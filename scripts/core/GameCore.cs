@@ -13,9 +13,6 @@ public class GameCore
 
         deckManager.CreateDeck();
         deckManager.Shuffle();
-
-        DealCards();
-
         //TODO: 扣底
     }
 
@@ -24,29 +21,16 @@ public class GameCore
         return playerManager.GetPlayerHand(playerId);
     }
 
-    private void DealCards()
+    public CardData DrawCardForPlayer(int playerId)
     {
-        int currentPlayer = 0;
+        CardData card = deckManager.DrawCard();
+        playerManager.AddCardToPlayer(playerId, card);
+        GD.Print($"玩家{playerId} 抽牌: {card}");
+        return card;
+    }
 
-        while (deckManager.GetRemainingCount() > 8)
-        {
-            CardData card = deckManager.DrawCard();
-            playerManager.AddCardToPlayer(currentPlayer, card);
-
-            currentPlayer++;
-            if (currentPlayer >= 4)
-                currentPlayer = 0;
-        }
-
-        // GD.Print("发牌完成");
-        playerManager.DealCardEnd();
-        // for (int i = 0; i < 4; i++)
-        // {
-        //     GD.Print("玩家 " + i + " 手牌数量: " + playerManager.GetPlayerHand(i).Count);
-        //     foreach (CardData item in playerManager.GetPlayerHand(i))
-        //     {
-        //         GD.Print("花色 " + item.suit + " 点数 " + item.rank);
-        //     }
-        // }
+    public void AddCardToPlayer(int playerId, CardData card)
+    {
+        playerManager.AddCardToPlayer(playerId, card);
     }
 }

@@ -24,10 +24,4 @@ public class PlayerManager
     {
         return players[playerIndex].cardList;
     }
-
-    public void DealCardEnd()
-    {
-        foreach (CardList cardList in players)
-            cardList.GenarateCardList();
-    }
 }

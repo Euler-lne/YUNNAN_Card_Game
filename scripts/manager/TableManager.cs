@@ -8,9 +8,9 @@ public partial class TableManager : Node2D
 	public override void _Ready()
 	{
 		seats[0] = GetNode<Seat>("../PlayerSeatRoot/SeatBottom");
-		seats[1] = GetNode<Seat>("../PlayerSeatRoot/SeatLeft");
+		seats[1] = GetNode<Seat>("../PlayerSeatRoot/SeatRight");
 		seats[2] = GetNode<Seat>("../PlayerSeatRoot/SeatTop");
-		seats[3] = GetNode<Seat>("../PlayerSeatRoot/SeatRight");
+		seats[3] = GetNode<Seat>("../PlayerSeatRoot/SeatLeft");
 		// GD.Print("TableManager ready");
 	}
 

@@ -15,4 +15,10 @@ namespace Euler.Global
         public const float BOTTOM_MARGIN_MOVE = CardParams.CARD_HEIGHT - BOTTOM_MARGIN_UNSELECT;
 
     }
+
+    public static class GameSettings
+    {
+        public const int PLAYER_COUNT = 4;
+        public const int CARD_PRE_PLAYER = 25;
+    }
 }

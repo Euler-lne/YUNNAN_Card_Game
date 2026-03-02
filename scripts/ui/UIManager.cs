@@ -25,7 +25,7 @@ public partial class UIManager : Control
 
 	public void UpdatePlayerCount(int count)
 	{
-		currentPlayerNumber.Text = "Current Player: " + count;
+		currentPlayerNumber.Text = "当前人数: " + count;
 	}
 
 	public void ConnectStartButtonPressed(Action actions)

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 public class CardData
 {
@@ -13,6 +14,26 @@ public class CardData
     public static int Serialize(CardData card)
     {
         return (int)card.suit * 100 + (int)card.rank;
+    }
+
+    public static int[] Serialize(List<CardData> hand)
+    {
+        int[] ids = new int[hand.Count];
+
+        for (int i = 0; i < hand.Count; i++)
+            ids[i] = Serialize(hand[i]); // 你自己定义的唯一ID
+
+        return ids;
+    }
+
+    public static List<CardData> Deserialize(int[] ids)
+    {
+        List<CardData> list = [];
+
+        foreach (var id in ids)
+            list.Add(Deserialize(id)); // 你自己的查表方法
+
+        return list;
     }
 
     public static CardData Deserialize(int id)
@@ -39,7 +60,7 @@ public class CardList
         cardList = [];
     }
 
-    public void GenarateCardList()
+    private void GenarateCardList()
     {
         cardList.Clear();
         foreach (var item in spadeList)
@@ -92,17 +113,47 @@ public class CardList
                 r = mid;
         }
         cardDatas.Insert(l, cardData);
+        GenarateCardList();
     }
 
-    public void ClearList()
+    public void ClearAllList()
     {
         spadeList.Clear();
         heartList.Clear();
         clubList.Clear();
         diamondList.Clear();
         mainList.Clear();
+        cardList.Clear();
     }
 
+    public void RemoveCard(CardData cardData)
+    {
+        switch (cardData.suit)
+        {
+            case Suit.SPADE:  // 黑桃
+                if (cardData.rank == Rank.ACE)// 常主牌
+                    RemoveFrom(mainList, cardData);
+                else
+                    RemoveFrom(spadeList, cardData);
+                break;
+            case Suit.HEART:  // 红心
+                RemoveFrom(heartList, cardData);
+                break;
+            case Suit.CLUB:  // 方片
+                RemoveFrom(clubList, cardData);
+                break;
+            case Suit.DIAMOND:  // 梅花
+                RemoveFrom(diamondList, cardData);
+                break;
+            case Suit.NONE:  // 大小王 
+                RemoveFrom(mainList, cardData);
+                break;
+        }
+    }
 
+    private void RemoveFrom(List<CardData> cardDatas, CardData cardData)
+    {
+        cardDatas.Remove(cardData);
+        GenarateCardList();
+    }
 }
-
