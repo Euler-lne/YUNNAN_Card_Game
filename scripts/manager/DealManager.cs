@@ -8,6 +8,8 @@ public partial class DealManager : Node
     public GameCore GameCore { get; private set; }      // 只有服务器有
     private TableManager tableManager;
 
+    private List<CardData> localHands;
+
     private Queue<int> dealQueue;
     private Timer timer;
 
@@ -67,8 +69,9 @@ public partial class DealManager : Node
         }
 
         int logicalSeat = dealQueue.Dequeue();
-        CardData cardData = GameCore.DrawCardForPlayer(logicalSeat);
-        int id = CardData.Serialize(cardData); // 只传一张
+        GameCore.DrawCardForPlayer(logicalSeat);
+        List<CardData> cardDatas = GameCore.GetPlayerHand(logicalSeat);
+        int[] ids = CardData.Serialize(cardDatas); // 只传一张
 
         long peerId = NetworkManager.Instance.GetPeerIdBySeat(logicalSeat);
 
@@ -79,28 +82,26 @@ public partial class DealManager : Node
         else if (peerId == Multiplayer.GetUniqueId())
         {
             // 自己发给自己
-            ReceiveHand(logicalSeat, id, true);
+            ReceiveHand(logicalSeat, ids);
         }
         else
         {
-            NetworkManager.Instance.SendHand(peerId, logicalSeat, id);
+            NetworkManager.Instance.SendHand(peerId, logicalSeat, ids);
         }
     }
 
     /// <summary>
     /// 所有客户端调用显示牌
     /// </summary>
-    public void ReceiveHand(int logicalSeat, int ids, bool isSelf = false)
+    public void ReceiveHand(int logicalSeat, int[] ids)
     {
         if (tableManager == null)
         {
             GD.PrintErr("DealManager: tableManager 未初始化！");
             return;
         }
-        CardData hand = CardData.Deserialize(ids);
+        localHands = CardData.Deserialize(ids);
         int viewSeat = NetworkManager.Instance.GetViewSeat(logicalSeat);
-        if (!isSelf)  // FIXME: 客户端不会初始化GameCore，所以下面代码报错
-            GameCore.AddCardToPlayer(logicalSeat, hand);
-        tableManager.ShowPlayerHand(viewSeat, GameCore.GetPlayerHand(logicalSeat));
+        tableManager.ShowPlayerHand(viewSeat, localHands);
     }
 }

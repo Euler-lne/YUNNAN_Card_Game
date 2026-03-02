@@ -29,8 +29,4 @@ public class GameCore
         return card;
     }
 
-    public void AddCardToPlayer(int playerId, CardData card)
-    {
-        playerManager.AddCardToPlayer(playerId, card);
-    }
 }
