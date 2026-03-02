@@ -3,6 +3,7 @@ using System.Collections.Generic;
 
 public class DeckManager
 {
+    // 负责发牌，洗牌
     private List<CardData> deck;
     private Random random;
 

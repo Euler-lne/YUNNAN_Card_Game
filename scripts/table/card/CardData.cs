@@ -1,6 +1,4 @@
 using System.Collections.Generic;
-using Godot;
-
 public class CardData
 {
     public Suit suit;
@@ -11,6 +9,20 @@ public class CardData
         this.suit = suit;
         this.rank = rank;
     }
+
+    public static int Serialize(CardData card)
+    {
+        return (int)card.suit * 100 + (int)card.rank;
+    }
+
+    public static CardData Deserialize(int id)
+    {
+        Suit suit = (Suit)(id / 100);
+        Rank rank = (Rank)(id % 100);
+
+        return new CardData(suit, rank);
+    }
+
 }
 
 public class CardList
@@ -62,12 +74,7 @@ public class CardList
                 InsertFrom(diamondList, cardData);
                 break;
             case Suit.NONE:  // 大小王
-                if (cardData.rank != Rank.BIG_JOKER && cardData.rank != Rank.SMALL_JOKER)
-                    GD.PrintErr("当前的Suit.NONE不正确，点数: " + cardData.rank + " 也为NONE");
                 InsertFrom(mainList, cardData);
-                break;
-            default:
-                GD.PrintErr("UNKNOW TYPE: " + cardData.suit);
                 break;
         }
     }

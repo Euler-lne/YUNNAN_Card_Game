@@ -2,6 +2,7 @@ using System.Collections.Generic;
 
 public class PlayerManager
 {
+    // 保管所有玩家的卡片列表。
     public List<CardList> players;
 
     public PlayerManager()

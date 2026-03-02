@@ -13,6 +13,11 @@ config_version=5
 config/name="YunNan Card Game"
 config/features=PackedStringArray("4.4", "C#", "Forward Plus")
 
+[autoload]
+
+NetworkManager="*res://scripts/network/NetworkManager.cs"
+ChangeSceneManger="*res://scripts/manager/ChangeSceneManger.cs"
+
 [display]
 
 window/size/viewport_width=1280

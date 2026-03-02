@@ -1,0 +1,107 @@
+[gd_scene load_steps=6 format=3 uid="uid://dh0r6wjeod2gf"]
+
+[ext_resource type="Script" uid="uid://d0hcpj6m3yoby" path="res://scripts/manager/GameManager.cs" id="2_p57ef"]
+[ext_resource type="Script" uid="uid://bacxbfi6pabl" path="res://scripts/manager/TableManager.cs" id="3_u5sy4"]
+[ext_resource type="PackedScene" uid="uid://bp3q3vd8w37at" path="res://scenes/card.tscn" id="4_gee14"]
+[ext_resource type="Script" uid="uid://bgecoksvkvvkb" path="res://scripts/ui/UIManager.cs" id="4_iywne"]
+[ext_resource type="Script" uid="uid://c5gkmka8m2x08" path="res://scripts/table/Seat.cs" id="6_gee14"]
+
+[node name="Game" type="Node"]
+
+[node name="TableRoot" type="Node2D" parent="."]
+
+[node name="TableManager" type="Node2D" parent="TableRoot"]
+script = ExtResource("3_u5sy4")
+
+[node name="PlayeArea" type="Node2D" parent="TableRoot"]
+
+[node name="PlayerSeatRoot" type="Node2D" parent="TableRoot"]
+
+[node name="SeatBottom" type="Node2D" parent="TableRoot/PlayerSeatRoot"]
+script = ExtResource("6_gee14")
+cardScene = ExtResource("4_gee14")
+
+[node name="HandRoot" type="Node2D" parent="TableRoot/PlayerSeatRoot/SeatBottom"]
+
+[node name="PlayedRoot" type="Node2D" parent="TableRoot/PlayerSeatRoot/SeatBottom"]
+
+[node name="SeatLeft" type="Node2D" parent="TableRoot/PlayerSeatRoot"]
+script = ExtResource("6_gee14")
+cardScene = ExtResource("4_gee14")
+
+[node name="HandRoot" type="Node2D" parent="TableRoot/PlayerSeatRoot/SeatLeft"]
+
+[node name="PlayedRoot" type="Node2D" parent="TableRoot/PlayerSeatRoot/SeatLeft"]
+
+[node name="SeatTop" type="Node2D" parent="TableRoot/PlayerSeatRoot"]
+script = ExtResource("6_gee14")
+cardScene = ExtResource("4_gee14")
+
+[node name="HandRoot" type="Node2D" parent="TableRoot/PlayerSeatRoot/SeatTop"]
+
+[node name="PlayedRoot" type="Node2D" parent="TableRoot/PlayerSeatRoot/SeatTop"]
+
+[node name="SeatRight" type="Node2D" parent="TableRoot/PlayerSeatRoot"]
+script = ExtResource("6_gee14")
+cardScene = ExtResource("4_gee14")
+
+[node name="HandRoot" type="Node2D" parent="TableRoot/PlayerSeatRoot/SeatRight"]
+
+[node name="PlayedRoot" type="Node2D" parent="TableRoot/PlayerSeatRoot/SeatRight"]
+
+[node name="CanvasLayer" type="CanvasLayer" parent="."]
+
+[node name="UIManager" type="Control" parent="CanvasLayer"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("4_iywne")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="CanvasLayer/UIManager"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -44.0
+offset_top = -46.0
+offset_right = 44.0
+offset_bottom = 46.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="CurrentPlayerNumber" type="Label" parent="CanvasLayer/UIManager/VBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 40
+text = "当前玩家：1"
+
+[node name="StartButton" type="Button" parent="CanvasLayer/UIManager/VBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 40
+text = "开始"
+
+[node name="ScorePanel" type="Control" parent="CanvasLayer"]
+layout_mode = 3
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -20.0
+offset_right = 20.0
+offset_bottom = 40.0
+grow_horizontal = 2
+
+[node name="StatusLabel" type="Label" parent="CanvasLayer"]
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -20.0
+offset_right = 20.0
+offset_bottom = 23.0
+grow_horizontal = 2
+
+[node name="GameManager" type="Node" parent="."]
+script = ExtResource("2_p57ef")
