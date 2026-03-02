@@ -20,7 +20,7 @@ public partial class TableManager : Node2D
 		seats[playerId].ShowHand(hand);
 	}
 
-	public void ShowPlayerHand(int playerId, List<CardData> hand, CardData currentCard)
+	public void DealCard(int playerId, List<CardData> hand, CardData currentCard)
 	{
 		seats[playerId].DealCard(hand, currentCard);
 	}

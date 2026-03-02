@@ -118,7 +118,7 @@ public partial class DealManager : Node
         localHands = CardData.Deserialize(ids);
         CardData currentCard = CardData.Deserialize(currentId);
         int viewSeat = NetworkManager.Instance.GetViewSeat(logicalSeat);
-        tableManager.ShowPlayerHand(viewSeat, localHands, currentCard);
+        tableManager.DealCard(viewSeat, localHands, currentCard);
     }
 
     /// <summary>
