@@ -1,9 +1,12 @@
 using Godot;
 using System;
 using System.Collections.Generic;
+using Euler.Global;
 
 public partial class NetworkManager : Node
 {
+	// 只负责RPC传输
+	// 只负责座位管理
 	public static NetworkManager Instance { get; private set; }
 	public Dictionary<long, int> PeerToSeat { get; private set; } = [];
 	// 保存着自己的逻辑座位号，不对应Seat的物理座位号，因为座位号会变。
@@ -98,27 +101,27 @@ public partial class NetworkManager : Node
 	[Rpc(MultiplayerApi.RpcMode.Authority)]
 	private void SetMySeat(int seat) => MyLogicalSeat = seat;
 
-	[Rpc(MultiplayerApi.RpcMode.AnyPeer)]
+	[Rpc(MultiplayerApi.RpcMode.Authority)]
 	private void SyncTotalPlayers(int count) => TotalPlayers = count;
 
 	// 逻辑座位 -> 本地视角座位
 	public int GetViewSeat(int logicalSeat)// logicalSeat 在自己作为中位于哪里，相对于自己
 	{
 		// 也就是对于B号玩家，如果发牌到了A号，那么把A的逻辑位置传递进来就可以得知它在B的视角下位于哪里
-		return (logicalSeat - MyLogicalSeat + TotalPlayers) % TotalPlayers;
+		return (logicalSeat - MyLogicalSeat + GameSettings.PLAYER_COUNT) % GameSettings.PLAYER_COUNT;
 	}
 
 	// 服务器发牌
-	public void SendHand(long peerId, int logicalSeat, int[] cardIds)
+	public void SendHand(long peerId, int logicalSeat, int[] cardIds, int currentId)
 	{
-		RpcId(peerId, nameof(ReceiveHand), logicalSeat, cardIds);
+		RpcId(peerId, nameof(ReceiveHand), logicalSeat, cardIds, currentId);
 	}
 
 	[Rpc(MultiplayerApi.RpcMode.Authority)]
-	private void ReceiveHand(int logicalSeat, int[] cardIds)
+	private void ReceiveHand(int logicalSeat, int[] cardIds, int currentId)
 	{
 		// 客户端接收手牌
-		DealManager.Instance.ReceiveHand(logicalSeat, cardIds);
+		DealManager.Instance.ReceiveHand(logicalSeat, cardIds, currentId);
 	}
 
 	private void OnConnectedToServer()

@@ -2,9 +2,11 @@ namespace Euler.Global
 {
     public static class CardParams
     {
-        public const float CARD_SCALE = 0.7f;
+        public const float CARD_SCALE = 0.4f;
         public const float CARD_HEIGHT = 222 * 2 * CARD_SCALE;
         public const float CARD_WIDTH = 156 * 2 * CARD_SCALE;
+
+        public const string CARD_BACK_PATH = "res://assets/back_black_design_04.png";
     }
 
     public static class CardLayoutParams
@@ -20,5 +22,11 @@ namespace Euler.Global
     {
         public const int PLAYER_COUNT = 4;
         public const int CARD_PRE_PLAYER = 25;
+        public const float DEAL_DURATION_TIME = 0.3f;
     }
+
+
+
+
 }
+

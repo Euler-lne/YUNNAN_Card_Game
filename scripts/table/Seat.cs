@@ -11,6 +11,7 @@ public partial class Seat : Node2D
 
 	public bool isLocalPlayer = false;
 	private List<Card> handCards = [];
+	private List<Vector2> handPositions = [];
 	private Card lastSelectCard = null;
 
 	private bool isLeftMouseDown = false; // 左键是否按住
@@ -21,11 +22,10 @@ public partial class Seat : Node2D
 		playedRoot = GetNode<Node2D>("PlayedRoot");
 	}
 
-
-	public void ShowHand(List<CardData> hand)
+	public void GenerateHandPosition(int count)
 	{
-		ClearHand();
-		if (hand.Count == 0) return;
+		handPositions.Clear();
+		if (count == 0) return;
 
 		// 获取屏幕尺寸
 		Vector2 screenSize = GetViewportRect().Size;
@@ -39,19 +39,19 @@ public partial class Seat : Node2D
 
 		// 计算重叠系数：保证总宽度不超过 maxTotalWidth
 		float overlap;
-		if (hand.Count == 1)
+		if (count == 1)
 		{
 			overlap = 1.0f; // 单张卡牌不重叠
 		}
 		else
 		{
 			// 解方程：(hand.Count-1) * offset + cardWidth <= maxTotalWidth, 其中 offset = cardWidth * overlap
-			float maxOffset = (maxTotalWidth - cardWidth) / (hand.Count - 1);
+			float maxOffset = (maxTotalWidth - cardWidth) / (count - 1);
 			overlap = Mathf.Min(1.0f, maxOffset / cardWidth); // 重叠系数不能大于1（允许重叠但不拉伸）
 		}
 
 		float offset = cardWidth * overlap;
-		float totalSpan = (hand.Count - 1) * offset + cardWidth;
+		float totalSpan = (count - 1) * offset + cardWidth;
 
 		// 计算第一个卡牌的中心 X 坐标
 		float startX = (screenSize.X - totalSpan) / 2 + cardWidth / 2;
@@ -60,15 +60,72 @@ public partial class Seat : Node2D
 		float y = screenSize.Y + cardHeight / 2; // 手牌顶部位于屏幕底部
 		y -= CardLayoutParams.BOTTOM_MARGIN_UNSELECT; // 当前手牌露出卡牌的0.75倍高度
 
+		for (int i = 0; i < count; i++)
+			handPositions.Add(new Vector2(startX + i * offset, y));
+
+	}
+
+	/// <summary>
+	/// 展示当前手牌
+	/// </summary>
+	/// <param name="hand"></param>
+	public void ShowHand(List<CardData> hand)
+	{
+		GenerateHandPosition(hand.Count);
+		ClearHand();
+
 		for (int i = 0; i < hand.Count; i++)
 		{
 			Card card = cardScene.Instantiate<Card>();
 			handRoot.AddChild(card); // cardParent 可以是任意 Node2D，但建议是一个全屏的 Control 或 Node2D
-			card.Position = new Vector2(startX + i * offset, y);
-			card.Scale = new Vector2(CardParams.CARD_SCALE, CardParams.CARD_SCALE);
+			card.Position = new Vector2(handPositions[i].X, handPositions[i].Y);
 			card.SetCardData(hand[i]);
 
 			handCards.Add(card);
+		}
+	}
+	/// <summary>
+	/// 发牌时候调用的函数
+	/// </summary>
+	/// <param name="hand">发的牌已经被记录了</param>
+	/// <param name="dealedCard">发的牌</param>
+	public void DealCard(List<CardData> hand, CardData dealedCard)
+	{
+		GenerateHandPosition(hand.Count);
+		ClearHand();
+
+		// 序列化处理，确保可以正确识别这张牌
+		int dealedId = CardData.Serialize(dealedCard);
+		bool dealt = false; // 标记是否已经处理了当前发牌
+
+		for (int i = 0; i < hand.Count; i++)
+		{
+			Card card = cardScene.Instantiate<Card>();
+			handRoot.AddChild(card);
+
+			// 先生成在牌堆位置
+			Vector2 screenSize = GetViewportRect().Size;
+			card.Position = new Vector2(screenSize.X / 2, screenSize.Y / 2);
+			card.SetCardData(hand[i]);
+			handCards.Add(card);
+
+			Vector2 targetPos = new(handPositions[i].X, handPositions[i].Y);
+
+			// 判断是否是当前发的牌，并且只处理一次
+			if (!dealt && CardData.Serialize(hand[i]) == dealedId)
+			{
+				dealt = true;
+
+				var tween = CreateTween();
+				tween.TweenProperty(card, "position", targetPos, GameSettings.DEAL_DURATION_TIME / 2)
+					 .SetTrans(Tween.TransitionType.Quad)
+					 .SetEase(Tween.EaseType.Out);
+			}
+			else
+			{
+				// 其他牌直接放在目标位置
+				card.Position = targetPos;
+			}
 		}
 	}
 

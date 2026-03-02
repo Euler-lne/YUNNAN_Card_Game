@@ -19,4 +19,9 @@ public partial class TableManager : Node2D
 		// GD.Print("Showing player hand " + hand.Count);
 		seats[playerId].ShowHand(hand);
 	}
+
+	public void ShowPlayerHand(int playerId, List<CardData> hand, CardData currentCard)
+	{
+		seats[playerId].DealCard(hand, currentCard);
+	}
 }

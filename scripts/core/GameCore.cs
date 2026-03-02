@@ -25,7 +25,6 @@ public class GameCore
     {
         CardData card = deckManager.DrawCard();
         playerManager.AddCardToPlayer(playerId, card);
-        GD.Print($"玩家{playerId} 抽牌: {card}");
         return card;
     }
 

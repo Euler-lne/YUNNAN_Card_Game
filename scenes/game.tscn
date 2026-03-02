@@ -16,6 +16,11 @@ script = ExtResource("3_u5sy4")
 
 [node name="PlayeArea" type="Node2D" parent="TableRoot"]
 
+[node name="DeckCards" type="Node2D" parent="TableRoot/PlayeArea"]
+
+[node name="Card" parent="TableRoot/PlayeArea/DeckCards" instance=ExtResource("4_gee14")]
+visible = false
+
 [node name="PlayerSeatRoot" type="Node2D" parent="TableRoot"]
 
 [node name="SeatBottom" type="Node2D" parent="TableRoot/PlayerSeatRoot"]

@@ -1,19 +1,23 @@
 using Godot;
 using System;
+using Euler.Global;
 
 public partial class Card : Node2D
 {
 	public CardData cardData;
 	private Sprite2D sprite;
+	private string cardTexturePath = "";
 	public bool isSelected;
+	public bool isBack = true;
+
 	public override void _Ready()
 	{
 		sprite = GetNode<Sprite2D>("Sprite2D");
+		sprite.Texture = GD.Load<Texture2D>(CardParams.CARD_BACK_PATH);
 		isSelected = false;
-	}
-
-	public override void _Process(double delta)
-	{
+		Vector2 screenSize = GetViewportRect().Size;
+		Scale = new Vector2(CardParams.CARD_SCALE, CardParams.CARD_SCALE);
+		Position = new Vector2(screenSize.X / 2, screenSize.Y / 2);
 	}
 
 	public void SetCardData(CardData data)
@@ -25,8 +29,8 @@ public partial class Card : Node2D
 
 	private void UpdateTexture()
 	{
-		string path = GetCardTexturePath();
-		sprite.Texture = GD.Load<Texture2D>(path);
+		cardTexturePath = GetCardTexturePath();
+		sprite.Texture = GD.Load<Texture2D>(cardTexturePath);
 	}
 
 	private string GetCardTexturePath()
