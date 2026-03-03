@@ -3,6 +3,11 @@ using System;
 using System.Collections.Generic;
 using Euler.Global;
 
+/// <summary>
+/// 发牌包括：
+/// 1. 普通发牌（发牌堆旋转、从发牌堆生成牌并移动到手牌上）
+/// 2. 发牌阶段需要记录当前的牌发到哪个位置，应为需要进行叫主、反主的操作
+/// </summary>
 public partial class DealManager : Node
 {
     public GameCore GameCore { get; private set; }      // 只有服务器有
@@ -83,7 +88,7 @@ public partial class DealManager : Node
 
 
         CardData currentCard = GameCore.DrawCardForPlayer(logicalSeat);
-        List<CardData> cardDatas = GameCore.GetPlayerHand(logicalSeat);
+        List<CardData> cardDatas = GameCore.GetPlayerHand(logicalSeat);  // 得到当前座位的完整手牌
         int[] ids = CardData.Serialize(cardDatas);
         int currentId = CardData.Serialize(currentCard);
 
@@ -145,5 +150,7 @@ public partial class DealManager : Node
                 .SetEase(Tween.EaseType.Out);
         }
     }
+
+
 
 }
