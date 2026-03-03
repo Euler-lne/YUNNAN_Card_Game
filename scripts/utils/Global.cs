@@ -22,7 +22,7 @@ namespace Euler.Global
     {
         public const int PLAYER_COUNT = 4;
         public const int CARD_PRE_PLAYER = 25;
-        public const float DEAL_DURATION_TIME = 0.4f;
+        public const float DEAL_DURATION_TIME = 3f;
     }
 
 

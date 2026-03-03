@@ -1,6 +1,4 @@
 using Godot;
-using System;
-using System.Collections.Generic;
 using Euler.Global;
 using System.Threading.Tasks;
 
@@ -14,8 +12,10 @@ public partial class DealManager : Node
     public GameCore GameCore { get; private set; }      // 只有服务器有
     private TableManager tableManager;
     private Card deckCard;
-
-    private List<CardData> localHands;
+    private UIManager uiManager;
+    private TaskCompletionSource<(DeclareOption, Suit)>[] declareTcsArr =
+    new TaskCompletionSource<(DeclareOption, Suit)>[GameSettings.PLAYER_COUNT];
+    private DeclareOption[] lastDeclareOption = new DeclareOption[GameSettings.PLAYER_COUNT];
 
     public static DealManager Instance { get; private set; }
 
@@ -25,6 +25,9 @@ public partial class DealManager : Node
             Instance = this;
         else
             QueueFree();
+
+        for (int i = 0; i < GameSettings.PLAYER_COUNT; i++)
+            lastDeclareOption[i] = DeclareOption.NONE;
     }
 
     /// <summary>
@@ -32,12 +35,12 @@ public partial class DealManager : Node
     /// 所有客户端都必须调用
     /// 服务器传入 GameCore，客户端传 null
     /// </summary>
-    public void Init(GameCore _gameCore, TableManager _tableManager, Card _deckCard)
+    public void Init(GameCore _gameCore, TableManager _tableManager, Card _deckCard, UIManager _uiManger)
     {
         GameCore = _gameCore;      // 服务器才有
         tableManager = _tableManager;
         deckCard = _deckCard;
-
+        uiManager = _uiManger;
 
         // 客户端值初始化上面的信息就好了
         if (!Multiplayer.IsServer())
@@ -54,7 +57,7 @@ public partial class DealManager : Node
 
         int total = GameSettings.PLAYER_COUNT * GameSettings.CARD_PRE_PLAYER;
 
-        int hostSeat = 3; // TODO 真庄家
+        int hostSeat = 0; // TODO: 真庄家
         Rpc(nameof(RpcInitDeckRotation), hostSeat);
 
         for (int i = 0; i < total; i++)
@@ -70,16 +73,10 @@ public partial class DealManager : Node
 
     private async Task DealOneCardFlow(int logicalSeat)
     {
-        // 1️⃣ 旋转动画（所有人执行）
         Rpc(nameof(RpcRotateDeck));
+        await ToSignal(GetTree().CreateTimer(GameSettings.DEAL_DURATION_TIME / 2), SceneTreeTimer.SignalName.Timeout);
 
-        await ToSignal(
-            GetTree().CreateTimer(GameSettings.DEAL_DURATION_TIME / 2),
-            SceneTreeTimer.SignalName.Timeout);
-
-        // 2️⃣ 服务器本地发牌（只在服务器）
         var cardData = GameCore.DealOneCard(logicalSeat);
-
         int currentId = CardData.Serialize(cardData);
 
         long peerId = NetworkManager.Instance.GetPeerIdBySeat(logicalSeat);
@@ -90,31 +87,107 @@ public partial class DealManager : Node
         else
             NetworkManager.Instance.SendHand(peerId, logicalSeat, currentId);  // 服务器发牌给对应客户端
 
-        // 3️⃣ 飞牌动画
+        // 飞牌动画
         Rpc(nameof(RpcFlyCard), logicalSeat);
 
         await ToSignal(
             GetTree().CreateTimer(GameSettings.DEAL_DURATION_TIME / 2),
             SceneTreeTimer.SignalName.Timeout);
-        if (peerId != -1)
+
+        // 1️⃣ 检查是否可以叫主（仅显示按钮，不暂停发牌）
+
+        CheckDeclare(logicalSeat);
+
+        // 2️⃣ 如果 declareTcs 存在（说明玩家点击了叫主），就暂停发牌
+        if (declareTcsArr[logicalSeat] != null)
         {
-            DeclareOption option = GameCore.CheckIfSeatCanDeclare(logicalSeat);
-            if (option != DeclareOption.NONE)
-            {
-                // 通知对应玩家客户端可以叫主
-                RpcId(peerId, nameof(RpcNotifyDeclareOption), logicalSeat, (int)option);
-            }
+            var result = await declareTcsArr[logicalSeat].Task;
+            GameCore.SetTrump(result.Item1, result.Item2, logicalSeat);
+            GD.Print($"玩家 {logicalSeat} 确认叫主 {result.Item1} {result.Item2}");
+            declareTcsArr[logicalSeat] = null;
         }
     }
-    [Rpc(MultiplayerApi.RpcMode.Authority, CallLocal = true)]
-    private void RpcNotifyDeclareOption(int logicalSeat, int optionInt)
+    #region 叫主相关
+    private void CheckDeclare(int logicalSeat)
     {
-        int viewSeat = NetworkManager.Instance.GetViewSeat(logicalSeat);
-        DeclareOption option = (DeclareOption)optionInt;
+        long peerId = NetworkManager.Instance.GetPeerIdBySeat(logicalSeat);
+        if (peerId == -1) return;
 
-        GD.Print($"{Multiplayer.GetUniqueId()}:我可以叫主，类型{option}");
+        DeclareOption option = GameCore.CheckIfSeatCanDeclare(logicalSeat);
+        GD.Print($"名字{peerId}，状态当前{option}，之前状态{lastDeclareOption[logicalSeat]}");
+
+        // 状态没有变化就不发送
+        if (option != lastDeclareOption[logicalSeat])
+        {
+            lastDeclareOption[logicalSeat] = option;
+            RpcId(peerId, nameof(RpcNotifyDeclareOption), (int)option);
+        }
+    }
+    private void SetDeclareUIInvisiable(int expectLogicalSeat)
+    {
+        for (int i = 0; i < GameSettings.PLAYER_COUNT; i++)
+        {
+            if (i == expectLogicalSeat) continue;
+            long peerId = NetworkManager.Instance.GetPeerIdBySeat(i);
+            if (peerId == -1) continue;
+            RpcId(peerId, nameof(RpcSetDeclareUIInvisiable));
+        }
     }
 
+
+    /// <summary>
+    /// 服务器收到玩家点击 declare
+    /// </summary>
+    public void HandleDeclareRequest(long peerId)
+    {
+        int logicalSeat = NetworkManager.Instance.PeerToSeat[peerId];
+
+        DeclareOption canDeclare = GameCore.CheckIfSeatCanDeclare(logicalSeat);
+        if (canDeclare == DeclareOption.NONE) return;
+
+        GD.Print($"玩家 {logicalSeat} 可以叫主");
+
+        declareTcsArr[logicalSeat] = new TaskCompletionSource<(DeclareOption, Suit)>();
+
+        SetDeclareUIInvisiable(logicalSeat);
+    }
+
+    /// <summary>
+    /// 服务器收到玩家点击 confirm
+    /// </summary>
+    public void HandleConfirmDeclare(long peerId, int optionInt, int suitInt)
+    {
+        int logicalSeat = NetworkManager.Instance.PeerToSeat[peerId];
+
+        DeclareOption option = (DeclareOption)optionInt;
+        Suit suit = (Suit)suitInt;
+
+        declareTcsArr[logicalSeat]?.SetResult((option, suit));
+        declareTcsArr[logicalSeat] = null;
+
+        GameCore.SetTrump(option, suit, logicalSeat);
+        GD.Print($"玩家 {logicalSeat} 确认叫主 {option} {suit}");
+
+        // 更新其他玩家 UI
+        for (int i = 0; i < GameSettings.PLAYER_COUNT; i++)
+            CheckDeclare(i);
+    }
+    [Rpc(MultiplayerApi.RpcMode.Authority, CallLocal = true)]
+    private void RpcSetDeclareUIInvisiable()
+    {
+        uiManager.Declare(DeclareOption.NONE);
+    }
+    [Rpc(MultiplayerApi.RpcMode.Authority, CallLocal = true)]
+    private void RpcNotifyDeclareOption(int optionInt)
+    {
+        DeclareOption option = (DeclareOption)optionInt;
+        uiManager.Declare(option);
+        GD.Print($"{Multiplayer.GetUniqueId()}:我可以叫主，类型{option}");
+    }
+    #endregion
+
+
+    #region 发牌
     /// <summary>
     /// 所有客户端调用显示牌
     /// </summary>
@@ -129,7 +202,8 @@ public partial class DealManager : Node
         int viewSeat = NetworkManager.Instance.GetViewSeat(logicalSeat);
         tableManager.DealCard(viewSeat, currentCard);
     }
-
+    #endregion
+    #region 动画相关
     /// <summary>
     /// 初始化旋转方向
     /// </summary>
@@ -198,5 +272,6 @@ public partial class DealManager : Node
             flyingCard.QueueFree();
         }));
     }
+    #endregion
 
 }

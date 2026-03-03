@@ -20,7 +20,7 @@ public partial class GameManager : Node
 
         // 所有客户端都初始化 DealManager
         gameCore = Multiplayer.IsServer() ? new GameCore() : null;
-        DealManager.Instance.Init(gameCore, tableManager, deckCard);
+        DealManager.Instance.Init(gameCore, tableManager, deckCard, uiManager);
 
         if (Multiplayer.IsServer())
         {

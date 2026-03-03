@@ -1,13 +1,18 @@
-[gd_scene load_steps=7 format=3 uid="uid://dh0r6wjeod2gf"]
+[gd_scene load_steps=9 format=3 uid="uid://dh0r6wjeod2gf"]
 
 [ext_resource type="Script" uid="uid://d0hcpj6m3yoby" path="res://scripts/manager/GameManager.cs" id="2_p57ef"]
 [ext_resource type="Script" uid="uid://bacxbfi6pabl" path="res://scripts/manager/TableManager.cs" id="3_u5sy4"]
 [ext_resource type="PackedScene" uid="uid://bp3q3vd8w37at" path="res://scenes/card.tscn" id="4_gee14"]
 [ext_resource type="Script" uid="uid://bgecoksvkvvkb" path="res://scripts/ui/UIManager.cs" id="4_iywne"]
 [ext_resource type="Script" uid="uid://cc5v0rkldqlr7" path="res://scripts/manager/DealManager.cs" id="5_p57ef"]
+[ext_resource type="Script" uid="uid://b06xh6pdd233k" path="res://scripts/ui/DeclareContainer.cs" id="5_u5sy4"]
+[ext_resource type="Script" uid="uid://c85it2sctj4s8" path="res://scripts/network/ClientRequestManager.cs" id="6_0tnpc"]
 [ext_resource type="Script" uid="uid://c5gkmka8m2x08" path="res://scripts/table/Seat.cs" id="6_gee14"]
 
 [node name="Game" type="Node"]
+
+[node name="ClientRequestManager" type="Node" parent="."]
+script = ExtResource("6_0tnpc")
 
 [node name="TableRoot" type="Node2D" parent="."]
 
@@ -89,6 +94,35 @@ text = "当前玩家：1"
 layout_mode = 2
 theme_override_font_sizes/font_size = 40
 text = "开始"
+
+[node name="DeclareContainer" type="HBoxContainer" parent="CanvasLayer/UIManager"]
+visible = false
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -44.0
+offset_top = 90.0
+offset_right = 44.0
+offset_bottom = 153.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("5_u5sy4")
+
+[node name="DeclareButton" type="Button" parent="CanvasLayer/UIManager/DeclareContainer"]
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_font_sizes/font_size = 40
+text = "亮主"
+
+[node name="ConfirmButton" type="Button" parent="CanvasLayer/UIManager/DeclareContainer"]
+visible = false
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_font_sizes/font_size = 40
+text = "确定"
 
 [node name="ScorePanel" type="Control" parent="CanvasLayer"]
 layout_mode = 3

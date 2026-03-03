@@ -38,6 +38,26 @@ public class DeckManager
         }
     }
 
+    public void TestCreateDeck()
+    {
+        deck.Clear();
+        for (int i = 0; i < 4; i++)
+        {
+            deck.Add(new CardData(Suit.HEART, Rank.TEN));
+        }
+        for (int i = 4; i < 108; i++)
+        {
+            if (i % 4 == 0)
+                deck.Add(new CardData(Suit.HEART, Rank.TWO));
+            if (i % 4 == 1)
+                deck.Add(new CardData(Suit.CLUB, Rank.TWO));
+            if (i % 4 == 2)
+                deck.Add(new CardData(Suit.DIAMOND, Rank.TWO));
+            if (i % 4 == 3)
+                deck.Add(new CardData(Suit.SPADE, Rank.TWO));
+        }
+    }
+
     public void Shuffle()
     {
         int n = deck.Count;
@@ -60,6 +80,8 @@ public class DeckManager
         deck.RemoveAt(deck.Count - 1);
         return card;
     }
+
+
 
     public int GetRemainingCount()
     {

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Godot;
 
 public class GameCore
 {
@@ -16,8 +17,9 @@ public class GameCore
 
     public void StartGame()
     {
-        deckManager.CreateDeck();
-        deckManager.Shuffle();
+        // deckManager.CreateDeck();
+        // deckManager.Shuffle();
+        deckManager.TestCreateDeck();
 
         gameData.CurrentPhase = GamePhase.DEALING;
 
@@ -35,6 +37,12 @@ public class GameCore
         playerManager.AddCardToPlayer(seat, card);
         return card;
     }
+    public bool IsTrumpLocked()
+    {
+        return gameData.TrumpState.isLocked;
+    }
+
+
     /// <summary>
     /// 检查某个玩家当前手牌是否可以叫主
     /// </summary>
@@ -48,6 +56,28 @@ public class GameCore
 
         DeclareOption option = RuleEngine.GetDeclareOption(hand, trumpState, currentLevel);
         return option;
+    }
+    /// <summary>
+    /// 设置主花色/叫主类型
+    /// </summary>
+    /// <param name="option">叫主类型</param>
+    /// <param name="suit">玩家选择的花色</param>
+    /// <param name="logicalSeat">叫主玩家座位</param>
+    public void SetTrump(DeclareOption option, Suit suit, int logicalSeat)
+    {
+        GD.Print($"设置主花色: 玩家 {logicalSeat}, 类型 {option}, 花色 {suit}");
+
+        // 庄家是谁
+        gameData.TrumpState.dealerSeat = logicalSeat;
+
+        // 判断是否无主
+        gameData.TrumpState.haveTrump = true; // 或者根据规则改
+
+        // 定主/锁定
+        gameData.TrumpState.isLocked = option == DeclareOption.COUNTERTRUMP;
+
+        // 主花色
+        gameData.TrumpState.trumpSuit = TrumpState.ToTrumpSuit(suit);
     }
 
 }

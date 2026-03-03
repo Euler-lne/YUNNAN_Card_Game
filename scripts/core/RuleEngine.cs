@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Godot;
 
 public static class RuleEngine
 {
@@ -10,9 +11,11 @@ public static class RuleEngine
         TrumpState trumpState,
         Rank currentLevel)
     {
+        if (trumpState.isLocked)
+            return DeclareOption.NONE;
 
         // 还没有主
-        if (trumpState.trumpSuit == TrumpSuit.UNKNOW_TRUMP && !trumpState.isNoTrump)
+        if (trumpState.trumpSuit == TrumpSuit.UNKNOW_TRUMP && !trumpState.haveTrump)
         {
             if (HasRankCard(hand, currentLevel))
                 return DeclareOption.BRIGHTTRUMP;
@@ -20,11 +23,9 @@ public static class RuleEngine
             if (hand.Count == 1 && hand[0].rank == currentLevel) // 只有第一轮可以暗主
                 return DeclareOption.DARKTRUMP;
         }
-        else
-        {
-            if (CanCounterTrump(hand, trumpState, currentLevel))
-                return DeclareOption.COUNTERTRUMP;
-        }
+        else if (CanCounterTrump(hand, trumpState, currentLevel) && trumpState.haveTrump)
+            return DeclareOption.COUNTERTRUMP;  // 有主的情况下才能反
+
 
         return DeclareOption.NONE;
     }
@@ -47,9 +48,11 @@ public static class RuleEngine
 
         foreach (var card in hand)
         {
-            if (card.rank != currentLevel)
+            if (TrumpState.ToTrumpSuit(card.suit) == trumpState.trumpSuit)
+                GD.Print($"当前型号和亮主的一样，不可以进行反主{card.suit}");
+            if (card.rank != currentLevel || TrumpState.ToTrumpSuit(card.suit) == trumpState.trumpSuit)
                 continue;
-
+            // 当前是满足的牌的型号相等了
             if (!suitCount.ContainsKey(card.suit))
                 suitCount[card.suit] = 0;
 
