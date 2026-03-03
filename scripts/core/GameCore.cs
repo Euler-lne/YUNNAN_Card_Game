@@ -29,16 +29,11 @@ public class GameCore
 
     }
 
-    public List<CardData> GetPlayerHand(int playerId)
-    {
-        return playerManager.GetPlayerHand(playerId);
-    }
-
-    public CardData DrawCardForPlayer(int playerId)
+    public DealResult DealOneCard(int seat)
     {
         CardData card = deckManager.DrawCard();
-        playerManager.AddCardToPlayer(playerId, card);
-        return card;
+        playerManager.AddCardToPlayer(seat, card);
+        return new DealResult(card, playerManager.GetPlayerHand(seat));
     }
     /// <summary>
     /// 

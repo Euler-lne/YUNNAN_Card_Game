@@ -70,7 +70,7 @@ public partial class DealManager : Node
 
         timer.Start();
         int currentHost = 0; // TODO: 改成真正的庄家座位号
-        Rpc(nameof(RpcDealAnimate), currentHost, true);
+        Rpc(nameof(RpcDealAnimateRatate), currentHost, true);
     }
 
     private void OnDealTimeout()
@@ -83,14 +83,43 @@ public partial class DealManager : Node
             return;
         }
         int logicalSeat = dealQueue.Dequeue();  // 当前要发给的逻辑座位号
-                                                // 每次发牌告诉所有客户端发给谁
-        Rpc(nameof(RpcDealAnimate), logicalSeat, false);
 
+        Rpc(nameof(RpcDealAnimateRatate), logicalSeat, false); // 所有角色转牌
+    }
 
-        CardData currentCard = GameCore.DrawCardForPlayer(logicalSeat);
-        List<CardData> cardDatas = GameCore.GetPlayerHand(logicalSeat);  // 得到当前座位的完整手牌
-        int[] ids = CardData.Serialize(cardDatas);
-        int currentId = CardData.Serialize(currentCard);
+    /// <summary>
+    /// 发牌动画（旋转牌堆）
+    /// </summary>
+    [Rpc(MultiplayerApi.RpcMode.Authority, CallLocal = true)]
+    private void RpcDealAnimateRatate(int logicalSeat, bool isFirst)
+    {
+        int viewSeat = NetworkManager.Instance.GetViewSeat(logicalSeat);
+        if (isFirst)
+        {
+            // 初始化牌堆方向
+            deckCard.Rotation = -Mathf.Pi / 2 * viewSeat + Mathf.Pi / 2;
+            return;
+        }
+        // Tween旋转牌堆，每次90度
+        var tween = CreateTween();
+        tween.TweenProperty(deckCard, "rotation",
+            deckCard.Rotation - Mathf.Pi / 2,
+            GameSettings.DEAL_DURATION_TIME / 2)
+            .SetTrans(Tween.TransitionType.Quad)
+            .SetEase(Tween.EaseType.Out);
+
+        tween.TweenCallback(Callable.From(() =>
+        {
+            DealCard(logicalSeat);
+        }));
+    }
+
+    private void DealCard(int logicalSeat)
+    {
+        // 旋转结束之后需要完成的操作
+        var dealResult = GameCore.DealOneCard(logicalSeat);
+        int[] ids = CardData.Serialize(dealResult.FullHand);
+        int currentId = CardData.Serialize(dealResult.CurrentCard);
 
         long peerId = NetworkManager.Instance.GetPeerIdBySeat(logicalSeat);
 
@@ -100,7 +129,7 @@ public partial class DealManager : Node
         }
         else if (peerId == Multiplayer.GetUniqueId())
         {
-            // 自己发给自己
+            // 自己发给自己，就是服务器自己发给自己
             ReceiveHand(logicalSeat, ids, currentId);
         }
         else
@@ -108,8 +137,9 @@ public partial class DealManager : Node
             // 服务器向peerID发送牌
             NetworkManager.Instance.SendHand(peerId, logicalSeat, ids, currentId);
         }
+        int viewSeat = NetworkManager.Instance.GetViewSeat(logicalSeat);
+        GD.Print($"我是{Multiplayer.GetUniqueId()}，在我这里要给{viewSeat}发牌");
     }
-
     /// <summary>
     /// 所有客户端调用显示牌
     /// </summary>
@@ -126,31 +156,35 @@ public partial class DealManager : Node
         tableManager.DealCard(viewSeat, localHands, currentCard);
     }
 
+
     /// <summary>
     /// 发牌动画（旋转牌堆）
     /// </summary>
     [Rpc(MultiplayerApi.RpcMode.Authority, CallLocal = true)]
-    private void RpcDealAnimate(int logicalSeat, bool isFirst)
+    private void RpcDealAnimateFly(int logicalSeat)
     {
         int viewSeat = NetworkManager.Instance.GetViewSeat(logicalSeat);
+        Card flyingCard = deckCard.Duplicate() as Card;
+        AddChild(flyingCard);
 
-        if (isFirst)
+        flyingCard.GlobalPosition = deckCard.GlobalPosition;
+        flyingCard.Rotation = deckCard.Rotation;
+
+        Vector2 targetPos = tableManager.GetDealTargetPosition(viewSeat);
+
+        var moveTween = CreateTween();
+        moveTween.TweenProperty(
+            flyingCard,
+            "global_position",
+            targetPos,
+            GameSettings.DEAL_DURATION_TIME / 2)
+            .SetTrans(Tween.TransitionType.Quad)
+            .SetEase(Tween.EaseType.Out);
+
+        moveTween.TweenCallback(Callable.From(() =>
         {
-            // 初始化牌堆方向
-            deckCard.Rotation = Mathf.Pi / 2 * viewSeat;
-        }
-        else
-        {
-            // Tween旋转牌堆，每次90度
-            var tween = CreateTween();
-            tween.TweenProperty(deckCard, "rotation",
-                deckCard.Rotation + Mathf.Pi / 2,
-                GameSettings.DEAL_DURATION_TIME / 2)
-                .SetTrans(Tween.TransitionType.Quad)
-                .SetEase(Tween.EaseType.Out);
-        }
+            flyingCard.QueueFree();
+        }));
     }
-
-
 
 }

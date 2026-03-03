@@ -20,6 +20,21 @@ public partial class TableManager : Node2D
 		seats[playerId].ShowHand(hand);
 	}
 
+	public Vector2 GetDealTargetPosition(int viewSeat)
+	{
+		// 1 屏幕右 2 屏幕上 3 屏幕左
+		Vector2 screenSize = GetViewportRect().Size;
+		if (viewSeat == 1)
+			return new(screenSize.X, screenSize.Y / 2);
+		else if (viewSeat == 2)
+			return new(screenSize.X / 2, 0);
+		else if (viewSeat == 3)
+			return new(0, screenSize.Y / 2);
+
+		GD.PrintErr($"发牌动画不合理的发牌位置{viewSeat}");
+		return Vector2.Zero;
+	}
+
 	public void DealCard(int playerId, List<CardData> hand, CardData currentCard)
 	{
 		seats[playerId].DealCard(hand, currentCard);
