@@ -2,6 +2,7 @@ using Godot;
 using System;
 using System.Collections.Generic;
 using Euler.Global;
+using System.Threading.Tasks;
 
 /// <summary>
 /// 发牌包括：
@@ -15,9 +16,6 @@ public partial class DealManager : Node
     private Card deckCard;
 
     private List<CardData> localHands;
-
-    private Queue<int> dealQueue;
-    private Timer timer;
 
     public static DealManager Instance { get; private set; }
 
@@ -44,126 +42,140 @@ public partial class DealManager : Node
         // 客户端值初始化上面的信息就好了
         if (!Multiplayer.IsServer())
             return;
-
-        dealQueue = new Queue<int>();
-        timer = new Timer
-        {
-            WaitTime = GameSettings.DEAL_DURATION_TIME,
-            OneShot = false,
-            Autostart = false
-        };
-        AddChild(timer);
-        timer.Timeout += OnDealTimeout;
     }
 
     /// <summary>
     /// 服务器开始发牌
     /// </summary>
-    public void StartDeal()
+    public async void StartDeal()
     {
         if (!Multiplayer.IsServer() || GameCore == null)
-            return; // 只有服务器执行发牌
-
-        dealQueue.Clear();
-        for (int i = 0; i < GameSettings.PLAYER_COUNT * GameSettings.CARD_PRE_PLAYER; i++)
-            dealQueue.Enqueue(i % GameSettings.PLAYER_COUNT);
-
-        timer.Start();
-        int currentHost = 0; // TODO: 改成真正的庄家座位号
-        Rpc(nameof(RpcDealAnimateRatate), currentHost, true);
-    }
-
-    private void OnDealTimeout()
-    {
-        // 客户端不会执行，因为Timer没有初始化
-        if (dealQueue.Count == 0)
-        {
-            timer.Stop();
-            GD.Print("发牌结束");
             return;
-        }
-        int logicalSeat = dealQueue.Dequeue();  // 当前要发给的逻辑座位号
 
-        Rpc(nameof(RpcDealAnimateRatate), logicalSeat, false); // 所有角色转牌
+        int total = GameSettings.PLAYER_COUNT * GameSettings.CARD_PRE_PLAYER;
+
+        int hostSeat = 3; // TODO 真庄家
+        Rpc(nameof(RpcInitDeckRotation), hostSeat);
+
+        for (int i = 0; i < total; i++)
+        {
+            int logicalSeat = (i + hostSeat) % GameSettings.PLAYER_COUNT;
+
+            await DealOneCardFlow(logicalSeat);
+        }
+
+        GD.Print("发牌结束");
+        Rpc(nameof(RpcEndDeckRotation), hostSeat);
     }
 
-    /// <summary>
-    /// 发牌动画（旋转牌堆）
-    /// </summary>
-    [Rpc(MultiplayerApi.RpcMode.Authority, CallLocal = true)]
-    private void RpcDealAnimateRatate(int logicalSeat, bool isFirst)
+    private async Task DealOneCardFlow(int logicalSeat)
     {
-        int viewSeat = NetworkManager.Instance.GetViewSeat(logicalSeat);
-        if (isFirst)
-        {
-            // 初始化牌堆方向
-            deckCard.Rotation = -Mathf.Pi / 2 * viewSeat + Mathf.Pi / 2;
-            return;
-        }
-        // Tween旋转牌堆，每次90度
-        var tween = CreateTween();
-        tween.TweenProperty(deckCard, "rotation",
-            deckCard.Rotation - Mathf.Pi / 2,
-            GameSettings.DEAL_DURATION_TIME / 2)
-            .SetTrans(Tween.TransitionType.Quad)
-            .SetEase(Tween.EaseType.Out);
+        // 1️⃣ 旋转动画（所有人执行）
+        Rpc(nameof(RpcRotateDeck));
 
-        tween.TweenCallback(Callable.From(() =>
-        {
-            DealCard(logicalSeat);
-        }));
-    }
+        await ToSignal(
+            GetTree().CreateTimer(GameSettings.DEAL_DURATION_TIME / 2),
+            SceneTreeTimer.SignalName.Timeout);
 
-    private void DealCard(int logicalSeat)
-    {
-        // 旋转结束之后需要完成的操作
-        var dealResult = GameCore.DealOneCard(logicalSeat);
-        int[] ids = CardData.Serialize(dealResult.FullHand);
-        int currentId = CardData.Serialize(dealResult.CurrentCard);
+        // 2️⃣ 服务器本地发牌（只在服务器）
+        var cardData = GameCore.DealOneCard(logicalSeat);
+
+        int currentId = CardData.Serialize(cardData);
 
         long peerId = NetworkManager.Instance.GetPeerIdBySeat(logicalSeat);
-
-        if (peerId == -1)
-        {
-            // 玩家不存在，跳过
-        }
-        else if (peerId == Multiplayer.GetUniqueId())
-        {
-            // 自己发给自己，就是服务器自己发给自己
-            ReceiveHand(logicalSeat, ids, currentId);
-        }
+        if (peerId == -1) // 没有这个人跳过
+        { }
+        else if (peerId == Multiplayer.GetUniqueId())  // 服务器发牌给自己
+            ReceiveHand(logicalSeat, currentId);
         else
+            NetworkManager.Instance.SendHand(peerId, logicalSeat, currentId);  // 服务器发牌给对应客户端
+
+        // 3️⃣ 飞牌动画
+        Rpc(nameof(RpcFlyCard), logicalSeat);
+
+        await ToSignal(
+            GetTree().CreateTimer(GameSettings.DEAL_DURATION_TIME / 2),
+            SceneTreeTimer.SignalName.Timeout);
+        if (peerId != -1)
         {
-            // 服务器向peerID发送牌
-            NetworkManager.Instance.SendHand(peerId, logicalSeat, ids, currentId);
+            DeclareOption option = GameCore.CheckIfSeatCanDeclare(logicalSeat);
+            if (option != DeclareOption.NONE)
+            {
+                // 通知对应玩家客户端可以叫主
+                RpcId(peerId, nameof(RpcNotifyDeclareOption), logicalSeat, (int)option);
+            }
         }
-        int viewSeat = NetworkManager.Instance.GetViewSeat(logicalSeat);
-        GD.Print($"我是{Multiplayer.GetUniqueId()}，在我这里要给{viewSeat}发牌");
     }
+    [Rpc(MultiplayerApi.RpcMode.Authority, CallLocal = true)]
+    private void RpcNotifyDeclareOption(int logicalSeat, int optionInt)
+    {
+        int viewSeat = NetworkManager.Instance.GetViewSeat(logicalSeat);
+        DeclareOption option = (DeclareOption)optionInt;
+
+        GD.Print($"{Multiplayer.GetUniqueId()}:我可以叫主，类型{option}");
+    }
+
     /// <summary>
     /// 所有客户端调用显示牌
     /// </summary>
-    public void ReceiveHand(int logicalSeat, int[] ids, int currentId)
+    public void ReceiveHand(int logicalSeat, int currentId)
     {
         if (tableManager == null)
         {
             GD.PrintErr("DealManager: tableManager 未初始化！");
             return;
         }
-        localHands = CardData.Deserialize(ids);
         CardData currentCard = CardData.Deserialize(currentId);
         int viewSeat = NetworkManager.Instance.GetViewSeat(logicalSeat);
-        tableManager.DealCard(viewSeat, localHands, currentCard);
+        tableManager.DealCard(viewSeat, currentCard);
     }
 
-
     /// <summary>
-    /// 发牌动画（旋转牌堆）
+    /// 初始化旋转方向
     /// </summary>
+    /// <param name="logicalSeat"></param>
     [Rpc(MultiplayerApi.RpcMode.Authority, CallLocal = true)]
-    private void RpcDealAnimateFly(int logicalSeat)
+    private void RpcInitDeckRotation(int logicalSeat)
     {
         int viewSeat = NetworkManager.Instance.GetViewSeat(logicalSeat);
+        deckCard.Rotation = Mathf.Pi / 2 * (1 - viewSeat);
+    }
+    [Rpc(MultiplayerApi.RpcMode.Authority, CallLocal = true)]
+    private void RpcEndDeckRotation(int logicalSeat)
+    {
+        int viewSeat = NetworkManager.Instance.GetViewSeat(logicalSeat);
+        var tween = CreateTween();
+        tween.TweenProperty(deckCard, "rotation",
+            deckCard.Rotation - Mathf.Pi / 2 * ((viewSeat % 2) == 0 ? 1 : 0),
+            GameSettings.DEAL_DURATION_TIME / 2)
+            .SetTrans(Tween.TransitionType.Quad)
+            .SetEase(Tween.EaseType.Out);
+    }
+
+    /// <summary>
+    /// 旋转
+    /// </summary>
+    [Rpc(MultiplayerApi.RpcMode.Authority, CallLocal = true)]
+    private void RpcRotateDeck()
+    {
+        var tween = CreateTween();
+        tween.TweenProperty(deckCard, "rotation",
+            deckCard.Rotation - Mathf.Pi / 2,
+            GameSettings.DEAL_DURATION_TIME / 2)
+            .SetTrans(Tween.TransitionType.Quad)
+            .SetEase(Tween.EaseType.Out);
+    }
+    /// <summary>
+    /// 飞牌
+    /// </summary>
+    /// <param name="logicalSeat"></param>
+    [Rpc(MultiplayerApi.RpcMode.Authority, CallLocal = true)]
+    private void RpcFlyCard(int logicalSeat)
+    {
+        int viewSeat = NetworkManager.Instance.GetViewSeat(logicalSeat);
+        if (viewSeat == 0)
+            return; // 是自己，不飞
+
         Card flyingCard = deckCard.Duplicate() as Card;
         AddChild(flyingCard);
 
@@ -172,8 +184,8 @@ public partial class DealManager : Node
 
         Vector2 targetPos = tableManager.GetDealTargetPosition(viewSeat);
 
-        var moveTween = CreateTween();
-        moveTween.TweenProperty(
+        var tween = CreateTween();
+        tween.TweenProperty(
             flyingCard,
             "global_position",
             targetPos,
@@ -181,7 +193,7 @@ public partial class DealManager : Node
             .SetTrans(Tween.TransitionType.Quad)
             .SetEase(Tween.EaseType.Out);
 
-        moveTween.TweenCallback(Callable.From(() =>
+        tween.TweenCallback(Callable.From(() =>
         {
             flyingCard.QueueFree();
         }));

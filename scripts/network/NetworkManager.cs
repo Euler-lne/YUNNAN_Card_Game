@@ -112,16 +112,16 @@ public partial class NetworkManager : Node
 	}
 
 	// 服务器发牌
-	public void SendHand(long peerId, int logicalSeat, int[] cardIds, int currentId)
+	public void SendHand(long peerId, int logicalSeat, int currentId)
 	{
-		RpcId(peerId, nameof(ReceiveHand), logicalSeat, cardIds, currentId);
+		RpcId(peerId, nameof(ReceiveHand), logicalSeat, currentId);
 	}
 
 	[Rpc(MultiplayerApi.RpcMode.Authority)]
-	private void ReceiveHand(int logicalSeat, int[] cardIds, int currentId)
+	private void ReceiveHand(int logicalSeat, int currentId)
 	{
 		// 客户端接收手牌
-		DealManager.Instance.ReceiveHand(logicalSeat, cardIds, currentId);
+		DealManager.Instance.ReceiveHand(logicalSeat, currentId);
 	}
 
 	private void OnConnectedToServer()

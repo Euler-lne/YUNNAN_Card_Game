@@ -29,21 +29,25 @@ public class GameCore
 
     }
 
-    public DealResult DealOneCard(int seat)
+    public CardData DealOneCard(int seat)
     {
         CardData card = deckManager.DrawCard();
         playerManager.AddCardToPlayer(seat, card);
-        return new DealResult(card, playerManager.GetPlayerHand(seat));
+        return card;
     }
     /// <summary>
-    /// 
+    /// 检查某个玩家当前手牌是否可以叫主
     /// </summary>
     /// <param name="playerId">服务器视角下的玩家座位ID</param>
-    /// <returns></returns>
-    public bool CheckIfSeatCanDeclare(int playerId)
+    /// <returns>玩家可以选择的叫主方式，如果不能叫主返回 DeclareOption.NONE</returns>
+    public DeclareOption CheckIfSeatCanDeclare(int playerId)
     {
-        RuleEngine.GetDeclareOption(playerManager.GetPlayerHand(playerId), gameData.TrumpState, gameData.GetCurrentRank());
-        return false;
+        var hand = playerManager.GetPlayerHand(playerId);
+        var trumpState = gameData.TrumpState;
+        var currentLevel = gameData.GetCurrentRank();
+
+        DeclareOption option = RuleEngine.GetDeclareOption(hand, trumpState, currentLevel);
+        return option;
     }
 
 }

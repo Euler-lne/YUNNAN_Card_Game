@@ -14,12 +14,6 @@ public partial class TableManager : Node2D
 		// GD.Print("TableManager ready");
 	}
 
-	public void ShowPlayerHand(int playerId, List<CardData> hand)
-	{
-		// GD.Print("Showing player hand " + hand.Count);
-		seats[playerId].ShowHand(hand);
-	}
-
 	public Vector2 GetDealTargetPosition(int viewSeat)
 	{
 		// 1 屏幕右 2 屏幕上 3 屏幕左
@@ -35,8 +29,8 @@ public partial class TableManager : Node2D
 		return Vector2.Zero;
 	}
 
-	public void DealCard(int playerId, List<CardData> hand, CardData currentCard)
+	public void DealCard(int playerId, CardData currentCard)
 	{
-		seats[playerId].DealCard(hand, currentCard);
+		seats[playerId].InsertCard(currentCard);
 	}
 }

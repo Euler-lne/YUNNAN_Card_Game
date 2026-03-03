@@ -16,6 +16,8 @@ public partial class Seat : Node2D
 
 	private bool isLeftMouseDown = false; // 左键是否按住
 
+	private CardList handLogic = new();
+
 	public override void _Ready()
 	{
 		handRoot = GetNode<Node2D>("HandRoot");
@@ -65,70 +67,75 @@ public partial class Seat : Node2D
 
 	}
 
-	/// <summary>
-	/// 展示当前手牌
-	/// </summary>
-	/// <param name="hand"></param>
-	public void ShowHand(List<CardData> hand)
+
+	public void InsertCard(CardData currentCard)
 	{
-		GenerateHandPosition(hand.Count);
-		ClearHand();
-
-		for (int i = 0; i < hand.Count; i++)
-		{
-			Card card = cardScene.Instantiate<Card>();
-			handRoot.AddChild(card); // cardParent 可以是任意 Node2D，但建议是一个全屏的 Control 或 Node2D
-			card.Position = new Vector2(handPositions[i].X, handPositions[i].Y);
-			card.SetCardData(hand[i]);
-
-			handCards.Add(card);
-		}
+		handLogic.Insert(currentCard);
+		RebuildHandUI(true);
 	}
-	/// <summary>
-	/// 发牌时候调用的函数
-	/// </summary>
-	/// <param name="hand">发的牌已经被记录了</param>
-	/// <param name="dealedCard">发的牌</param>
-	public void DealCard(List<CardData> hand, CardData dealedCard)
+
+	private void RebuildHandUI(bool animation = false)
 	{
-		GenerateHandPosition(hand.Count);
-		ClearHand();
+		var sorted = handLogic.cardList;
 
-		// 序列化处理，确保可以正确识别这张牌
-		int dealedId = CardData.Serialize(dealedCard);
-		bool dealt = false; // 标记是否已经处理了当前发牌
+		GenerateHandPosition(sorted.Count);
 
-		for (int i = 0; i < hand.Count; i++)
+		Dictionary<int, Queue<Card>> existing = [];
+
+		foreach (var card in handCards)  // 记录上一次的手牌
 		{
-			Card card = cardScene.Instantiate<Card>();
-			handRoot.AddChild(card);
+			int id = CardData.Serialize(card.cardData);
+			if (!existing.ContainsKey(id))
+				existing[id] = new Queue<Card>();
+			existing[id].Enqueue(card);
+		}
 
-			// 先生成在牌堆位置
-			Vector2 screenSize = GetViewportRect().Size;
-			card.Position = new Vector2(screenSize.X / 2, screenSize.Y / 2);
-			card.SetCardData(hand[i]);
-			handCards.Add(card);
+		List<Card> newHandCards = [];
 
-			Vector2 targetPos = new(handPositions[i].X, handPositions[i].Y);
+		for (int i = 0; i < sorted.Count; i++)
+		{
+			int id = CardData.Serialize(sorted[i]);
+			Vector2 target = handPositions[i];
 
-			// 判断是否是当前发的牌，并且只处理一次
-			if (!dealt && CardData.Serialize(hand[i]) == dealedId)
+			Card card;
+			if (existing.TryGetValue(id, out Queue<Card> queue))
 			{
-				dealt = true;
-
-				var tween = CreateTween();
-				tween.TweenProperty(card, "position", targetPos, GameSettings.DEAL_DURATION_TIME / 2)
-					 .SetTrans(Tween.TransitionType.Quad)
-					 .SetEase(Tween.EaseType.Out);
+				card = queue.Dequeue(); // 先进先出
+				if (queue.Count == 0)
+					existing.Remove(id);
 			}
 			else
 			{
-				// 其他牌直接放在目标位置
-				card.Position = targetPos;
-			}
-		}
-	}
+				card = cardScene.Instantiate<Card>();
+				handRoot.AddChild(card);
+				card.SetCardData(sorted[i]);
 
+				// 新牌起始位置
+				Vector2 screenSize = GetViewportRect().Size;
+				card.Position = new Vector2(screenSize.X / 2, screenSize.Y / 2);
+			}
+
+			newHandCards.Add(card);
+
+			if (animation)
+			{
+				var tween = CreateTween();
+				tween.TweenProperty(card, "position",
+					target,
+					GameSettings.DEAL_DURATION_TIME / 2)
+					.SetTrans(Tween.TransitionType.Quad)
+					.SetEase(Tween.EaseType.Out);
+			}
+			else
+			{
+				card.Position = target;
+			}
+			handRoot.MoveChild(card, i);
+		}
+
+		handCards = newHandCards;
+	}
+	#region 鼠标输入选牌
 	public override void _Input(InputEvent @event)
 	{
 		//FIXME: 当前的拖拽有问题，没有考虑到图层的遮罩关系，也就是如果从右向左选择卡牌，那么鼠标在很远的位置就会触发选择卡牌
@@ -204,7 +211,7 @@ public partial class Seat : Node2D
 		float offset = card.isSelected ? -CardLayoutParams.BOTTOM_MARGIN_MOVE : CardLayoutParams.BOTTOM_MARGIN_MOVE;
 		card.Position = new Vector2(postion.X, postion.Y + offset);
 	}
-
+	#endregion
 	private void ClearHand()
 	{
 		foreach (Node child in handRoot.GetChildren())

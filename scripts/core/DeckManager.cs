@@ -56,8 +56,8 @@ public class DeckManager
         if (deck.Count == 0)
             return null;
 
-        CardData card = deck[0];
-        deck.RemoveAt(0);
+        CardData card = deck[^1];
+        deck.RemoveAt(deck.Count - 1);
         return card;
     }
 
