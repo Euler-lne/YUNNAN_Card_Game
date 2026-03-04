@@ -1,13 +1,14 @@
-[gd_scene load_steps=10 format=3 uid="uid://dh0r6wjeod2gf"]
+[gd_scene load_steps=11 format=3 uid="uid://dh0r6wjeod2gf"]
 
 [ext_resource type="Script" uid="uid://d0hcpj6m3yoby" path="res://scripts/manager/GameManager.cs" id="2_p57ef"]
 [ext_resource type="Script" uid="uid://bacxbfi6pabl" path="res://scripts/manager/TableManager.cs" id="3_u5sy4"]
+[ext_resource type="Script" uid="uid://bm1e4brkugvp1" path="res://scripts/table/PlayerHandCard.cs" id="4_0tnpc"]
 [ext_resource type="PackedScene" uid="uid://bp3q3vd8w37at" path="res://scenes/card.tscn" id="4_gee14"]
 [ext_resource type="Script" uid="uid://bgecoksvkvvkb" path="res://scripts/ui/UIManager.cs" id="4_iywne"]
+[ext_resource type="Script" uid="uid://bdtbiv8y54moa" path="res://scripts/table/PutCardArea.cs" id="4_vtaks"]
 [ext_resource type="Script" uid="uid://cc5v0rkldqlr7" path="res://scripts/manager/DealManager.cs" id="5_p57ef"]
 [ext_resource type="Script" uid="uid://b06xh6pdd233k" path="res://scripts/ui/DeclareContainer.cs" id="5_u5sy4"]
 [ext_resource type="Script" uid="uid://c85it2sctj4s8" path="res://scripts/network/ClientRequestManager.cs" id="6_0tnpc"]
-[ext_resource type="Script" uid="uid://c5gkmka8m2x08" path="res://scripts/table/Seat.cs" id="6_gee14"]
 [ext_resource type="Script" uid="uid://e4r1vljgl08q" path="res://scripts/Player/Player.cs" id="7_0tnpc"]
 
 [node name="Game" type="Node"]
@@ -17,9 +18,6 @@ script = ExtResource("6_0tnpc")
 
 [node name="TableRoot" type="Node2D" parent="."]
 
-[node name="TableManager" type="Node2D" parent="TableRoot"]
-script = ExtResource("3_u5sy4")
-
 [node name="PlayeArea" type="Node2D" parent="TableRoot"]
 
 [node name="DeckCards" type="Node2D" parent="TableRoot/PlayeArea"]
@@ -27,39 +25,30 @@ script = ExtResource("3_u5sy4")
 [node name="Card" parent="TableRoot/PlayeArea/DeckCards" instance=ExtResource("4_gee14")]
 visible = false
 
-[node name="PlayerSeatRoot" type="Node2D" parent="TableRoot"]
+[node name="PutCardArea" type="Node2D" parent="TableRoot/PlayeArea"]
 
-[node name="SeatBottom" type="Node2D" parent="TableRoot/PlayerSeatRoot"]
-script = ExtResource("6_gee14")
+[node name="ButtomArea" type="Node2D" parent="TableRoot/PlayeArea/PutCardArea"]
+script = ExtResource("4_vtaks")
 cardScene = ExtResource("4_gee14")
 
-[node name="HandRoot" type="Node2D" parent="TableRoot/PlayerSeatRoot/SeatBottom"]
-
-[node name="PlayedRoot" type="Node2D" parent="TableRoot/PlayerSeatRoot/SeatBottom"]
-
-[node name="SeatLeft" type="Node2D" parent="TableRoot/PlayerSeatRoot"]
-script = ExtResource("6_gee14")
+[node name="RightArea" type="Node2D" parent="TableRoot/PlayeArea/PutCardArea"]
+script = ExtResource("4_vtaks")
 cardScene = ExtResource("4_gee14")
 
-[node name="HandRoot" type="Node2D" parent="TableRoot/PlayerSeatRoot/SeatLeft"]
-
-[node name="PlayedRoot" type="Node2D" parent="TableRoot/PlayerSeatRoot/SeatLeft"]
-
-[node name="SeatTop" type="Node2D" parent="TableRoot/PlayerSeatRoot"]
-script = ExtResource("6_gee14")
+[node name="TopArea" type="Node2D" parent="TableRoot/PlayeArea/PutCardArea"]
+script = ExtResource("4_vtaks")
 cardScene = ExtResource("4_gee14")
 
-[node name="HandRoot" type="Node2D" parent="TableRoot/PlayerSeatRoot/SeatTop"]
-
-[node name="PlayedRoot" type="Node2D" parent="TableRoot/PlayerSeatRoot/SeatTop"]
-
-[node name="SeatRight" type="Node2D" parent="TableRoot/PlayerSeatRoot"]
-script = ExtResource("6_gee14")
+[node name="LeftArea" type="Node2D" parent="TableRoot/PlayeArea/PutCardArea"]
+script = ExtResource("4_vtaks")
 cardScene = ExtResource("4_gee14")
 
-[node name="HandRoot" type="Node2D" parent="TableRoot/PlayerSeatRoot/SeatRight"]
+[node name="PlayerHandRoot" type="Node2D" parent="TableRoot"]
+script = ExtResource("4_0tnpc")
+cardScene = ExtResource("4_gee14")
 
-[node name="PlayedRoot" type="Node2D" parent="TableRoot/PlayerSeatRoot/SeatRight"]
+[node name="TableManager" type="Node2D" parent="TableRoot"]
+script = ExtResource("3_u5sy4")
 
 [node name="CanvasLayer" type="CanvasLayer" parent="."]
 

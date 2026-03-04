@@ -1,6 +1,4 @@
-using System;
 using System.Collections.Generic;
-using Godot;
 
 public static class RuleEngine
 {
@@ -66,8 +64,6 @@ public static class RuleEngine
         foreach (var card in hand)
         {
             TrumpSuit trumpSuit = TrumpState.ToTrumpSuit(card.suit);
-            if (trumpSuit == trumpState.trumpSuit)
-                GD.Print($"当前型号和亮主的一样，不可以进行反主{card.suit}");
             if (card.rank != currentLevel || trumpSuit == trumpState.trumpSuit)
                 continue;
             // 当前是满足的牌的型号相等了

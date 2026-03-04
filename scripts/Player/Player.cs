@@ -5,17 +5,17 @@ using System.Collections.Generic;
 public partial class Player : Node2D
 {
 	private UIManager uiManager;
-	private Seat seat;
+	private PlayerHandCard playerHandCard;
 	public override void _Ready()
 	{
 		uiManager = GetNode<UIManager>("../CanvasLayer/UIManager");
-		seat = GetNode<Seat>("../TableRoot/PlayerSeatRoot/SeatBottom");
+		playerHandCard = GetNode<PlayerHandCard>("../TableRoot/PlayerHandRoot");
 		uiManager.declareContainer.OnConfirmPressed += OnConfirmPressed;
 	}
 
 	private void OnConfirmPressed(DeclareOption option)
 	{
-		List<CardData> cardDatas = seat.GetSelectedCardList();
+		List<CardData> cardDatas = playerHandCard.GetSelectedCardList();
 		int[] ids = CardData.Serialize(cardDatas);
 		ClientRequestManager.Instance.SendConfirmDeclare(option, ids);
 	}
@@ -26,7 +26,7 @@ public partial class Player : Node2D
 
 	public void EnterDeclareMode(Rank rank)
 	{
-		var cards = seat.GetHandCards();
+		var cards = playerHandCard.GetHandCards();
 
 		foreach (var card in cards)
 		{
@@ -37,12 +37,12 @@ public partial class Player : Node2D
 
 	public void EnterDealMode()
 	{
-		seat.SetAllCardSelectable(false);
+		playerHandCard.SetAllCardIsSelected(false);
 	}
 
 	public void DealCard(CardData currentCard)
 	{
-		seat.InsertCard(currentCard);
+		playerHandCard.InsertCard(currentCard);
 	}
 
 	public Vector2 GetDealTargetPosition(int viewSeat)

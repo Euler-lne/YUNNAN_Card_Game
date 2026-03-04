@@ -96,7 +96,7 @@ public partial class DealManager : Node
         if (peerId == -1 || activeDeclareSeat != -1) return;
 
         DeclareOption option = GameCore.CheckIfSeatCanDeclare(logicalSeat);
-        GD.Print($"{logicalSeat}检查叫主状态:{option}");
+        // GD.Print($"{logicalSeat}检查叫主状态:{option}");
         RpcId(peerId, nameof(RpcNotifyDeclareOption), (int)option);
         if (option == DeclareOption.DARK_TRUMP)  // 等待判断
             declareTcs = new();
@@ -129,7 +129,7 @@ public partial class DealManager : Node
         int logicalSeat = NetworkManager.Instance.PeerToSeat[peerId];
         bool canDeclare = GameCore.CheckIfSeatCanDeclareOption(logicalSeat, option);
         Rank rank = GameCore.GetCurrentRank();
-        RpcId(peerId, nameof(RpcNotifyClientDeclareButtonPressed), (int)rank, logicalSeat, canDeclare);
+        RpcId(peerId, nameof(RpcNotifyClientDeclareButtonPressed), (int)rank, canDeclare);
         if (!canDeclare) return;
         activeDeclareSeat = logicalSeat;
         GD.Print($"服务器再次判断，玩家 {logicalSeat} 可以叫主{option}");
@@ -151,6 +151,7 @@ public partial class DealManager : Node
         GD.Print($"结束");
         Rank rank = GameCore.GetCurrentRank();
         bool isDeclareRight = RuleEngine.IsDeclareRight(option, cardDatas, rank);
+        RpcId(peerId, nameof(RpcNotifyClientConfirmButtonPressed), isDeclareRight);
         if (!isDeclareRight)
         {
             // TODO:可以通知客户端当前选择的牌不满足条件
@@ -165,7 +166,7 @@ public partial class DealManager : Node
         GD.Print($"玩家 {logicalSeat} 确认叫主 {option} {suit}");
         GameCore.PrintDeclareInfo();
 
-        // 更新其他玩家 UI
+        // 更新其他玩家 UI 更新UI使得不关闭也会有人自动关闭
         for (int i = 0; i < GameSettings.PLAYER_COUNT; i++)
             CheckDeclare(i);
     }
@@ -189,7 +190,7 @@ public partial class DealManager : Node
         player.GetUIManager().Declare(option);
     }
     [Rpc(MultiplayerApi.RpcMode.Authority, CallLocal = true)]
-    public void RpcNotifyClientDeclareButtonPressed(int rank, int logicalSeat, bool isValid)
+    public void RpcNotifyClientDeclareButtonPressed(int rank, bool isValid)
     {
         // 告知客户端点击叫主按钮是否合法
         player.GetUIManager().DeclareButtonPressed(isValid);
@@ -197,7 +198,7 @@ public partial class DealManager : Node
     }
 
     [Rpc(MultiplayerApi.RpcMode.Authority, CallLocal = true)]
-    public void RpcNotifyClientConfirmButtonPressed(int rank, int logicalSeat, bool isValid)
+    public void RpcNotifyClientConfirmButtonPressed(bool isValid)
     {
         // 告知客户端点击叫主按钮是否合法
         player.GetUIManager().ConfirmButtonPressed(isValid);

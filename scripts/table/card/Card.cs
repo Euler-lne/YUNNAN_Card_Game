@@ -40,6 +40,7 @@ public partial class Card : Node2D
 		sprite.Texture = GD.Load<Texture2D>(CardParams.CARD_BACK_PATH);
 		IsSelected = false;
 		CanSelected = false;
+		IsBack = true;
 		Vector2 screenSize = GetViewportRect().Size;
 		Scale = new Vector2(CardParams.CARD_SCALE, CardParams.CARD_SCALE);
 		Position = new Vector2(screenSize.X / 2, screenSize.Y / 2);
@@ -56,7 +57,7 @@ public partial class Card : Node2D
 	{
 		if (isBack)
 		{
-			sprite.Texture = GD.Load<Texture2D>("res://assets/back_black_design_04.png");
+			sprite.Texture = GD.Load<Texture2D>(CardParams.CARD_BACK_PATH);
 		}
 		else
 		{

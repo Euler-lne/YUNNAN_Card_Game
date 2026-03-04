@@ -3,11 +3,9 @@ using System;
 using System.Collections.Generic;
 using Euler.Global;
 
-public partial class Seat : Node2D
+public partial class PlayerHandCard : Node2D
 {
 	[Export] public PackedScene cardScene;
-	public Node2D handRoot;
-	public Node2D playedRoot;
 
 	public bool isLocalPlayer = false;
 	private List<Card> handCards = [];
@@ -17,13 +15,20 @@ public partial class Seat : Node2D
 	private bool isLeftMouseDown = false; // 左键是否按住
 
 	private CardList handLogic = new();
-
-
-	public override void _Ready()
+	private float unselecteY = -1f;
+	private float UnselecteY()
 	{
-		handRoot = GetNode<Node2D>("HandRoot");
-		playedRoot = GetNode<Node2D>("PlayedRoot");
+		if (unselecteY < 0)
+		{
+			Vector2 screenSize = GetViewportRect().Size;
+			float y = screenSize.Y + CardParams.CARD_HEIGHT / 2; // 手牌顶部位于屏幕底部
+			y -= CardLayoutParams.BOTTOM_MARGIN_UNSELECT; // 当前手牌露出卡牌的0.75倍高度
+			unselecteY = y;
+		}
+		return unselecteY;
 	}
+
+
 	#region 计算手牌应该出现的位置
 	public void GenerateHandPosition(int count)
 	{
@@ -34,7 +39,6 @@ public partial class Seat : Node2D
 		Vector2 screenSize = GetViewportRect().Size;
 
 		float cardWidth = CardParams.CARD_WIDTH;
-		float cardHeight = CardParams.CARD_HEIGHT; // 确保定义了卡牌高度
 
 
 		// 可用的最大总宽度
@@ -60,11 +64,9 @@ public partial class Seat : Node2D
 		float startX = (screenSize.X - totalSpan) / 2 + cardWidth / 2;
 
 		// Y 坐标：距离屏幕底部一定距离，并确保卡牌完整显示（假设卡牌中心在底部上方卡牌高度的一半处）
-		float y = screenSize.Y + cardHeight / 2; // 手牌顶部位于屏幕底部
-		y -= CardLayoutParams.BOTTOM_MARGIN_UNSELECT; // 当前手牌露出卡牌的0.75倍高度
 
 		for (int i = 0; i < count; i++)
-			handPositions.Add(new Vector2(startX + i * offset, y));
+			handPositions.Add(new Vector2(startX + i * offset, UnselecteY()));
 
 	}
 	#endregion
@@ -80,6 +82,17 @@ public partial class Seat : Node2D
 		foreach (var card in handCards)
 		{
 			card.CanSelected = selectable;
+			card.IsSelected = false;
+			SetSelectedPosition(card);
+		}
+	}
+
+	public void SetAllCardIsSelected(bool isSelected)
+	{
+		foreach (var card in handCards)
+		{
+			card.IsSelected = isSelected;
+			SetSelectedPosition(card);
 		}
 	}
 
@@ -132,7 +145,7 @@ public partial class Seat : Node2D
 			else
 			{
 				card = cardScene.Instantiate<Card>();
-				handRoot.AddChild(card);
+				AddChild(card);
 				card.SetCardData(sorted[i]);
 				card.IsBack = false;
 
@@ -156,7 +169,7 @@ public partial class Seat : Node2D
 			{
 				card.Position = target;
 			}
-			handRoot.MoveChild(card, i);
+			MoveChild(card, i);
 		}
 
 		handCards = newHandCards;
@@ -220,9 +233,7 @@ public partial class Seat : Node2D
 	private void ToggleCardSelection(Card card)
 	{
 		card.IsSelected = !card.IsSelected;
-		Vector2 postion = card.Position;
-		float offset = card.IsSelected ? -CardLayoutParams.BOTTOM_MARGIN_MOVE : CardLayoutParams.BOTTOM_MARGIN_MOVE;
-		card.Position = new Vector2(postion.X, postion.Y + offset);
+		SetSelectedPosition(card);
 	}
 
 	private bool IsPointOverCard(Vector2 globalPoint, Card card)
@@ -240,10 +251,17 @@ public partial class Seat : Node2D
 	#endregion
 	private void ClearHand()
 	{
-		foreach (Node child in handRoot.GetChildren())
+		foreach (Node child in GetChildren())
 			child.QueueFree();
 
 		handCards.Clear();
+	}
+
+	private void SetSelectedPosition(Card card)
+	{
+		Vector2 postion = card.Position;
+		float y = UnselecteY() + (card.IsSelected ? -CardLayoutParams.BOTTOM_MARGIN_MOVE : 0);
+		card.Position = new Vector2(postion.X, y);
 	}
 
 }
