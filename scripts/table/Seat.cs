@@ -23,7 +23,7 @@ public partial class Seat : Node2D
 		handRoot = GetNode<Node2D>("HandRoot");
 		playedRoot = GetNode<Node2D>("PlayedRoot");
 	}
-
+	#region 计算手牌应该出现的位置
 	public void GenerateHandPosition(int count)
 	{
 		handPositions.Clear();
@@ -66,12 +66,17 @@ public partial class Seat : Node2D
 			handPositions.Add(new Vector2(startX + i * offset, y));
 
 	}
-
+	#endregion
 
 	public void InsertCard(CardData currentCard)
 	{
 		handLogic.Insert(currentCard);
 		RebuildHandUI(true);
+	}
+
+	public List<Card> GetHandCards()
+	{
+		return handCards;
 	}
 
 	private void RebuildHandUI(bool animation = false)
@@ -109,6 +114,7 @@ public partial class Seat : Node2D
 				card = cardScene.Instantiate<Card>();
 				handRoot.AddChild(card);
 				card.SetCardData(sorted[i]);
+				card.IsBack = false;
 
 				// 新牌起始位置
 				Vector2 screenSize = GetViewportRect().Size;
@@ -135,6 +141,7 @@ public partial class Seat : Node2D
 
 		handCards = newHandCards;
 	}
+
 	#region 鼠标输入选牌
 	public override void _Input(InputEvent @event)
 	{
@@ -156,8 +163,6 @@ public partial class Seat : Node2D
 		}
 		else if (@event is InputEventMouseMotion motionEvent && isLeftMouseDown && lastSelectCard != null)
 		{
-			// 左键按住并移动：重新检测卡牌
-			// GD.Print("Mouse moved");
 			ProcessMouseDragCard();
 		}
 	}
@@ -168,7 +173,7 @@ public partial class Seat : Node2D
 		for (int i = handCards.Count - 1; i >= 0; i--)  // 从后往前遍历，确保只处理最上层的卡牌
 		{
 			Card card = handCards[i];
-			if (IsPointOverCard(mousePos, card))
+			if (IsPointOverCard(mousePos, card) && card.CanSelected)
 			{
 				ToggleCardSelection(card);
 				lastSelectCard = card; // 只处理最上层的卡牌
@@ -183,13 +188,21 @@ public partial class Seat : Node2D
 		for (int i = handCards.Count - 1; i >= 0; i--)  // 从后往前遍历，确保只处理最上层的卡牌
 		{
 			Card card = handCards[i];
-			if (IsPointOverCard(mousePos, card))
+			if (IsPointOverCard(mousePos, card) && card.CanSelected)
 			{
-				if (lastSelectCard.isSelected != card.isSelected)
+				if (lastSelectCard.IsSelected != card.IsSelected)
 					ToggleCardSelection(card);
 				break; // 只处理最上层的卡牌
 			}
 		}
+	}
+
+	private void ToggleCardSelection(Card card)
+	{
+		card.IsSelected = !card.IsSelected;
+		Vector2 postion = card.Position;
+		float offset = card.IsSelected ? -CardLayoutParams.BOTTOM_MARGIN_MOVE : CardLayoutParams.BOTTOM_MARGIN_MOVE;
+		card.Position = new Vector2(postion.X, postion.Y + offset);
 	}
 
 	private bool IsPointOverCard(Vector2 globalPoint, Card card)
@@ -204,13 +217,6 @@ public partial class Seat : Node2D
 			   globalPoint.Y <= cardPos.Y + halfHeight;
 	}
 
-	private void ToggleCardSelection(Card card)
-	{
-		card.isSelected = !card.isSelected;
-		Vector2 postion = card.Position;
-		float offset = card.isSelected ? -CardLayoutParams.BOTTOM_MARGIN_MOVE : CardLayoutParams.BOTTOM_MARGIN_MOVE;
-		card.Position = new Vector2(postion.X, postion.Y + offset);
-	}
 	#endregion
 	private void ClearHand()
 	{

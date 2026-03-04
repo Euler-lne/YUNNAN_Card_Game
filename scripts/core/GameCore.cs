@@ -46,7 +46,7 @@ public class GameCore
         gameData.TrumpState.Print();
     }
 
-
+    #region 叫主相关
     /// <summary>
     /// 检查某个玩家当前手牌是否可以叫主
     /// </summary>
@@ -86,10 +86,14 @@ public class GameCore
         gameData.TrumpState.haveTrump = true; // 或者根据规则改
 
         // 定主/锁定
-        gameData.TrumpState.isLocked = option == DeclareOption.COUNTERTRUMP;
+        gameData.TrumpState.isLocked = option == DeclareOption.COUNTER_TRUMP;
 
         // 主花色
         gameData.TrumpState.trumpSuit = TrumpState.ToTrumpSuit(suit);
     }
-
+    #endregion
+    public Rank GetCurrentRank()
+    {
+        return gameData.GetCurrentRank();
+    }
 }

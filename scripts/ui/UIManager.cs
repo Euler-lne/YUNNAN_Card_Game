@@ -36,15 +36,16 @@ public partial class UIManager : Control
 	#region 叫主UI显示相关
 	public void Declare(DeclareOption option)
 	{
-		declareContainer.Visible = option != DeclareOption.NONE;
-		if (option == DeclareOption.NONE) return;
 		declareContainer.Declare(option);
 	}
 
 	public void DeclareButtonPressed(bool isValid)
 	{
-		declareContainer.Visible = true;
-		declareContainer.IsDeclare = false;
+		// 服务器得知按下了叫主按钮然后关闭一些UI显示
+		if (isValid) // 合法那么显示确定按钮
+			declareContainer.DeclareButtonPressed();
+		else // 不合法都取消
+			declareContainer.SetInVisiable();
 	}
 	#endregion
 

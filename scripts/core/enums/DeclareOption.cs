@@ -1,7 +1,7 @@
 public enum DeclareOption
 {
     NONE,          // 不可声明
-    BRIGHTTRUMP,   // 亮主
-    COUNTERTRUMP,  // 反主
-    DARKTRUMP      // 暗主
+    BRIGHT_TRUMP,   // 亮主
+    COUNTER_TRUMP,  // 反主
+    DARK_TRUMP      // 暗主
 }

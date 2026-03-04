@@ -18,12 +18,12 @@ public static class RuleEngine
         if (trumpState.trumpSuit == TrumpSuit.UNKNOW_TRUMP && !trumpState.haveTrump)
         {
             if (hand.Count == 1 && hand[0].rank == currentLevel) // 只有第一轮可以暗主
-                return DeclareOption.DARKTRUMP;
+                return DeclareOption.DARK_TRUMP;
             if (HasRankCard(hand, currentLevel))
-                return DeclareOption.BRIGHTTRUMP;
+                return DeclareOption.BRIGHT_TRUMP;
         }
         else if (CanCounterTrump(hand, trumpState, currentLevel) && trumpState.haveTrump)
-            return DeclareOption.COUNTERTRUMP;  // 有主的情况下才能反
+            return DeclareOption.COUNTER_TRUMP;  // 有主的情况下才能反
 
 
         return DeclareOption.NONE;
@@ -34,13 +34,13 @@ public static class RuleEngine
         bool answer = false;
         switch (option)
         {
-            case DeclareOption.BRIGHTTRUMP:
+            case DeclareOption.BRIGHT_TRUMP:
                 answer = HasRankCard(hand, currentLevel);
                 break;
-            case DeclareOption.COUNTERTRUMP:
+            case DeclareOption.COUNTER_TRUMP:
                 answer = CanCounterTrump(hand, trumpState, currentLevel);
                 break;
-            case DeclareOption.DARKTRUMP:
+            case DeclareOption.DARK_TRUMP:
                 answer = hand.Count == 1 && hand[0].rank == currentLevel;
                 break;
         }
@@ -84,4 +84,15 @@ public static class RuleEngine
 
     }
     #endregion
+
+    #region 选牌逻辑
+    public static bool CanSelect(CardData card, GamePhase phase, Rank rank)
+    {
+        if (phase == GamePhase.DECLARE)
+            return card.rank == rank;
+
+        return true;
+    }
+    #endregion
+
 }

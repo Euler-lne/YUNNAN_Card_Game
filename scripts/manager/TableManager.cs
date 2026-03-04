@@ -33,4 +33,25 @@ public partial class TableManager : Node2D
 	{
 		seats[playerId].InsertCard(currentCard);
 	}
+
+	public void EnterDeclareMode(int playerId, Rank rank)
+	{
+		var cards = seats[playerId].GetHandCards();
+
+		foreach (var card in cards)
+		{
+			bool canSelect = RuleEngine.CanSelect(card.cardData, GamePhase.DECLARE, rank);
+			card.CanSelected = canSelect;
+		}
+	}
+
+	public void EnterDealMode(int playerId)
+	{
+		var cards = seats[playerId].GetHandCards();
+
+		foreach (var card in cards)
+		{
+			card.CanSelected = false;
+		}
+	}
 }

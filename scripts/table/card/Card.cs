@@ -4,17 +4,42 @@ using Euler.Global;
 
 public partial class Card : Node2D
 {
-	public CardData cardData;
+	public CardData cardData = null;
 	private Sprite2D sprite;
 	private string cardTexturePath = "";
-	public bool isSelected;
-	public bool isBack = true;
+	private bool isSelected;
+	private bool canSelected;
+	public bool IsSelected
+	{
+		get { return isSelected; }
+		set { isSelected = value; RefreshVisualState(); }
+	}
+
+	public bool CanSelected
+	{
+		get { return canSelected; }
+		set { canSelected = value; RefreshVisualState(); }
+	}
+	private bool isBack = true;
+	public bool IsBack
+	{
+		get
+		{
+			return isBack;
+		}
+		set
+		{
+			isBack = value;
+			UpdateTexture(isBack || cardData == null);
+		}
+	}
 
 	public override void _Ready()
 	{
 		sprite = GetNode<Sprite2D>("Sprite2D");
 		sprite.Texture = GD.Load<Texture2D>(CardParams.CARD_BACK_PATH);
-		isSelected = false;
+		IsSelected = false;
+		CanSelected = false;
 		Vector2 screenSize = GetViewportRect().Size;
 		Scale = new Vector2(CardParams.CARD_SCALE, CardParams.CARD_SCALE);
 		Position = new Vector2(screenSize.X / 2, screenSize.Y / 2);
@@ -24,13 +49,35 @@ public partial class Card : Node2D
 	{
 		// GD.Print(Scale);
 		cardData = data;
-		UpdateTexture();
 	}
 
-	private void UpdateTexture()
+	private void UpdateTexture(bool isBack = false)
 	{
-		cardTexturePath = GetCardTexturePath();
-		sprite.Texture = GD.Load<Texture2D>(cardTexturePath);
+		if (isBack)
+		{
+			sprite.Texture = GD.Load<Texture2D>("res://assets/back_black_design_04.png");
+		}
+		else
+		{
+			cardTexturePath = GetCardTexturePath();
+			sprite.Texture = GD.Load<Texture2D>(cardTexturePath);
+		}
+	}
+	private void RefreshVisualState()
+	{
+		if (isBack)
+		{
+			sprite.Modulate = Colors.White;
+			return;
+		}
+
+		if (!canSelected)
+		{
+			sprite.Modulate = new Color(0.4f, 0.4f, 0.4f, 0.8f);
+			return;
+		}
+
+		sprite.Modulate = Colors.White;
 	}
 
 	private string GetCardTexturePath()

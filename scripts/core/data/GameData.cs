@@ -48,7 +48,6 @@ public class GameData
     {
         int team = GetTeamIndex(DealerSeat);
         return TeamLevels[team];
-
     }
 
     public void WinRound(int seat, int step = 1)

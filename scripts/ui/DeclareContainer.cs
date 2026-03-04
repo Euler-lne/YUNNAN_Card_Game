@@ -41,7 +41,7 @@ public partial class DeclareContainer : HBoxContainer
 		darkDeclareContainer.Visible = false;
 
 		declareButton.Pressed += OnDeclareButtonPressed;
-		darkDeclareButton.Pressed += OnDeclareButtonPressed;  // 暗主点击了
+		darkDeclareButton.Pressed += OnConfirmButton;  // 暗主点击了
 		confirmButton.Pressed += OnConfirmButton;
 		cancelButton.Pressed += OnCancelButton;
 	}
@@ -58,6 +58,7 @@ public partial class DeclareContainer : HBoxContainer
 		Suit selectedSuit = Suit.HEART;
 
 		// 通知 ClientRequestManager 发送确认请求
+		// TODO:区分情况到是否为暗主
 		OnConfirmPressed?.Invoke(currentOption, selectedSuit);
 
 		// 重置按钮显示（下次可继续叫主）
@@ -71,29 +72,43 @@ public partial class DeclareContainer : HBoxContainer
 
 		// 触发事件给 ClientRequestManager
 		OnDeclarePressed?.Invoke(currentOption);
-		darkDeclareContainer.Visible = false;
+
 	}
 
 	public void Declare(DeclareOption option)
 	{
 		currentOption = option;
 		isDeclare = true;
+		Visible = true;
+		darkDeclareContainer.Visible = false;
 		switch (option)
 		{
 			case DeclareOption.NONE:
-				// GD.PrintErr("失去叫主资格");
-				// Visible = false;  // 当前失去了叫主资格
+				Visible = false;
 				break;
-			case DeclareOption.BRIGHTTRUMP:
+			case DeclareOption.BRIGHT_TRUMP:
 				declareButton.Text = "亮主";
 				break;
-			case DeclareOption.COUNTERTRUMP:
+			case DeclareOption.COUNTER_TRUMP:
 				declareButton.Text = "反主";
 				break;
-			case DeclareOption.DARKTRUMP:
+			case DeclareOption.DARK_TRUMP:
 				Visible = false;
 				darkDeclareContainer.Visible = true;
 				break;
 		}
+	}
+	public void DeclareButtonPressed()
+	{
+		Visible = true;
+		IsDeclare = false;
+		darkDeclareContainer.Visible = false;
+		GD.Print($"DeclareContainer说{Multiplayer.GetUniqueId()}玩家可以{currentOption}");
+	}
+
+	public void SetInVisiable()
+	{
+		Visible = false;
+		darkDeclareContainer.Visible = false;
 	}
 }
