@@ -93,6 +93,22 @@ public static class RuleEngine
 
         return true;
     }
+
+    public static bool IsDeclareRight(DeclareOption option, List<CardData> cardDatas, Rank rank)
+    {
+        switch (option)
+        {
+            case DeclareOption.NONE:
+                break;
+            case DeclareOption.BRIGHT_TRUMP:
+                return cardDatas.Count == 1 && cardDatas[0].rank == rank;
+            case DeclareOption.COUNTER_TRUMP:
+                return cardDatas.Count == 2 && cardDatas[0].rank == rank && cardDatas[1].rank == rank;
+            case DeclareOption.DARK_TRUMP:
+                return true;
+        }
+        return false;
+    }
     #endregion
 
 }

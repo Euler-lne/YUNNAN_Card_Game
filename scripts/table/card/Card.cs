@@ -49,6 +49,7 @@ public partial class Card : Node2D
 	{
 		// GD.Print(Scale);
 		cardData = data;
+		UpdateTexture();
 	}
 
 	private void UpdateTexture(bool isBack = false)
@@ -65,19 +66,19 @@ public partial class Card : Node2D
 	}
 	private void RefreshVisualState()
 	{
-		if (isBack)
-		{
-			sprite.Modulate = Colors.White;
-			return;
-		}
+		// if (isBack)
+		// {
+		// 	sprite.Modulate = Colors.White;
+		// 	return;
+		// }
 
-		if (!canSelected)
-		{
-			sprite.Modulate = new Color(0.4f, 0.4f, 0.4f, 0.8f);
-			return;
-		}
+		// if (!canSelected)
+		// {
+		// 	sprite.Modulate = new Color(0.4f, 0.4f, 0.4f, 0.8f);
+		// 	return;
+		// }
 
-		sprite.Modulate = Colors.White;
+		// sprite.Modulate = Colors.White;
 	}
 
 	private string GetCardTexturePath()

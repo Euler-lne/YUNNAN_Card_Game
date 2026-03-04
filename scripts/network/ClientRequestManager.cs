@@ -37,17 +37,17 @@ public partial class ClientRequestManager : Node
 	/// <summary>
 	/// 玩家点击 ConfirmButton，告诉服务器我确认了主花色/方式
 	/// </summary>
-	public void SendConfirmDeclare(DeclareOption option, Suit suit)
+	public void SendConfirmDeclare(DeclareOption option, int[] ids)
 	{
 		long myPeerId = Multiplayer.GetUniqueId();
-		RpcId(1, nameof(ServerConfirmDeclare), myPeerId, (int)option, (int)suit);
+		RpcId(1, nameof(ServerConfirmDeclare), myPeerId, (int)option, ids);
 	}
 
 	[Rpc(MultiplayerApi.RpcMode.AnyPeer, CallLocal = true)]
-	private void ServerConfirmDeclare(long peerId, int optionInt, int suitInt)
+	private void ServerConfirmDeclare(long peerId, int optionInt, int[] ids)
 	{
 		// GD.Print($"服务器收到玩家 {peerId} 确认叫主，类型 {optionInt}, 花色 {suitInt}");
-		DealManager.Instance.HandleConfirmDeclare(peerId, optionInt, suitInt);
+		DealManager.Instance.HandleConfirmDeclare(peerId, optionInt, ids);
 	}
 
 	public void SendCancelDarkDeclare()

@@ -89,7 +89,10 @@ public class GameCore
         gameData.TrumpState.isLocked = option == DeclareOption.COUNTER_TRUMP;
 
         // 主花色
-        gameData.TrumpState.trumpSuit = TrumpState.ToTrumpSuit(suit);
+        if (option == DeclareOption.DARK_TRUMP)
+            gameData.TrumpState.trumpSuit = TrumpSuit.UNKNOW_TRUMP;
+        else
+            gameData.TrumpState.trumpSuit = TrumpState.ToTrumpSuit(suit);
     }
     #endregion
     public Rank GetCurrentRank()

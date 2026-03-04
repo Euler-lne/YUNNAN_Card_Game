@@ -111,18 +111,7 @@ public partial class NetworkManager : Node
 		return (logicalSeat - MyLogicalSeat + GameSettings.PLAYER_COUNT) % GameSettings.PLAYER_COUNT;
 	}
 
-	// 服务器发牌
-	public void SendHand(long peerId, int logicalSeat, int currentId)
-	{
-		RpcId(peerId, nameof(ReceiveHand), logicalSeat, currentId);
-	}
 
-	[Rpc(MultiplayerApi.RpcMode.Authority)]
-	private void ReceiveHand(int logicalSeat, int currentId)
-	{
-		// 客户端接收手牌
-		DealManager.Instance.ReceiveHand(logicalSeat, currentId);
-	}
 
 	private void OnConnectedToServer()
 	{

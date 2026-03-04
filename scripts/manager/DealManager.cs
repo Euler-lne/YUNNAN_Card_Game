@@ -1,6 +1,7 @@
 using Godot;
 using Euler.Global;
 using System.Threading.Tasks;
+using System.Collections.Generic;
 
 /// <summary>
 /// 发牌包括：
@@ -10,9 +11,9 @@ using System.Threading.Tasks;
 public partial class DealManager : Node
 {
     public GameCore GameCore { get; private set; }      // 只有服务器有
-    private TableManager tableManager;
+
     private Card deckCard;
-    private UIManager uiManager;
+    private Player player;
     private TaskCompletionSource<(DeclareOption, Suit)> declareTcs = null;
 
     private int activeDeclareSeat = -1;
@@ -32,12 +33,11 @@ public partial class DealManager : Node
     /// 所有客户端都必须调用
     /// 服务器传入 GameCore，客户端传 null
     /// </summary>
-    public void Init(GameCore _gameCore, TableManager _tableManager, Card _deckCard, UIManager _uiManger)
+    public void Init(GameCore _gameCore, Card _deckCard, Player _player)
     {
         GameCore = _gameCore;      // 服务器才有
-        tableManager = _tableManager;
         deckCard = _deckCard;
-        uiManager = _uiManger;
+        player = _player;
     }
 
     /// <summary>
@@ -75,12 +75,8 @@ public partial class DealManager : Node
         int currentId = CardData.Serialize(cardData);
 
         long peerId = NetworkManager.Instance.GetPeerIdBySeat(logicalSeat);
-        if (peerId == -1) // 没有这个人跳过
-        { }
-        else if (peerId == Multiplayer.GetUniqueId())  // 服务器发牌给自己
-            ReceiveHand(logicalSeat, currentId);
-        else
-            NetworkManager.Instance.SendHand(peerId, logicalSeat, currentId);  // 服务器发牌给对应客户端
+        if (peerId != -1) // 发牌
+            RpcId(peerId, nameof(ReceiveHand), currentId);
 
         // 飞牌动画
         Rpc(nameof(RpcFlyCard), logicalSeat);
@@ -141,15 +137,27 @@ public partial class DealManager : Node
 
         SetDeclareUIInvisiable(logicalSeat);
     }
-    public void HandleConfirmDeclare(long peerId, int optionInt, int suitInt)
+    public void HandleConfirmDeclare(long peerId, int optionInt, int[] ids)
     {
         // TODO：需要告诉服务器选的是哪些牌
         // 确定叫主
         int logicalSeat = NetworkManager.Instance.PeerToSeat[peerId];
         activeDeclareSeat = -1;
         DeclareOption option = (DeclareOption)optionInt;
-        Suit suit = (Suit)suitInt;
-
+        List<CardData> cardDatas = CardData.Deserialize(ids);
+        GD.Print($"服务器收到客户端{peerId}选的牌");
+        foreach (CardData cardData in cardDatas)
+            GD.Print($"花色{cardData.suit}，点数{cardData.suit}");
+        GD.Print($"结束");
+        Rank rank = GameCore.GetCurrentRank();
+        bool isDeclareRight = RuleEngine.IsDeclareRight(option, cardDatas, rank);
+        if (!isDeclareRight)
+        {
+            // TODO:可以通知客户端当前选择的牌不满足条件
+            return;
+        }
+        // 无主的时候没有花色不知道花色
+        Suit suit = option == DeclareOption.DARK_TRUMP ? Suit.NONE : cardDatas[0].suit;
         declareTcs?.SetResult((option, suit));
         declareTcs = null;
 
@@ -157,8 +165,6 @@ public partial class DealManager : Node
         GD.Print($"玩家 {logicalSeat} 确认叫主 {option} {suit}");
         GameCore.PrintDeclareInfo();
 
-        int viewSeat = NetworkManager.Instance.GetViewSeat(logicalSeat);
-        tableManager.EnterDealMode(viewSeat);
         // 更新其他玩家 UI
         for (int i = 0; i < GameSettings.PLAYER_COUNT; i++)
             CheckDeclare(i);
@@ -174,21 +180,28 @@ public partial class DealManager : Node
     [Rpc(MultiplayerApi.RpcMode.Authority, CallLocal = true)]
     private void RpcSetDeclareUIInvisiable()
     {
-        uiManager.Declare(DeclareOption.NONE);
+        player.GetUIManager().Declare(DeclareOption.NONE);
     }
     [Rpc(MultiplayerApi.RpcMode.Authority, CallLocal = true)]
     private void RpcNotifyDeclareOption(int optionInt)
     {
         DeclareOption option = (DeclareOption)optionInt;
-        uiManager.Declare(option);
+        player.GetUIManager().Declare(option);
     }
     [Rpc(MultiplayerApi.RpcMode.Authority, CallLocal = true)]
     public void RpcNotifyClientDeclareButtonPressed(int rank, int logicalSeat, bool isValid)
     {
         // 告知客户端点击叫主按钮是否合法
-        uiManager.DeclareButtonPressed(isValid);
-        int viewSeat = NetworkManager.Instance.GetViewSeat(logicalSeat);
-        tableManager.EnterDeclareMode(viewSeat, (Rank)rank);  // 可以选了
+        player.GetUIManager().DeclareButtonPressed(isValid);
+        player.EnterDeclareMode((Rank)rank);  // 可以选了
+    }
+
+    [Rpc(MultiplayerApi.RpcMode.Authority, CallLocal = true)]
+    public void RpcNotifyClientConfirmButtonPressed(int rank, int logicalSeat, bool isValid)
+    {
+        // 告知客户端点击叫主按钮是否合法
+        player.GetUIManager().ConfirmButtonPressed(isValid);
+        player.EnterDealMode();
     }
     #endregion
 
@@ -197,16 +210,17 @@ public partial class DealManager : Node
     /// <summary>
     /// 所有客户端调用显示牌
     /// </summary>
-    public void ReceiveHand(int logicalSeat, int currentId)
+    [Rpc(MultiplayerApi.RpcMode.Authority, CallLocal = true)]
+    public void ReceiveHand(int currentId)
     {
-        if (tableManager == null)
+        if (player == null) // 会调用自己的player展示牌
         {
-            GD.PrintErr("DealManager: tableManager 未初始化！");
+            GD.PrintErr("DealManager: player 未初始化！");
             return;
         }
         CardData currentCard = CardData.Deserialize(currentId);
-        int viewSeat = NetworkManager.Instance.GetViewSeat(logicalSeat);
-        tableManager.DealCard(viewSeat, currentCard);
+
+        player.DealCard(currentCard);
     }
     #endregion
     #region 动画相关
@@ -262,7 +276,7 @@ public partial class DealManager : Node
         flyingCard.GlobalPosition = deckCard.GlobalPosition;
         flyingCard.Rotation = deckCard.Rotation;
 
-        Vector2 targetPos = tableManager.GetDealTargetPosition(viewSeat);
+        Vector2 targetPos = player.GetDealTargetPosition(viewSeat);
 
         var tween = CreateTween();
         tween.TweenProperty(

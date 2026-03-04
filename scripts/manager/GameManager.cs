@@ -9,18 +9,18 @@ public partial class GameManager : Node
     private UIManager uiManager;
 
     private Card deckCard;
+    private Player player;
 
     private GameCore gameCore = null;
 
     public override void _Ready()
     {
         uiManager = GetNode<UIManager>("../CanvasLayer/UIManager");
-        TableManager tableManager = GetNode<TableManager>("../TableRoot/TableManager");
         deckCard = GetNode<Card>("../TableRoot/PlayeArea/DeckCards/Card");
-
+        player = GetNode<Player>("../Player");
         // 所有客户端都初始化 DealManager
         gameCore = Multiplayer.IsServer() ? new GameCore() : null;
-        DealManager.Instance.Init(gameCore, tableManager, deckCard, uiManager);
+        DealManager.Instance.Init(gameCore, deckCard, player);
 
         if (Multiplayer.IsServer())
         {

@@ -18,6 +18,7 @@ public partial class Seat : Node2D
 
 	private CardList handLogic = new();
 
+
 	public override void _Ready()
 	{
 		handRoot = GetNode<Node2D>("HandRoot");
@@ -74,9 +75,28 @@ public partial class Seat : Node2D
 		RebuildHandUI(true);
 	}
 
+	public void SetAllCardSelectable(bool selectable)
+	{
+		foreach (var card in handCards)
+		{
+			card.CanSelected = selectable;
+		}
+	}
+
 	public List<Card> GetHandCards()
 	{
 		return handCards;
+	}
+
+	public List<CardData> GetSelectedCardList()
+	{
+		List<CardData> selectedCardList = [];
+		foreach (Card card in handCards)
+		{
+			if (card.IsSelected)
+				selectedCardList.Add(card.cardData);
+		}
+		return selectedCardList;
 	}
 
 	private void RebuildHandUI(bool animation = false)

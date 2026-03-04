@@ -13,7 +13,7 @@ public partial class DeclareContainer : HBoxContainer
 
 	// 给 DealManager 订阅
 	public event Action<DeclareOption> OnDeclarePressed;
-	public event Action<DeclareOption, Suit> OnConfirmPressed; // 第二个参数可以是玩家选择的主花色/方式
+	public event Action<DeclareOption> OnConfirmPressed; // 第二个参数可以是玩家选择的主花色/方式
 	public event Action OnCancelButtonPressed;
 
 	private bool isDeclare = true;
@@ -54,16 +54,7 @@ public partial class DeclareContainer : HBoxContainer
 
 	private void OnConfirmButton()
 	{
-		// FIXME: 这里暂时选择 HEART，真实可以用 UI 选择花色
-		Suit selectedSuit = Suit.HEART;
-
-		// 通知 ClientRequestManager 发送确认请求
-		// TODO:区分情况到是否为暗主
-		OnConfirmPressed?.Invoke(currentOption, selectedSuit);
-
-		// 重置按钮显示（下次可继续叫主）
-		IsDeclare = true;
-		Visible = false;
+		OnConfirmPressed?.Invoke(currentOption);
 	}
 
 
@@ -103,7 +94,14 @@ public partial class DeclareContainer : HBoxContainer
 		Visible = true;
 		IsDeclare = false;
 		darkDeclareContainer.Visible = false;
-		GD.Print($"DeclareContainer说{Multiplayer.GetUniqueId()}玩家可以{currentOption}");
+		// GD.Print($"DeclareContainer说{Multiplayer.GetUniqueId()}玩家可以{currentOption}");
+	}
+
+	public void ConfirmButtonPressed()
+	{
+		// 重置按钮显示（下次可继续叫主）
+		IsDeclare = true;
+		Visible = false;
 	}
 
 	public void SetInVisiable()

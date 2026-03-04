@@ -5,7 +5,7 @@ public partial class UIManager : Control
 {
 	private Button startButton;
 	private Label currentPlayerNumber;
-	private DeclareContainer declareContainer;
+	public DeclareContainer declareContainer;
 
 	public override void _Ready()
 	{
@@ -16,9 +16,7 @@ public partial class UIManager : Control
 		declareContainer.Visible = false;
 		// 客户端点击叫主，通知服务器
 		declareContainer.OnDeclarePressed += ClientRequestManager.Instance.SendDeclareRequest;
-		// 客户端点击确认，通知服务器
 
-		declareContainer.OnConfirmPressed += ClientRequestManager.Instance.SendConfirmDeclare;
 
 		declareContainer.OnCancelButtonPressed += ClientRequestManager.Instance.SendCancelDarkDeclare;
 
@@ -33,6 +31,7 @@ public partial class UIManager : Control
 			currentPlayerNumber.Visible = false;
 		}
 	}
+
 	#region 叫主UI显示相关
 	public void Declare(DeclareOption option)
 	{
@@ -46,6 +45,13 @@ public partial class UIManager : Control
 			declareContainer.DeclareButtonPressed();
 		else // 不合法都取消
 			declareContainer.SetInVisiable();
+	}
+	public void ConfirmButtonPressed(bool isValid)
+	{
+		if (isValid)
+		{
+			declareContainer.ConfirmButtonPressed();
+		}
 	}
 	#endregion
 

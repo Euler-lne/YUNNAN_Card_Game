@@ -1,4 +1,4 @@
-[gd_scene load_steps=9 format=3 uid="uid://dh0r6wjeod2gf"]
+[gd_scene load_steps=10 format=3 uid="uid://dh0r6wjeod2gf"]
 
 [ext_resource type="Script" uid="uid://d0hcpj6m3yoby" path="res://scripts/manager/GameManager.cs" id="2_p57ef"]
 [ext_resource type="Script" uid="uid://bacxbfi6pabl" path="res://scripts/manager/TableManager.cs" id="3_u5sy4"]
@@ -8,6 +8,7 @@
 [ext_resource type="Script" uid="uid://b06xh6pdd233k" path="res://scripts/ui/DeclareContainer.cs" id="5_u5sy4"]
 [ext_resource type="Script" uid="uid://c85it2sctj4s8" path="res://scripts/network/ClientRequestManager.cs" id="6_0tnpc"]
 [ext_resource type="Script" uid="uid://c5gkmka8m2x08" path="res://scripts/table/Seat.cs" id="6_gee14"]
+[ext_resource type="Script" uid="uid://e4r1vljgl08q" path="res://scripts/Player/Player.cs" id="7_0tnpc"]
 
 [node name="Game" type="Node"]
 
@@ -169,6 +170,9 @@ offset_left = -20.0
 offset_right = 20.0
 offset_bottom = 23.0
 grow_horizontal = 2
+
+[node name="Player" type="Node2D" parent="."]
+script = ExtResource("7_0tnpc")
 
 [node name="DealManager" type="Node" parent="."]
 script = ExtResource("5_p57ef")
