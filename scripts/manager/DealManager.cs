@@ -13,9 +13,9 @@ public partial class DealManager : Node
     private TableManager tableManager;
     private Card deckCard;
     private UIManager uiManager;
-    private TaskCompletionSource<(DeclareOption, Suit)>[] declareTcsArr =
-    new TaskCompletionSource<(DeclareOption, Suit)>[GameSettings.PLAYER_COUNT];
-    private DeclareOption[] lastDeclareOption = new DeclareOption[GameSettings.PLAYER_COUNT];
+    private TaskCompletionSource<(DeclareOption, Suit)> declareTcs = null;
+
+    private int activeDeclareSeat = -1;
 
     public static DealManager Instance { get; private set; }
 
@@ -25,9 +25,6 @@ public partial class DealManager : Node
             Instance = this;
         else
             QueueFree();
-
-        for (int i = 0; i < GameSettings.PLAYER_COUNT; i++)
-            lastDeclareOption[i] = DeclareOption.NONE;
     }
 
     /// <summary>
@@ -73,6 +70,13 @@ public partial class DealManager : Node
 
     private async Task DealOneCardFlow(int logicalSeat)
     {
+        // 如果 declareTcs 存在（说明玩家点击了叫主），就暂停发牌
+        if (declareTcs != null)
+        {
+            var result = await declareTcs.Task;
+            declareTcs = null;
+        }
+
         Rpc(nameof(RpcRotateDeck));
         await ToSignal(GetTree().CreateTimer(GameSettings.DEAL_DURATION_TIME / 2), SceneTreeTimer.SignalName.Timeout);
 
@@ -94,34 +98,22 @@ public partial class DealManager : Node
             GetTree().CreateTimer(GameSettings.DEAL_DURATION_TIME / 2),
             SceneTreeTimer.SignalName.Timeout);
 
-        // 1️⃣ 检查是否可以叫主（仅显示按钮，不暂停发牌）
+        // 检查是否可以叫主（仅显示按钮，不暂停发牌）
 
         CheckDeclare(logicalSeat);
 
-        // 2️⃣ 如果 declareTcs 存在（说明玩家点击了叫主），就暂停发牌
-        if (declareTcsArr[logicalSeat] != null)
-        {
-            var result = await declareTcsArr[logicalSeat].Task;
-            GameCore.SetTrump(result.Item1, result.Item2, logicalSeat);
-            GD.Print($"玩家 {logicalSeat} 确认叫主 {result.Item1} {result.Item2}");
-            declareTcsArr[logicalSeat] = null;
-        }
     }
     #region 叫主相关
     private void CheckDeclare(int logicalSeat)
     {
+        if (activeDeclareSeat != -1)  // 有人叫主期间不判断其他人是否可以叫主
+            GD.Print($"当前{activeDeclareSeat}正在叫主，{logicalSeat}取消判断");
         long peerId = NetworkManager.Instance.GetPeerIdBySeat(logicalSeat);
-        if (peerId == -1) return;
+        if (peerId == -1 || activeDeclareSeat != -1) return;
 
         DeclareOption option = GameCore.CheckIfSeatCanDeclare(logicalSeat);
-        GD.Print($"名字{peerId}，状态当前{option}，之前状态{lastDeclareOption[logicalSeat]}");
 
-        // 状态没有变化就不发送
-        if (option != lastDeclareOption[logicalSeat])
-        {
-            lastDeclareOption[logicalSeat] = option;
-            RpcId(peerId, nameof(RpcNotifyDeclareOption), (int)option);
-        }
+        RpcId(peerId, nameof(RpcNotifyDeclareOption), (int)option);
     }
     private void SetDeclareUIInvisiable(int expectLogicalSeat)
     {
@@ -138,16 +130,15 @@ public partial class DealManager : Node
     /// <summary>
     /// 服务器收到玩家点击 declare
     /// </summary>
-    public void HandleDeclareRequest(long peerId)
+    public void HandleDeclareRequest(DeclareOption option, long peerId)
     {
         int logicalSeat = NetworkManager.Instance.PeerToSeat[peerId];
-
-        DeclareOption canDeclare = GameCore.CheckIfSeatCanDeclare(logicalSeat);
-        if (canDeclare == DeclareOption.NONE) return;
-
-        GD.Print($"玩家 {logicalSeat} 可以叫主");
-
-        declareTcsArr[logicalSeat] = new TaskCompletionSource<(DeclareOption, Suit)>();
+        bool canDeclare = GameCore.CheckIfSeatCanDeclareOption(logicalSeat, option);
+        RpcId(peerId, nameof(RpcNotifyClientDeclareButtonPressed), canDeclare);
+        if (!canDeclare) return;
+        activeDeclareSeat = logicalSeat;
+        GD.Print($"服务器再次判断，玩家 {logicalSeat} 可以叫主{option}");
+        declareTcs = new();
 
         SetDeclareUIInvisiable(logicalSeat);
     }
@@ -158,19 +149,26 @@ public partial class DealManager : Node
     public void HandleConfirmDeclare(long peerId, int optionInt, int suitInt)
     {
         int logicalSeat = NetworkManager.Instance.PeerToSeat[peerId];
-
+        activeDeclareSeat = -1;
         DeclareOption option = (DeclareOption)optionInt;
         Suit suit = (Suit)suitInt;
 
-        declareTcsArr[logicalSeat]?.SetResult((option, suit));
-        declareTcsArr[logicalSeat] = null;
+        declareTcs?.SetResult((option, suit));
+        declareTcs = null;
 
         GameCore.SetTrump(option, suit, logicalSeat);
         GD.Print($"玩家 {logicalSeat} 确认叫主 {option} {suit}");
+        GameCore.PrintDeclareInfo();
 
         // 更新其他玩家 UI
         for (int i = 0; i < GameSettings.PLAYER_COUNT; i++)
             CheckDeclare(i);
+    }
+
+    public void HandleCancelDarkDeclare()
+    {
+        GD.Print("取消暗主资格");
+
     }
     [Rpc(MultiplayerApi.RpcMode.Authority, CallLocal = true)]
     private void RpcSetDeclareUIInvisiable()
@@ -182,7 +180,14 @@ public partial class DealManager : Node
     {
         DeclareOption option = (DeclareOption)optionInt;
         uiManager.Declare(option);
-        GD.Print($"{Multiplayer.GetUniqueId()}:我可以叫主，类型{option}");
+        if (option == DeclareOption.DARKTRUMP)  // 等待判断
+        { }
+    }
+    [Rpc(MultiplayerApi.RpcMode.Authority, CallLocal = true)]
+    public void RpcNotifyClientDeclareButtonPressed(bool isValid)
+    {
+        // 告知客户端点击按钮是否合法
+        uiManager.DeclareButtonPressed(isValid);
     }
     #endregion
 

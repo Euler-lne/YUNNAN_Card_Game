@@ -41,6 +41,10 @@ public class GameCore
     {
         return gameData.TrumpState.isLocked;
     }
+    public void PrintDeclareInfo()
+    {
+        gameData.TrumpState.Print();
+    }
 
 
     /// <summary>
@@ -56,6 +60,14 @@ public class GameCore
 
         DeclareOption option = RuleEngine.GetDeclareOption(hand, trumpState, currentLevel);
         return option;
+    }
+    public bool CheckIfSeatCanDeclareOption(int playerId, DeclareOption option)
+    {
+        var hand = playerManager.GetPlayerHand(playerId);
+        var trumpState = gameData.TrumpState;
+        var currentLevel = gameData.GetCurrentRank();
+
+        return RuleEngine.CanDeclareOfOption(hand, trumpState, currentLevel, option);
     }
     /// <summary>
     /// 设置主花色/叫主类型

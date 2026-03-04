@@ -6,15 +6,20 @@ public partial class DeclareContainer : HBoxContainer
 
 	private Button declareButton;
 	private Button confirmButton;
+	private Button darkDeclareButton;
+	private Button cancelButton;
+
+	private HBoxContainer darkDeclareContainer;
 
 	// 给 DealManager 订阅
-	public event Action OnDeclarePressed;
+	public event Action<DeclareOption> OnDeclarePressed;
 	public event Action<DeclareOption, Suit> OnConfirmPressed; // 第二个参数可以是玩家选择的主花色/方式
+	public event Action OnCancelButtonPressed;
 
 	private bool isDeclare = true;
 	private DeclareOption currentOption = DeclareOption.NONE;
 
-	private bool IsDeclare
+	public bool IsDeclare
 	{
 		get { return isDeclare; }
 		set
@@ -29,15 +34,26 @@ public partial class DeclareContainer : HBoxContainer
 	{
 		declareButton = GetNode<Button>("DeclareButton");
 		confirmButton = GetNode<Button>("ConfirmButton");
+		darkDeclareContainer = GetNode<HBoxContainer>("../DarkDeclareContainer");
+		darkDeclareButton = GetNode<Button>("../DarkDeclareContainer/DarkDeclareButton");
+		cancelButton = GetNode<Button>("../DarkDeclareContainer/CancelButton");
 		isDeclare = true;
+		darkDeclareContainer.Visible = false;
 
 		declareButton.Pressed += OnDeclareButtonPressed;
+		darkDeclareButton.Pressed += OnDeclareButtonPressed;  // 暗主点击了
 		confirmButton.Pressed += OnConfirmButton;
+		cancelButton.Pressed += OnCancelButton;
+	}
+
+	private void OnCancelButton()
+	{
+		OnCancelButtonPressed?.Invoke();
+		darkDeclareContainer.Visible = false;
 	}
 
 	private void OnConfirmButton()
 	{
-		GD.Print("点击了确认");
 		// FIXME: 这里暂时选择 HEART，真实可以用 UI 选择花色
 		Suit selectedSuit = Suit.HEART;
 
@@ -52,20 +68,16 @@ public partial class DeclareContainer : HBoxContainer
 
 	private void OnDeclareButtonPressed()
 	{
-		// 点击叫主
-		GD.Print("点击了叫主");
 
 		// 触发事件给 ClientRequestManager
-		OnDeclarePressed?.Invoke();
-
-		// 按钮显示切换为等待确认
-		IsDeclare = false;
+		OnDeclarePressed?.Invoke(currentOption);
+		darkDeclareContainer.Visible = false;
 	}
 
 	public void Declare(DeclareOption option)
 	{
 		currentOption = option;
-
+		isDeclare = true;
 		switch (option)
 		{
 			case DeclareOption.NONE:
@@ -74,15 +86,13 @@ public partial class DeclareContainer : HBoxContainer
 				break;
 			case DeclareOption.BRIGHTTRUMP:
 				declareButton.Text = "亮主";
-				isDeclare = true;
 				break;
 			case DeclareOption.COUNTERTRUMP:
 				declareButton.Text = "反主";
-				isDeclare = true;
 				break;
 			case DeclareOption.DARKTRUMP:
-				declareButton.Text = "暗主";
-				isDeclare = true;
+				Visible = false;
+				darkDeclareContainer.Visible = true;
 				break;
 		}
 	}

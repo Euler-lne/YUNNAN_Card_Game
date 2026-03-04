@@ -11,23 +11,40 @@ public static class RuleEngine
         TrumpState trumpState,
         Rank currentLevel)
     {
-        if (trumpState.isLocked)
+        if (trumpState.isLocked)  // 已经定主了
             return DeclareOption.NONE;
 
         // 还没有主
         if (trumpState.trumpSuit == TrumpSuit.UNKNOW_TRUMP && !trumpState.haveTrump)
         {
-            if (HasRankCard(hand, currentLevel))
-                return DeclareOption.BRIGHTTRUMP;
-
             if (hand.Count == 1 && hand[0].rank == currentLevel) // 只有第一轮可以暗主
                 return DeclareOption.DARKTRUMP;
+            if (HasRankCard(hand, currentLevel))
+                return DeclareOption.BRIGHTTRUMP;
         }
         else if (CanCounterTrump(hand, trumpState, currentLevel) && trumpState.haveTrump)
             return DeclareOption.COUNTERTRUMP;  // 有主的情况下才能反
 
 
         return DeclareOption.NONE;
+    }
+
+    public static bool CanDeclareOfOption(List<CardData> hand, TrumpState trumpState, Rank currentLevel, DeclareOption option)
+    {
+        bool answer = false;
+        switch (option)
+        {
+            case DeclareOption.BRIGHTTRUMP:
+                answer = HasRankCard(hand, currentLevel);
+                break;
+            case DeclareOption.COUNTERTRUMP:
+                answer = CanCounterTrump(hand, trumpState, currentLevel);
+                break;
+            case DeclareOption.DARKTRUMP:
+                answer = hand.Count == 1 && hand[0].rank == currentLevel;
+                break;
+        }
+        return answer;
     }
 
     private static bool HasRankCard(List<CardData> hand, Rank currentLevel)
@@ -48,9 +65,10 @@ public static class RuleEngine
 
         foreach (var card in hand)
         {
-            if (TrumpState.ToTrumpSuit(card.suit) == trumpState.trumpSuit)
+            TrumpSuit trumpSuit = TrumpState.ToTrumpSuit(card.suit);
+            if (trumpSuit == trumpState.trumpSuit)
                 GD.Print($"当前型号和亮主的一样，不可以进行反主{card.suit}");
-            if (card.rank != currentLevel || TrumpState.ToTrumpSuit(card.suit) == trumpState.trumpSuit)
+            if (card.rank != currentLevel || trumpSuit == trumpState.trumpSuit)
                 continue;
             // 当前是满足的牌的型号相等了
             if (!suitCount.ContainsKey(card.suit))

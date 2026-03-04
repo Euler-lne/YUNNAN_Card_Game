@@ -20,6 +20,8 @@ public partial class UIManager : Control
 
 		declareContainer.OnConfirmPressed += ClientRequestManager.Instance.SendConfirmDeclare;
 
+		declareContainer.OnCancelButtonPressed += ClientRequestManager.Instance.SendCancelDarkDeclare;
+
 		if (Multiplayer.IsServer())
 		{
 			startButton.Visible = true;
@@ -37,6 +39,12 @@ public partial class UIManager : Control
 		declareContainer.Visible = option != DeclareOption.NONE;
 		if (option == DeclareOption.NONE) return;
 		declareContainer.Declare(option);
+	}
+
+	public void DeclareButtonPressed(bool isValid)
+	{
+		declareContainer.Visible = true;
+		declareContainer.IsDeclare = false;
 	}
 	#endregion
 
