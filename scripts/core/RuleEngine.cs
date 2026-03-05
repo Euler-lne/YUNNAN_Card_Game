@@ -13,7 +13,7 @@ public static class RuleEngine
             return DeclareOption.NONE;
 
         // 还没有主
-        if (trumpState.trumpSuit == TrumpSuit.UNKNOW_TRUMP && !trumpState.haveTrump)
+        if (trumpState.trumpSuit == Suit.NONE && !trumpState.haveTrump)
         {
             if (hand.Count == 1 && hand[0].rank == currentLevel) // 只有第一轮可以暗主
                 return DeclareOption.DARK_TRUMP;
@@ -63,8 +63,7 @@ public static class RuleEngine
 
         foreach (var card in hand)
         {
-            TrumpSuit trumpSuit = TrumpState.ToTrumpSuit(card.suit);
-            if (card.rank != currentLevel || trumpSuit == trumpState.trumpSuit)
+            if (card.rank != currentLevel || card.suit == trumpState.trumpSuit)
                 continue;
             // 当前是满足的牌的型号相等了
             if (!suitCount.ContainsKey(card.suit))

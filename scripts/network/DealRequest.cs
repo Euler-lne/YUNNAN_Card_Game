@@ -18,6 +18,7 @@ public partial class DealRequest : Node
         deckCard.Visible = visiable;
     }
 
+
     #region 叫主相关
     public void SetDeclareUIInvisiable(long peerId)
     {

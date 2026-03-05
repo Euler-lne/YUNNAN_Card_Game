@@ -17,9 +17,9 @@ public class GameCore
 
     public void StartGame()
     {
-        deckManager.CreateDeck();
-        deckManager.Shuffle();
-        // deckManager.TestCreateDeck();
+        // deckManager.CreateDeck();
+        // deckManager.Shuffle();
+        deckManager.TestCreateDeck();
 
         gameData.CurrentPhase = GamePhase.DEALING;
 
@@ -54,7 +54,6 @@ public class GameCore
     {
         // 如果cardDatas为空就删除所有的
         playerManager.RemoveCardFromPlayer(seat, cardDatas);
-        NetworkManager.Instance.RemovePlayerCards(seat, cardDatas);
     }
 
     #region 叫主相关
@@ -100,10 +99,7 @@ public class GameCore
         gameData.TrumpState.isLocked = option == DeclareOption.COUNTER_TRUMP;
 
         // 主花色
-        if (option == DeclareOption.DARK_TRUMP)
-            gameData.TrumpState.trumpSuit = TrumpSuit.UNKNOW_TRUMP;
-        else
-            gameData.TrumpState.trumpSuit = TrumpState.ToTrumpSuit(suit);
+        gameData.TrumpState.trumpSuit = suit;
     }
     #endregion
     public Rank GetCurrentRank()

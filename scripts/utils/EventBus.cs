@@ -8,6 +8,12 @@ namespace Euler.Event
         {
             SelectCardEvent?.Invoke(ids);
         }
+
+        public static Action<int, int[], bool, GamePhase> PlayCardEvent;
+        public static void OnPlayCardEvent(int playSeat, int[] ids, bool isBack, GamePhase gamePhase)
+        {
+            PlayCardEvent?.Invoke(playSeat, ids, isBack, gamePhase);
+        }
     }
     public static class DealEvent
     {
@@ -41,6 +47,12 @@ namespace Euler.Event
         public static void OnConfirmRequestEvent(DeclareOption option, long peerId, int[] ids)
         {
             ConfirmRequestEvent?.Invoke(option, peerId, ids);
+        }
+
+        public static Func<CardData> ConfirmDardTrumpEvent;
+        public static CardData OnConfirmDardTrumpEvent()
+        {
+            return ConfirmDardTrumpEvent?.Invoke();
         }
     }
 

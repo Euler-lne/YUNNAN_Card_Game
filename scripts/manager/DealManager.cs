@@ -59,7 +59,6 @@ public partial class DealManager : Node
         dealRequest.EndDeckRotation(dealerSeat);
 
         // TODO:如果没有定主给出1秒暂停，一秒之后还没有人叫主，那么翻开第一张牌判断当局的主
-        // FIXME:鬼对是否可以反主？
     }
 
     private async Task DealOneCardFlow(int logicalSeat)
@@ -151,7 +150,8 @@ public partial class DealManager : Node
         }
 
         // 无主的时候没有花色不知道花色
-        Suit suit = option == DeclareOption.DARK_TRUMP ? Suit.NONE : cardDatas[0].suit;
+        // FIXME:暗主的时候由于没有选牌，所以导致了cardDatas为空
+        Suit suit = cardDatas[0].suit;
         declareTcs?.SetResult((option, suit));
         declareTcs = null;
 
@@ -159,7 +159,7 @@ public partial class DealManager : Node
         bool isBack = option == DeclareOption.DARK_TRUMP;
         GamePhase gamePhase = GameCore.GetCurrentGamePhase();
         NetworkManager.Instance.PlayCard(logicalSeat, cardDatas, isBack, gamePhase);
-        GameCore.RemoveCardFrom(logicalSeat, cardDatas);
+        // 不能在服务器删除牌，因为这些牌并没有出
 
         GameCore.SetTrump(option, suit, logicalSeat);
 

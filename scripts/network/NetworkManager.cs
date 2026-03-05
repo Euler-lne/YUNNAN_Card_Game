@@ -2,6 +2,7 @@ using Godot;
 using System;
 using System.Collections.Generic;
 using Euler.Global;
+using Euler.Event;
 
 public partial class NetworkManager : Node
 {
@@ -12,8 +13,6 @@ public partial class NetworkManager : Node
 	// 保存着自己的逻辑座位号，不对应Seat的物理座位号，因为座位号会变。
 
 	public Action<int> OnTotalPlayersChanged;
-	public Action<int, int[], bool, GamePhase> OnPlayCardEvent;
-	public Action<int[]> OnRemoveCardEvent;
 
 	private int _totalPlayers = 0;
 	public int TotalPlayers
@@ -109,7 +108,7 @@ public partial class NetworkManager : Node
 		GD.Print("连接失败");
 	}
 	#endregion
-
+	#region 通知出牌
 	public void PlayCard(int playLogicSeat, List<CardData> cardDatas, bool isBack, GamePhase gamePhase)
 	{
 		if (!Multiplayer.IsServer()) return;
@@ -117,29 +116,12 @@ public partial class NetworkManager : Node
 		Rpc(nameof(RpcPlayCardBroadcast), playLogicSeat, ids, isBack, (int)gamePhase);
 	}
 
-	public void RemovePlayerCards(int playLogicSeat, List<CardData> cardDatas)
-	{
-		long peerId = GetPeerIdBySeat(playLogicSeat);
-		GD.Print($"{peerId}删除卡牌");
-		if (peerId == -1) return;
-		// 通知对应玩家出牌，也就是将牌移除
-		int[] ids = CardData.Serialize(cardDatas);
-		RpcId(peerId, nameof(RpcRemovePlayerCards), ids);
-	}
-
-	#region 通知出牌
 	[Rpc(MultiplayerApi.RpcMode.Authority, CallLocal = true)]
 	private void RpcPlayCardBroadcast(int playLogicSeat, int[] ids, bool isBack, int _gamePhase)
 	{
 		int playSeat = GetViewSeat(playLogicSeat); // 当前出牌的人在自己视角的逻辑座位
 		GamePhase gamePhase = (GamePhase)_gamePhase;
-		OnPlayCardEvent?.Invoke(playSeat, ids, isBack, gamePhase);
-	}
-
-	[Rpc(MultiplayerApi.RpcMode.Authority, CallLocal = true)]
-	private void RpcRemovePlayerCards(int[] ids)
-	{
-		OnRemoveCardEvent?.Invoke(ids);
+		EventBus.OnPlayCardEvent(playSeat, ids, isBack, gamePhase);
 	}
 	#endregion
 

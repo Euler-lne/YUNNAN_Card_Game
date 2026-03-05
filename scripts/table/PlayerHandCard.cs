@@ -2,6 +2,7 @@ using Godot;
 using System.Collections.Generic;
 using Euler.Global;
 using Euler.Event;
+using System;
 
 public partial class PlayerHandCard : Node2D
 {
@@ -27,6 +28,25 @@ public partial class PlayerHandCard : Node2D
 		}
 		return unselecteY;
 	}
+
+	public override void _Ready()
+	{
+		DealEvent.ConfirmDardTrumpEvent += OnConfirmDardTrumpEvent;
+
+	}
+
+	public override void _ExitTree()
+	{
+		DealEvent.ConfirmDardTrumpEvent -= OnConfirmDardTrumpEvent;
+
+	}
+
+
+	private CardData OnConfirmDardTrumpEvent()
+	{
+		return handLogic.cardList[0];
+	}
+
 
 
 	#region 计算手牌应该出现的位置

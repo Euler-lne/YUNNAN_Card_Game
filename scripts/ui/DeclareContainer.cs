@@ -63,11 +63,17 @@ public partial class DeclareContainer : HBoxContainer
 	private void OnCancelButton()
 	{
 		RpcId(1, nameof(RpcSendCancelDarkDeclare));
+		DeclareButtonPressed();
 	}
 
 	private void OnConfirmButton()
 	{
 		long myPeerId = Multiplayer.GetUniqueId();
+		if (currentOption == DeclareOption.DARK_TRUMP)
+		{
+			CardData cardData = DealEvent.ConfirmDardTrumpEvent();
+			selectCards = CardData.Serialize([cardData]);
+		}
 		RpcId(1, nameof(ServerConfirmDeclare), myPeerId, (int)currentOption, selectCards);
 	}
 

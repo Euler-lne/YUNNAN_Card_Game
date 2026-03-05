@@ -4,7 +4,10 @@ using Euler.Global;
 
 public class GameData
 {
-    public int DealerSeat { get; set; } // 赢家
+    // TODO:两种情况，平手那么需要强庄，这时候各队强各队的，谁先强到谁是庄
+    public int DealerSeat { get; set; }          // 庄家座位，-1 表示未定
+    public int CurrentTurnSeat { get; set; }      // 当前出牌玩家
+    public int OpponentScore { get; set; }        // 闲家累计得分
 
     public Dictionary<int, Rank> TeamLevels { get; private set; }
 
@@ -20,7 +23,6 @@ public class GameData
         Rank.FIVE,
         Rank.TEN,
         Rank.JACK,
-        Rank.QUEEN,
         Rank.KING,
         Rank.ACE
     ];
@@ -46,6 +48,7 @@ public class GameData
 
     public Rank GetCurrentRank()
     {
+        // FIXME：建议返回一个LIST用于判断强庄的情况
         int team = GetTeamIndex(DealerSeat);
         return TeamLevels[team];
     }

@@ -3,35 +3,9 @@ using Godot;
 public class TrumpState
 {
     public int dealerSeat = -1;      // 庄家是谁
-    public TrumpSuit trumpSuit = TrumpSuit.UNKNOW_TRUMP; // 主花色
+    public Suit trumpSuit = Suit.NONE; // 主花色
     public bool haveTrump = false;   // 是否无主
     public bool isLocked = false;    // 是否定主（对子锁主）
-
-    public static TrumpSuit ToTrumpSuit(Suit suit)
-    {
-        return suit switch
-        {
-            Suit.SPADE => TrumpSuit.SPADE,
-            Suit.HEART => TrumpSuit.HEART,
-            Suit.CLUB => TrumpSuit.CLUB,
-            Suit.DIAMOND => TrumpSuit.DIAMOND,
-            Suit.NONE => TrumpSuit.NONE_TRUMP,
-            _ => TrumpSuit.UNKNOW_TRUMP
-        };
-    }
-    public static Suit ToSuit(TrumpSuit trumpSuit)
-    {
-        return trumpSuit switch
-        {
-            TrumpSuit.UNKNOW_TRUMP => Suit.NONE,
-            TrumpSuit.SPADE => Suit.SPADE,
-            TrumpSuit.HEART => Suit.HEART,
-            TrumpSuit.CLUB => Suit.CLUB,
-            TrumpSuit.DIAMOND => Suit.DIAMOND,
-            TrumpSuit.NONE_TRUMP => Suit.NONE,
-            _ => Suit.NONE,
-        };
-    }
 
     public void Print()
     {

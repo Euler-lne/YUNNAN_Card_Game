@@ -2,6 +2,7 @@ using Godot;
 using System;
 using System.Collections.Generic;
 using Euler.Global;
+using Euler.Event;
 
 public partial class Player : Node2D
 {
@@ -15,27 +16,23 @@ public partial class Player : Node2D
 
 
 
-		NetworkManager.Instance.OnPlayCardEvent += OnPlayCard;
-		NetworkManager.Instance.OnRemoveCardEvent += OnRemoveCard;
+		EventBus.PlayCardEvent += OnPlayCard;
 	}
 
 	public override void _ExitTree()
 	{
-		NetworkManager.Instance.OnPlayCardEvent -= OnPlayCard;
-		NetworkManager.Instance.OnRemoveCardEvent -= OnRemoveCard;
-	}
-
-
-	private void OnRemoveCard(int[] ids)
-	{
-		List<CardData> cardDatas = CardData.Deserialize(ids);
-		playerHandCard.RemoveSeletedCard(cardDatas);
+		EventBus.PlayCardEvent -= OnPlayCard;
 	}
 
 	private void OnPlayCard(int playSeat, int[] ids, bool isBack, GamePhase gamePhase)
 	{
 		List<CardData> cardDatas = CardData.Deserialize(ids);
 		tableManager.InsertCard(playSeat, cardDatas, isBack, gamePhase);
+		if (playSeat == 0)
+		{
+			// 只有当前玩家删除，反正都是要删除，所以传递一次，在0号位置删除就好了
+			playerHandCard.RemoveSeletedCard(cardDatas);
+		}
 	}
 
 
