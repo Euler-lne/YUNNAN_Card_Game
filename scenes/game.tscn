@@ -1,7 +1,7 @@
 [gd_scene load_steps=11 format=3 uid="uid://dh0r6wjeod2gf"]
 
 [ext_resource type="Script" uid="uid://d0hcpj6m3yoby" path="res://scripts/manager/GameManager.cs" id="2_p57ef"]
-[ext_resource type="Script" uid="uid://bacxbfi6pabl" path="res://scripts/manager/TableManager.cs" id="3_u5sy4"]
+[ext_resource type="Script" uid="uid://bacxbfi6pabl" path="res://scripts/table/TableManager.cs" id="3_u5sy4"]
 [ext_resource type="Script" uid="uid://bm1e4brkugvp1" path="res://scripts/table/PlayerHandCard.cs" id="4_0tnpc"]
 [ext_resource type="PackedScene" uid="uid://bp3q3vd8w37at" path="res://scenes/card.tscn" id="4_gee14"]
 [ext_resource type="Script" uid="uid://bgecoksvkvvkb" path="res://scripts/ui/UIManager.cs" id="4_iywne"]
