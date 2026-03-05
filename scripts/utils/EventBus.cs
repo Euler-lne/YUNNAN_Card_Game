@@ -1,0 +1,47 @@
+using System;
+namespace Euler.Event
+{
+    public static class EventBus
+    {
+        public static Action<int[]> SelectCardEvent;
+        public static void OnSelectCardEvent(int[] ids)
+        {
+            SelectCardEvent?.Invoke(ids);
+        }
+    }
+    public static class DealEvent
+    {
+        public static Action<DeclareOption> SetDeclareEvent;
+        public static void OnSetDeclareEvent(DeclareOption declareOption)
+        {
+            SetDeclareEvent?.Invoke(declareOption);
+        }
+        public static Action<bool> JudgeDeclareEvent;
+        public static void OnJudgeDeclareRequestEvent(bool isValid)
+        {
+            JudgeDeclareEvent?.Invoke(isValid);
+        }
+        public static Action<DeclareOption, long> DeclareRequestEvent;
+        public static void OnDeclareRequestEvent(DeclareOption option, long peerId)
+        {
+            DeclareRequestEvent?.Invoke(option, peerId);
+        }
+        public static Action<bool> JudgeConfirmEvent;
+        public static void OnJudgeConfirmRequestEvent(bool isValid)
+        {
+            JudgeConfirmEvent?.Invoke(isValid);
+        }
+        public static Action CancelRequestEvent;
+        public static void OnCancelRequestEvent()
+        {
+            CancelRequestEvent?.Invoke();
+        }
+
+        public static Action<DeclareOption, long, int[]> ConfirmRequestEvent;
+        public static void OnConfirmRequestEvent(DeclareOption option, long peerId, int[] ids)
+        {
+            ConfirmRequestEvent?.Invoke(option, peerId, ids);
+        }
+    }
+
+}

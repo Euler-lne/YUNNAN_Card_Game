@@ -17,7 +17,7 @@ namespace Euler.Global
         public const float HORIZONTAL_MARGIN = 50f;
         public const float BOTTOM_MARGIN_UNSELECT = CardParams.CARD_HEIGHT * 0.75f;
         public const float BOTTOM_MARGIN_MOVE = CardParams.CARD_HEIGHT - BOTTOM_MARGIN_UNSELECT;
-        public const float PUT_CARD_MARGIN = 40f;
+        public const float PUT_CARD_MARGIN = 5f;
         public const float PUT_CARD_SPACING = 20f;
     }
 

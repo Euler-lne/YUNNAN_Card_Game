@@ -19,6 +19,19 @@ public class TrumpState
             _ => TrumpSuit.UNKNOW_TRUMP
         };
     }
+    public static Suit ToSuit(TrumpSuit trumpSuit)
+    {
+        return trumpSuit switch
+        {
+            TrumpSuit.UNKNOW_TRUMP => Suit.NONE,
+            TrumpSuit.SPADE => Suit.SPADE,
+            TrumpSuit.HEART => Suit.HEART,
+            TrumpSuit.CLUB => Suit.CLUB,
+            TrumpSuit.DIAMOND => Suit.DIAMOND,
+            TrumpSuit.NONE_TRUMP => Suit.NONE,
+            _ => Suit.NONE,
+        };
+    }
 
     public void Print()
     {

@@ -1,20 +1,17 @@
 [gd_scene load_steps=11 format=3 uid="uid://dh0r6wjeod2gf"]
 
 [ext_resource type="Script" uid="uid://d0hcpj6m3yoby" path="res://scripts/manager/GameManager.cs" id="2_p57ef"]
-[ext_resource type="Script" uid="uid://bacxbfi6pabl" path="res://scripts/table/TableManager.cs" id="3_u5sy4"]
 [ext_resource type="Script" uid="uid://bm1e4brkugvp1" path="res://scripts/table/PlayerHandCard.cs" id="4_0tnpc"]
 [ext_resource type="PackedScene" uid="uid://bp3q3vd8w37at" path="res://scenes/card.tscn" id="4_gee14"]
 [ext_resource type="Script" uid="uid://bgecoksvkvvkb" path="res://scripts/ui/UIManager.cs" id="4_iywne"]
 [ext_resource type="Script" uid="uid://bdtbiv8y54moa" path="res://scripts/table/PutCardArea.cs" id="4_vtaks"]
 [ext_resource type="Script" uid="uid://cc5v0rkldqlr7" path="res://scripts/manager/DealManager.cs" id="5_p57ef"]
 [ext_resource type="Script" uid="uid://b06xh6pdd233k" path="res://scripts/ui/DeclareContainer.cs" id="5_u5sy4"]
-[ext_resource type="Script" uid="uid://c85it2sctj4s8" path="res://scripts/network/ClientRequestManager.cs" id="6_0tnpc"]
+[ext_resource type="Script" uid="uid://bacxbfi6pabl" path="res://scripts/table/TableManager.cs" id="5_vtaks"]
 [ext_resource type="Script" uid="uid://e4r1vljgl08q" path="res://scripts/Player/Player.cs" id="7_0tnpc"]
+[ext_resource type="Script" uid="uid://d3xl2dy4m7ndx" path="res://scripts/network/DealRequest.cs" id="10_kvpfn"]
 
 [node name="Game" type="Node"]
-
-[node name="ClientRequestManager" type="Node" parent="."]
-script = ExtResource("6_0tnpc")
 
 [node name="TableRoot" type="Node2D" parent="."]
 
@@ -48,7 +45,7 @@ script = ExtResource("4_0tnpc")
 cardScene = ExtResource("4_gee14")
 
 [node name="TableManager" type="Node2D" parent="TableRoot"]
-script = ExtResource("3_u5sy4")
+script = ExtResource("5_vtaks")
 
 [node name="CanvasLayer" type="CanvasLayer" parent="."]
 
@@ -165,6 +162,11 @@ script = ExtResource("7_0tnpc")
 
 [node name="DealManager" type="Node" parent="."]
 script = ExtResource("5_p57ef")
+
+[node name="DealRequest" type="Node" parent="DealManager" node_paths=PackedStringArray("player", "deckCard")]
+script = ExtResource("10_kvpfn")
+player = NodePath("../../Player")
+deckCard = NodePath("../../TableRoot/PlayeArea/DeckCards/Card")
 
 [node name="GameManager" type="Node" parent="."]
 script = ExtResource("2_p57ef")

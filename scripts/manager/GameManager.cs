@@ -7,20 +7,19 @@ public partial class GameManager : Node
     private TableManager tableManager;
 
     private UIManager uiManager;
-
-    private Card deckCard;
     private Player player;
+    private DealManager dealManager;
 
     private GameCore gameCore = null;
 
     public override void _Ready()
     {
         uiManager = GetNode<UIManager>("../CanvasLayer/UIManager");
-        deckCard = GetNode<Card>("../TableRoot/PlayeArea/DeckCards/Card");
+        dealManager = GetNode<DealManager>("../DealManager");
         player = GetNode<Player>("../Player");
         // 所有客户端都初始化 DealManager
         gameCore = Multiplayer.IsServer() ? new GameCore() : null;
-        DealManager.Instance.Init(gameCore, deckCard, player);
+        dealManager.Init(gameCore);
 
         if (Multiplayer.IsServer())
         {
@@ -36,12 +35,10 @@ public partial class GameManager : Node
         if (!Multiplayer.IsServer())
             return;
 
-        // 通知所有人显示牌堆
-        Rpc(nameof(RpcStartGame));
 
         gameCore.StartGame();
         // 开始发牌
-        DealManager.Instance.StartDeal();
+        dealManager.StartDeal();
         // 开始回合
     }
 
@@ -51,11 +48,5 @@ public partial class GameManager : Node
         {
             NetworkManager.Instance.OnTotalPlayersChanged -= uiManager.UpdatePlayerCount;
         }
-    }
-
-    [Rpc(MultiplayerApi.RpcMode.Authority, CallLocal = true)]
-    public void RpcStartGame()
-    {
-        deckCard.Visible = true;
     }
 }

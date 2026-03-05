@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Godot;
 public class CardData
 {
     public Suit suit;
@@ -126,34 +127,62 @@ public class CardList
         cardList.Clear();
     }
 
-    public void RemoveCard(CardData cardData)
+    private void RemoveCard(CardData cardData)
     {
+        RemoveFrom(mainList, cardData); // 现在这里移除
         switch (cardData.suit)
         {
             case Suit.SPADE:  // 黑桃
-                if (cardData.rank == Rank.ACE)// 常主牌
-                    RemoveFrom(mainList, cardData);
-                else
-                    RemoveFrom(spadeList, cardData);
+                RemoveFrom(spadeList, cardData);
                 break;
             case Suit.HEART:  // 红心
                 RemoveFrom(heartList, cardData);
                 break;
-            case Suit.CLUB:  // 方片
+            case Suit.CLUB:  // 梅花
                 RemoveFrom(clubList, cardData);
+
                 break;
-            case Suit.DIAMOND:  // 梅花
+            case Suit.DIAMOND:  // 方片
                 RemoveFrom(diamondList, cardData);
+
                 break;
-            case Suit.NONE:  // 大小王 
-                RemoveFrom(mainList, cardData);
+            case Suit.NONE:
                 break;
         }
+    }
+    public void RemoveCard(List<CardData> cardDatas)
+    {
+
+        if (cardDatas.Count == 0)
+            ClearAllList();
+        else
+        {
+            foreach (var cardData in cardDatas)
+            {
+                RemoveCard(cardData);
+            }
+            GenarateCardList();
+        }
+
+
     }
 
     private void RemoveFrom(List<CardData> cardDatas, CardData cardData)
     {
-        cardDatas.Remove(cardData);
-        GenarateCardList();
+        int targetId = CardData.Serialize(cardData);
+        int index = -1;
+
+        for (int i = 0; i < cardDatas.Count; i++)
+        {
+            if (CardData.Serialize(cardDatas[i]) == targetId)
+            {
+                index = i;
+                break;
+            }
+        }
+        if (index != -1)
+            cardDatas.RemoveAt(index);
+
+
     }
 }

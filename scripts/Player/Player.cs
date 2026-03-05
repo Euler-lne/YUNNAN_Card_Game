@@ -1,28 +1,48 @@
 using Godot;
 using System;
 using System.Collections.Generic;
+using Euler.Global;
 
 public partial class Player : Node2D
 {
-	private UIManager uiManager;
 	private PlayerHandCard playerHandCard;
+	private TableManager tableManager;
 	public override void _Ready()
 	{
-		uiManager = GetNode<UIManager>("../CanvasLayer/UIManager");
+		// FIXME:建议修改当前的UI布局
 		playerHandCard = GetNode<PlayerHandCard>("../TableRoot/PlayerHandRoot");
-		uiManager.declareContainer.OnConfirmPressed += OnConfirmPressed;
+		tableManager = GetNode<TableManager>("../TableRoot/TableManager");
+
+
+
+		NetworkManager.Instance.OnPlayCardEvent += OnPlayCard;
+		NetworkManager.Instance.OnRemoveCardEvent += OnRemoveCard;
 	}
 
-	private void OnConfirmPressed(DeclareOption option)
+	public override void _ExitTree()
 	{
-		List<CardData> cardDatas = playerHandCard.GetSelectedCardList();
-		int[] ids = CardData.Serialize(cardDatas);
-		ClientRequestManager.Instance.SendConfirmDeclare(option, ids);
+		NetworkManager.Instance.OnPlayCardEvent -= OnPlayCard;
+		NetworkManager.Instance.OnRemoveCardEvent -= OnRemoveCard;
 	}
 
 
+	private void OnRemoveCard(int[] ids)
+	{
+		List<CardData> cardDatas = CardData.Deserialize(ids);
+		playerHandCard.RemoveSeletedCard(cardDatas);
+	}
 
-	public UIManager GetUIManager() => uiManager;
+	private void OnPlayCard(int playSeat, int[] ids, bool isBack, GamePhase gamePhase)
+	{
+		List<CardData> cardDatas = CardData.Deserialize(ids);
+		tableManager.InsertCard(playSeat, cardDatas, isBack, gamePhase);
+	}
+
+
+	public void ExitrDeclareMode()
+	{
+		playerHandCard.SetAllCardSelectable(true);
+	}
 
 	public void EnterDeclareMode(Rank rank)
 	{
@@ -33,11 +53,6 @@ public partial class Player : Node2D
 			bool canSelect = RuleEngine.CanSelect(card.cardData, GamePhase.DECLARE, rank);
 			card.CanSelected = canSelect;
 		}
-	}
-
-	public void EnterDealMode()
-	{
-		playerHandCard.SetAllCardIsSelected(false);
 	}
 
 	public void DealCard(CardData currentCard)

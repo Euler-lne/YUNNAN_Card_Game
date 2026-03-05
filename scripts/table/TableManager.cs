@@ -14,18 +14,34 @@ public partial class TableManager : Node2D
 		cardAreas[2] = GetNode<PutCardArea>("../PlayeArea/PutCardArea/TopArea");
 		cardAreas[3] = GetNode<PutCardArea>("../PlayeArea/PutCardArea/LeftArea");
 
-		for (int i = 0; i < 4; i++)
+		for (int i = 0; i < GameSettings.PLAYER_COUNT; i++)
 		{
 			PutAreaLayout putAreaLayout = CalculateLayout(i, screenSize);
 			cardAreas[i].Init(putAreaLayout);
-			cardAreas[i].Test();
+			// cardAreas[i].Test();
 		}
 
 	}
+	#region 操作出牌
+	public void InsertCard(int seat, List<CardData> cardDatas, bool isBack = false, GamePhase gamePhase = GamePhase.PLAYING)
+	{
+		cardAreas[seat].Insert(cardDatas, isBack, gamePhase);
+	}
+	public void RemoveAll()
+	{
+		for (int i = 0; i < GameSettings.PLAYER_COUNT; i++)
+			RemoveAt(i);
+	}
+	public void RemoveAt(int seat)
+	{
+		cardAreas[seat].RemoveCards();
+	}
+	#endregion
+	#region 工具函数
 	private PutAreaLayout CalculateLayout(int seatIndex, Vector2 screenSize)
 	{
-		float putWidth = CardParams.CARD_WIDTH * CardParams.CARD_SCALE;
-		float putHeight = CardParams.CARD_HEIGHT * CardParams.CARD_SCALE;
+		float putWidth = CardParams.CARD_WIDTH * CardParams.CARD_PUT_SCALE;
+		float putHeight = CardParams.CARD_HEIGHT * CardParams.CARD_PUT_SCALE;
 
 		float margin = CardLayoutParams.PUT_CARD_MARGIN;
 		float spacing = CardLayoutParams.PUT_CARD_SPACING;
@@ -33,7 +49,7 @@ public partial class TableManager : Node2D
 		float handHeight = CardParams.CARD_HEIGHT;
 
 		// 上下左右的安全偏移
-		float horizontalOffset = putHeight + margin;
+		float horizontalOffset = putHeight / 2 + putWidth / 2 + margin;
 
 		// ===== 上下位置 =====
 		float bottomY = screenSize.Y - handHeight - spacing - putHeight / 2;
@@ -43,84 +59,75 @@ public partial class TableManager : Node2D
 		float leftX = margin + putHeight / 2;
 		float rightX = screenSize.X - margin - putHeight / 2;
 
-		// ===== 左右Y范围（必须避开上下出牌区）=====
-		float verticalStart = bottomY - putWidth / 2;
-		float verticalEnd = topY + putWidth / 2;
-
 		PutAreaLayout layout = new();
 
 		switch (seatIndex)
 		{
-			// =====================
-			// Bottom
-			// =====================
 			case 0:
 				layout.start = new Vector2(
-					horizontalOffset + putWidth / 2,
+					leftX + horizontalOffset,
 					bottomY
 				);
 
 				layout.end = new Vector2(
-					screenSize.X - horizontalOffset - putWidth / 2,
+					rightX - horizontalOffset,
 					bottomY
 				);
 
 				layout.rotation = 0;
+				layout.isHorizontal = false;
 				break;
 
-			// =====================
-			// Right
-			// =====================
 			case 1:
 				layout.start = new Vector2(
 					rightX,
-					verticalStart
+					bottomY
 				);
 
 				layout.end = new Vector2(
 					rightX,
-					verticalEnd
+					topY
 				);
 
 				layout.rotation = Mathf.Pi / 2;
+				layout.isHorizontal = true;
+
 				break;
 
-			// =====================
-			// Top
-			// =====================
 			case 2:
 				layout.start = new Vector2(
-					screenSize.X - horizontalOffset - putWidth / 2,
+					rightX - horizontalOffset,
 					topY
 				);
 
 				layout.end = new Vector2(
-					horizontalOffset + putWidth / 2,
+					leftX + horizontalOffset,
 					topY
 				);
 
 				layout.rotation = Mathf.Pi;
+				layout.isHorizontal = false;
+
 				break;
 
-			// =====================
-			// Left
-			// =====================
 			case 3:
 				layout.start = new Vector2(
 					leftX,
-					verticalEnd
+					topY
 				);
 
 				layout.end = new Vector2(
 					leftX,
-					verticalStart
+					bottomY
 				);
 
 				layout.rotation = Mathf.Pi * 1.5f;
+				layout.isHorizontal = true;
+
 				break;
 		}
 
 		return layout;
 	}
-
+	#endregion
 }

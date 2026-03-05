@@ -4,7 +4,7 @@ using Euler.Global;
 
 public class GameData
 {
-    public int DealerSeat { get; set; }
+    public int DealerSeat { get; set; } // 赢家
 
     public Dictionary<int, Rank> TeamLevels { get; private set; }
 

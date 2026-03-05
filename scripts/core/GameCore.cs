@@ -17,9 +17,9 @@ public class GameCore
 
     public void StartGame()
     {
-        // deckManager.CreateDeck();
-        // deckManager.Shuffle();
-        deckManager.TestCreateDeck();
+        deckManager.CreateDeck();
+        deckManager.Shuffle();
+        // deckManager.TestCreateDeck();
 
         gameData.CurrentPhase = GamePhase.DEALING;
 
@@ -30,6 +30,10 @@ public class GameCore
     {
 
     }
+
+    public int GetDealerSeat() => gameData.DealerSeat;
+
+    public GamePhase GetCurrentGamePhase() => gameData.CurrentPhase;
 
     public CardData DealOneCard(int seat)
     {
@@ -44,6 +48,13 @@ public class GameCore
     public void PrintDeclareInfo()
     {
         gameData.TrumpState.Print();
+    }
+
+    public void RemoveCardFrom(int seat, List<CardData> cardDatas)
+    {
+        // 如果cardDatas为空就删除所有的
+        playerManager.RemoveCardFromPlayer(seat, cardDatas);
+        NetworkManager.Instance.RemovePlayerCards(seat, cardDatas);
     }
 
     #region 叫主相关

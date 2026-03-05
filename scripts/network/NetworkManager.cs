@@ -12,6 +12,8 @@ public partial class NetworkManager : Node
 	// 保存着自己的逻辑座位号，不对应Seat的物理座位号，因为座位号会变。
 
 	public Action<int> OnTotalPlayersChanged;
+	public Action<int, int[], bool, GamePhase> OnPlayCardEvent;
+	public Action<int[]> OnRemoveCardEvent;
 
 	private int _totalPlayers = 0;
 	public int TotalPlayers
@@ -42,6 +44,9 @@ public partial class NetworkManager : Node
 		Multiplayer.PeerConnected += OnPeerConnected;
 	}
 
+
+
+	#region 连接相关
 	public void HostGame(int port)
 	{
 		var peer = new ENetMultiplayerPeer();
@@ -66,16 +71,6 @@ public partial class NetworkManager : Node
 		PeerToSeat[serverId] = 0;
 		MyLogicalSeat = 0;
 		TotalPlayers = 1;
-	}
-
-	public long GetPeerIdBySeat(int seat)
-	{
-		foreach (var pair in PeerToSeat)
-		{
-			if (pair.Value == seat)
-				return pair.Key;
-		}
-		return -1;
 	}
 
 	private void OnPeerConnected(long id)
@@ -103,16 +98,6 @@ public partial class NetworkManager : Node
 
 	[Rpc(MultiplayerApi.RpcMode.Authority)]
 	private void SyncTotalPlayers(int count) => TotalPlayers = count;
-
-	// 逻辑座位 -> 本地视角座位
-	public int GetViewSeat(int logicalSeat)// logicalSeat 在自己作为中位于哪里，相对于自己
-	{
-		// 也就是对于B号玩家，如果发牌到了A号，那么把A的逻辑位置传递进来就可以得知它在B的视角下位于哪里
-		return (logicalSeat - MyLogicalSeat + GameSettings.PLAYER_COUNT) % GameSettings.PLAYER_COUNT;
-	}
-
-
-
 	private void OnConnectedToServer()
 	{
 		GD.Print("连接成功");
@@ -123,4 +108,55 @@ public partial class NetworkManager : Node
 	{
 		GD.Print("连接失败");
 	}
+	#endregion
+
+	public void PlayCard(int playLogicSeat, List<CardData> cardDatas, bool isBack, GamePhase gamePhase)
+	{
+		if (!Multiplayer.IsServer()) return;
+		int[] ids = CardData.Serialize(cardDatas);
+		Rpc(nameof(RpcPlayCardBroadcast), playLogicSeat, ids, isBack, (int)gamePhase);
+	}
+
+	public void RemovePlayerCards(int playLogicSeat, List<CardData> cardDatas)
+	{
+		long peerId = GetPeerIdBySeat(playLogicSeat);
+		GD.Print($"{peerId}删除卡牌");
+		if (peerId == -1) return;
+		// 通知对应玩家出牌，也就是将牌移除
+		int[] ids = CardData.Serialize(cardDatas);
+		RpcId(peerId, nameof(RpcRemovePlayerCards), ids);
+	}
+
+	#region 通知出牌
+	[Rpc(MultiplayerApi.RpcMode.Authority, CallLocal = true)]
+	private void RpcPlayCardBroadcast(int playLogicSeat, int[] ids, bool isBack, int _gamePhase)
+	{
+		int playSeat = GetViewSeat(playLogicSeat); // 当前出牌的人在自己视角的逻辑座位
+		GamePhase gamePhase = (GamePhase)_gamePhase;
+		OnPlayCardEvent?.Invoke(playSeat, ids, isBack, gamePhase);
+	}
+
+	[Rpc(MultiplayerApi.RpcMode.Authority, CallLocal = true)]
+	private void RpcRemovePlayerCards(int[] ids)
+	{
+		OnRemoveCardEvent?.Invoke(ids);
+	}
+	#endregion
+
+	#region 工具函数
+	public int GetViewSeat(int logicalSeat)// logicalSeat 在自己作为中位于哪里，相对于自己
+	{
+		// 也就是对于B号玩家，如果发牌到了A号，那么把A的逻辑位置传递进来就可以得知它在B的视角下位于哪里
+		return (logicalSeat - MyLogicalSeat + GameSettings.PLAYER_COUNT) % GameSettings.PLAYER_COUNT;
+	}
+	public long GetPeerIdBySeat(int seat)
+	{
+		foreach (var pair in PeerToSeat)
+		{
+			if (pair.Value == seat)
+				return pair.Key;
+		}
+		return -1;
+	}
+	#endregion
 }

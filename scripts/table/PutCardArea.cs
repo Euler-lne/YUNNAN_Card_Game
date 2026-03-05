@@ -12,7 +12,7 @@ public partial class PutCardArea : Node2D
 
 	public override void _Ready()
 	{
-		isCenter = false;
+		isCenter = true;
 	}
 
 	public void Init(PutAreaLayout putAreaLayout)
@@ -20,16 +20,38 @@ public partial class PutCardArea : Node2D
 		this.putAreaLayout = putAreaLayout;
 	}
 
-	public void Test()
+	public void Insert(List<CardData> cardDatas, bool isBack = false, GamePhase gamePhase = GamePhase.PLAYING)
 	{
-		for (int i = 0; i < 20; i++)
+		isCenter = gamePhase == GamePhase.PLAYING;
+		if (!isCenter && cardDatas.Count == 0 && isBack)
 		{
 			Card card = cardScene.Instantiate<Card>();
 			AddChild(card);
 			cards.Add(card);
+			card.IsBack = isBack;
 			card.Scale = new(CardParams.CARD_PUT_SCALE * CardParams.CARD_SCALE, CardParams.CARD_PUT_SCALE * CardParams.CARD_SCALE);
 		}
+		else
+			foreach (var cardData in cardDatas)
+			{
+				Card card = cardScene.Instantiate<Card>();
+				AddChild(card);
+				cards.Add(card);
+				card.SetCardData(cardData);
+				card.IsBack = isBack;
+				card.Scale = new(CardParams.CARD_PUT_SCALE * CardParams.CARD_SCALE, CardParams.CARD_PUT_SCALE * CardParams.CARD_SCALE);
+			}
 		GenerateLayout();
+	}
+
+	public void RemoveCards()
+	{
+		foreach (var card in cards)
+			card.QueueFree();
+
+
+		cards.Clear();
+		putLayout.Clear();
 	}
 
 	public void GenerateLayout()
@@ -42,21 +64,14 @@ public partial class PutCardArea : Node2D
 		Vector2 start = putAreaLayout.start;
 		Vector2 end = putAreaLayout.end;
 
-		Vector2 dir = (end - start);
+		Vector2 dir = end - start;
 		float length = dir.Length();
 		dir = dir.Normalized();
 
-		float cardSize =
-			Mathf.Abs(putAreaLayout.rotation % Mathf.Pi) < 0.01f
-			? CardParams.CARD_WIDTH * CardParams.CARD_PUT_SCALE
-			: CardParams.CARD_HEIGHT * CardParams.CARD_PUT_SCALE;
+		float cardSize = CardParams.CARD_WIDTH * CardParams.CARD_PUT_SCALE;
 
 		float spacing;
-
-		// ==========================
-		// ✅ 核心修改点
-		// ==========================
-		if (total * cardSize <= length)
+		if ((total - 1) * cardSize <= length)
 		{
 			// 不重叠
 			spacing = cardSize;
@@ -64,12 +79,13 @@ public partial class PutCardArea : Node2D
 		else
 		{
 			// 压缩重叠
-			spacing = (length - cardSize) / (total - 1);
+			spacing = length / (total - 1);
+
 		}
 
 		if (isCenter)
 		{
-			float totalWidth = cardSize + (total - 1) * spacing;
+			float totalWidth = (total - 1) * spacing;
 			Vector2 center = start + dir * (length / 2f);
 			Vector2 firstPos = center - dir * (totalWidth / 2f);
 

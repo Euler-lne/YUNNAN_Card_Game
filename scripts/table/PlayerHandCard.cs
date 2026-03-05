@@ -1,7 +1,7 @@
 using Godot;
-using System;
 using System.Collections.Generic;
 using Euler.Global;
+using Euler.Event;
 
 public partial class PlayerHandCard : Node2D
 {
@@ -71,35 +71,6 @@ public partial class PlayerHandCard : Node2D
 	}
 	#endregion
 
-	public void InsertCard(CardData currentCard)
-	{
-		handLogic.Insert(currentCard);
-		RebuildHandUI(true);
-	}
-
-	public void SetAllCardSelectable(bool selectable)
-	{
-		foreach (var card in handCards)
-		{
-			card.CanSelected = selectable;
-			card.IsSelected = false;
-			SetSelectedPosition(card);
-		}
-	}
-
-	public void SetAllCardIsSelected(bool isSelected)
-	{
-		foreach (var card in handCards)
-		{
-			card.IsSelected = isSelected;
-			SetSelectedPosition(card);
-		}
-	}
-
-	public List<Card> GetHandCards()
-	{
-		return handCards;
-	}
 
 	public List<CardData> GetSelectedCardList()
 	{
@@ -171,6 +142,11 @@ public partial class PlayerHandCard : Node2D
 			}
 			MoveChild(card, i);
 		}
+		foreach (var queue in existing.Values)
+		{
+			while (queue.Count > 0)
+				queue.Dequeue().QueueFree();
+		}
 
 		handCards = newHandCards;
 	}
@@ -234,6 +210,13 @@ public partial class PlayerHandCard : Node2D
 	{
 		card.IsSelected = !card.IsSelected;
 		SetSelectedPosition(card);
+		List<CardData> cardDatas = [];
+		foreach (Card _card in handCards)
+		{
+			if (_card.IsSelected)
+				cardDatas.Add(_card.cardData);
+		}
+		EventBus.OnSelectCardEvent(CardData.Serialize(cardDatas));
 	}
 
 	private bool IsPointOverCard(Vector2 globalPoint, Card card)
@@ -249,12 +232,37 @@ public partial class PlayerHandCard : Node2D
 	}
 
 	#endregion
-	private void ClearHand()
+	#region 工具函数
+	public void ClearHand()
 	{
 		foreach (Node child in GetChildren())
 			child.QueueFree();
 
 		handCards.Clear();
+		handLogic.RemoveCard([]);
+		RebuildHandUI();
+	}
+
+	public void RemoveSeletedCard(List<CardData> cardDatas)
+	{
+		handLogic.RemoveCard(cardDatas);
+		if (cardDatas.Count == 0)
+		{
+			foreach (Node child in GetChildren())
+				child.QueueFree();
+			handCards.Clear();
+		}
+		for (int i = handCards.Count - 1; i >= 0; i--)
+		{
+			Card card = handCards[i];
+			if (card.IsSelected)
+			{
+				handCards.RemoveAt(i);
+				card.QueueFree();
+			}
+		}
+		RebuildHandUI(true);
+
 	}
 
 	private void SetSelectedPosition(Card card)
@@ -263,5 +271,33 @@ public partial class PlayerHandCard : Node2D
 		float y = UnselecteY() + (card.IsSelected ? -CardLayoutParams.BOTTOM_MARGIN_MOVE : 0);
 		card.Position = new Vector2(postion.X, y);
 	}
+	public void InsertCard(CardData currentCard)
+	{
+		handLogic.Insert(currentCard);
+		RebuildHandUI(true);
+	}
 
+	public void SetAllCardSelectable(bool selectable)
+	{
+		foreach (var card in handCards)
+		{
+			card.CanSelected = selectable;
+			SetSelectedPosition(card);
+		}
+	}
+
+	public void SetAllCardIsSelected(bool isSelected)
+	{
+		foreach (var card in handCards)
+		{
+			card.IsSelected = isSelected;
+			SetSelectedPosition(card);
+		}
+	}
+
+	public List<Card> GetHandCards()
+	{
+		return handCards;
+	}
+	#endregion
 }
