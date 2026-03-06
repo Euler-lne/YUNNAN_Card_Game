@@ -63,7 +63,9 @@ public partial class DeclareContainer : HBoxContainer
 	private void OnCancelButton()
 	{
 		RpcId(1, nameof(RpcSendCancelDarkDeclare));
-		DeclareButtonPressed();
+		isDeclare = true;
+		darkDeclareContainer.Visible = false;
+		Visible = false;
 	}
 
 	private void OnConfirmButton()

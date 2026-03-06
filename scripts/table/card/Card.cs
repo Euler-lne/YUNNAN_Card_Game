@@ -9,16 +9,33 @@ public partial class Card : Node2D
 	private string cardTexturePath = "";
 	private bool isSelected;
 	private bool canSelected;
+	private bool isDark;
+	private bool IsDark
+	{
+		get { return isDark; }
+		set
+		{
+			isDark = value;
+			RefreshVisualState();
+		}
+	}
 	public bool IsSelected
 	{
 		get { return isSelected; }
-		set { isSelected = value; RefreshVisualState(); }
+		set { isSelected = value; }
 	}
 
 	public bool CanSelected
 	{
 		get { return canSelected; }
-		set { canSelected = value; RefreshVisualState(); }
+		set
+		{
+			canSelected = value;
+			if (canSelected)
+			{
+				IsDark = false;
+			}
+		}
 	}
 	private bool isBack = true;
 	public bool IsBack
@@ -31,6 +48,7 @@ public partial class Card : Node2D
 		{
 			isBack = value;
 			UpdateTexture(isBack || cardData == null);
+			RefreshVisualState();
 		}
 	}
 
@@ -41,6 +59,7 @@ public partial class Card : Node2D
 		IsSelected = false;
 		CanSelected = false;
 		IsBack = true;
+		IsDark = false;
 		Vector2 screenSize = GetViewportRect().Size;
 		Scale = new Vector2(CardParams.CARD_SCALE, CardParams.CARD_SCALE);
 		Position = new Vector2(screenSize.X / 2, screenSize.Y / 2);
@@ -52,10 +71,20 @@ public partial class Card : Node2D
 		cardData = data;
 		UpdateTexture();
 	}
+	public void SetDark()
+	{
+		CanSelected = false;
+		IsDark = true;
+	}
+
+	public void SetLight()
+	{
+		IsDark = false;
+	}
 
 	private void UpdateTexture(bool isBack = false)
 	{
-		if (isBack)
+		if (IsBack)
 		{
 			sprite.Texture = GD.Load<Texture2D>(CardParams.CARD_BACK_PATH);
 		}
@@ -67,19 +96,19 @@ public partial class Card : Node2D
 	}
 	private void RefreshVisualState()
 	{
-		// if (isBack)
-		// {
-		// 	sprite.Modulate = Colors.White;
-		// 	return;
-		// }
+		if (IsBack)
+		{
+			sprite.Modulate = Colors.White;
+			return;
+		}
 
-		// if (!canSelected)
-		// {
-		// 	sprite.Modulate = new Color(0.4f, 0.4f, 0.4f, 0.8f);
-		// 	return;
-		// }
+		if (IsDark)
+		{
+			sprite.Modulate = new Color(0.75f, 0.75f, 0.75f, 1f);
+			return;
+		}
 
-		// sprite.Modulate = Colors.White;
+		sprite.Modulate = Colors.White;
 	}
 
 	private string GetCardTexturePath()

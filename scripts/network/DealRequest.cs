@@ -40,16 +40,15 @@ public partial class DealRequest : Node
         DealEvent.OnSetDeclareEvent((DeclareOption)optionInt);
     }
 
-    public void NotifyClientDeclareButtonPressed(long peerId, Rank rank, bool canDeclare)
+    public void NotifyClientDeclareButtonPressed(long peerId, bool canDeclare)
     {
-        RpcId(peerId, nameof(RpcNotifyClientDeclareButtonPressed), (int)rank, canDeclare);
+        RpcId(peerId, nameof(RpcNotifyClientDeclareButtonPressed), canDeclare);
     }
     [Rpc(MultiplayerApi.RpcMode.Authority, CallLocal = true)]
-    private void RpcNotifyClientDeclareButtonPressed(int rank, bool isValid)
+    private void RpcNotifyClientDeclareButtonPressed(bool isValid)
     {
         // 告知客户端点击叫主按钮是否合法
         DealEvent.OnJudgeDeclareRequestEvent(isValid);
-        player.EnterDeclareMode((Rank)rank);  // 可以选了
     }
 
     public void NotifyClientConfirmButtonPressed(long peerId, bool isDeclareRight)
@@ -62,6 +61,41 @@ public partial class DealRequest : Node
         // 告知客户端点击叫主按钮是否合法
         DealEvent.JudgeConfirmEvent(isValid);
         player.ExitrDeclareMode(); // 这里判断为点击按钮成功了
+    }
+
+    public void NotifyClientChooseTrump(long peerId, Rank rank)
+    {
+        RpcId(peerId, nameof(RpcNotifyClientChooseTrump), (int)rank);
+    }
+    [Rpc(MultiplayerApi.RpcMode.Authority, CallLocal = true)]
+    private void RpcNotifyClientChooseTrump(int rank)
+    {
+        player.EnterDeclareMode((Rank)rank);  // 可以选了
+    }
+    #endregion
+
+    #region 扣抵相关
+    public void NotifyHostChooseMode(int hostSeat)
+    {
+        long peerId = NetworkManager.Instance.GetPeerIdBySeat(hostSeat);
+        if (peerId == -1) return;
+        RpcId(peerId, nameof(RpcNotifyHostChooseMode));
+    }
+    [Rpc(MultiplayerApi.RpcMode.Authority, CallLocal = true)]
+    private void RpcNotifyHostChooseMode()
+    {
+        // 显示UI，让对应的主选择遇大遇小
+        DealEvent.OnChooseHoleEvent();
+    }
+    public void NotifyChooseModeResult(bool isBig)
+    {
+        Rpc(nameof(RpcNotifyChooseModeResult), isBig);
+    }
+    [Rpc(MultiplayerApi.RpcMode.Authority, CallLocal = true)]
+    private void RpcNotifyChooseModeResult(bool isBig)
+    {
+        // 显示UI，让对应的主选择遇大遇小
+        DealEvent.OnServerNotifyChooseHoleResultEvent(isBig);
     }
     #endregion
 

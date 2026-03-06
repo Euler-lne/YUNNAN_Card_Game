@@ -25,21 +25,12 @@ public partial class PutCardArea : Node2D
 		isCenter = gamePhase == GamePhase.PLAYING;
 		if (!isCenter && cardDatas.Count == 0 && isBack)
 		{
-			Card card = cardScene.Instantiate<Card>();
-			AddChild(card);
-			cards.Add(card);
-			card.IsBack = isBack;
-			card.Scale = new(CardParams.CARD_PUT_SCALE * CardParams.CARD_SCALE, CardParams.CARD_PUT_SCALE * CardParams.CARD_SCALE);
+			GenerateCard(isBack);
 		}
 		else
 			foreach (var cardData in cardDatas)
 			{
-				Card card = cardScene.Instantiate<Card>();
-				AddChild(card);
-				cards.Add(card);
-				card.SetCardData(cardData);
-				card.IsBack = isBack;
-				card.Scale = new(CardParams.CARD_PUT_SCALE * CardParams.CARD_SCALE, CardParams.CARD_PUT_SCALE * CardParams.CARD_SCALE);
+				GenerateCard(isBack, cardData);
 			}
 		GenerateLayout();
 	}
@@ -54,7 +45,27 @@ public partial class PutCardArea : Node2D
 		putLayout.Clear();
 	}
 
-	public void GenerateLayout()
+	public void Test()
+	{
+		for (int i = 0; i < 10; i++)
+		{
+			GenerateCard(true);
+		}
+		GenerateLayout();
+	}
+	private void GenerateCard(bool isBack, CardData cardData = null)
+	{
+		Card card = cardScene.Instantiate<Card>();
+		AddChild(card);
+		cards.Add(card);
+		if (cardData != null)
+			card.SetCardData(cardData);
+		card.IsBack = isBack;
+		card.SetLight();
+		card.Scale = new(CardParams.CARD_PUT_SCALE * CardParams.CARD_SCALE, CardParams.CARD_PUT_SCALE * CardParams.CARD_SCALE);
+	}
+
+	private void GenerateLayout()
 	{
 		putLayout.Clear();
 

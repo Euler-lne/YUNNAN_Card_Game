@@ -32,5 +32,6 @@ project/assembly_name="YunNan Card Game"
 
 folder_colors={
 "res://assets/": "pink",
-"res://scenes/": "yellow"
+"res://scenes/": "yellow",
+"res://theme/": "red"
 }

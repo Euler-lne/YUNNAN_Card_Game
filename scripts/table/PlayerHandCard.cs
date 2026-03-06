@@ -226,19 +226,6 @@ public partial class PlayerHandCard : Node2D
 		}
 	}
 
-	private void ToggleCardSelection(Card card)
-	{
-		card.IsSelected = !card.IsSelected;
-		SetSelectedPosition(card);
-		List<CardData> cardDatas = [];
-		foreach (Card _card in handCards)
-		{
-			if (_card.IsSelected)
-				cardDatas.Add(_card.cardData);
-		}
-		EventBus.OnSelectCardEvent(CardData.Serialize(cardDatas));
-	}
-
 	private bool IsPointOverCard(Vector2 globalPoint, Card card)
 	{
 		Vector2 cardPos = card.GlobalPosition;
@@ -301,8 +288,22 @@ public partial class PlayerHandCard : Node2D
 	{
 		foreach (var card in handCards)
 		{
+			SetCardSelectable(card, selectable);
+		}
+	}
+
+	public void SetCardSelectable(Card card, bool selectable)
+	{
+		if (selectable == false)
+			card.SetDark();
+		else
+		{
 			card.CanSelected = selectable;
-			SetSelectedPosition(card);
+		}
+		if (card.IsSelected && selectable == false)  // 设置为不可选当前牌选中的时候要设置为不选中
+		{
+			ToggleCardSelection(card);
+			GD.Print($"当前牌被选中{card.cardData.suit} {card.cardData.rank}设置为不能选，且取消选中");
 		}
 	}
 
@@ -311,8 +312,23 @@ public partial class PlayerHandCard : Node2D
 		foreach (var card in handCards)
 		{
 			card.IsSelected = isSelected;
-			SetSelectedPosition(card);
+			if (card.IsSelected != isSelected)
+			{
+				ToggleCardSelection(card);
+			}
 		}
+	}
+	private void ToggleCardSelection(Card card)
+	{
+		card.IsSelected = !card.IsSelected;
+		SetSelectedPosition(card);
+		List<CardData> cardDatas = [];
+		foreach (Card _card in handCards)
+		{
+			if (_card.IsSelected)
+				cardDatas.Add(_card.cardData);
+		}
+		EventBus.OnSelectCardEvent(CardData.Serialize(cardDatas));
 	}
 
 	public List<Card> GetHandCards()

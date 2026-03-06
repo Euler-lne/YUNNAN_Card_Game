@@ -3,6 +3,7 @@ using Euler.Global;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using Euler.Event;
+using System;
 
 /// <summary>
 /// 发牌包括：
@@ -15,8 +16,12 @@ public partial class DealManager : Node
 
 
     private TaskCompletionSource<(DeclareOption, Suit)> declareTcs = null;
+    private TaskCompletionSource<bool> handleholeTcs = null;
+
     private DealRequest dealRequest;
     private int activeDeclareSeat = -1;
+
+    private Timer dealEndTimer = null;
 
     public override void _Ready()
     {
@@ -24,18 +29,37 @@ public partial class DealManager : Node
         DealEvent.CancelRequestEvent += OnCancelRequestEvent;
         DealEvent.ConfirmRequestEvent += OnConfirmRequestEvent;
         DealEvent.DeclareRequestEvent += OnDeclareRequestEvent;
+
+        DealEvent.ClientNotifyChooseHoleResultEvent += OnClientNotifyChooseHoleResultEvent;
     }
     public override void _EnterTree()
     {
         DealEvent.CancelRequestEvent -= OnCancelRequestEvent;
         DealEvent.ConfirmRequestEvent -= OnConfirmRequestEvent;
         DealEvent.DeclareRequestEvent -= OnDeclareRequestEvent;
+        DealEvent.ClientNotifyChooseHoleResultEvent -= OnClientNotifyChooseHoleResultEvent;
     }
-
 
     public void Init(GameCore _gameCore)
     {
         GameCore = _gameCore;      // 服务器才有
+        if (Multiplayer.IsServer())
+        {
+            dealEndTimer = new Timer
+            {
+                WaitTime = GameSettings.DEAL_END_TIME,
+                OneShot = true,
+                Autostart = false
+            };
+            AddChild(dealEndTimer);
+            dealEndTimer.Timeout += HandleHoleCard;
+
+        }
+    }
+    public override void _ExitTree()
+    {
+        if (dealEndTimer != null)
+            dealEndTimer.Timeout -= HandleHoleCard;
     }
 
     public async void StartDeal()
@@ -48,7 +72,9 @@ public partial class DealManager : Node
         int dealerSeat = GameCore.GetDealerSeat();
         dealRequest.InitDeckRotation(dealerSeat);
 
-        for (int i = 0; i < total; i++)
+        GD.Print($"本局发牌是否为抢庄{GameCore.IsSnatchDealer()}");
+
+        for (int i = 0; i < 8; i++)
         {
             int logicalSeat = (i + dealerSeat) % GameSettings.PLAYER_COUNT;
 
@@ -57,18 +83,82 @@ public partial class DealManager : Node
 
         GD.Print("发牌结束");
         dealRequest.EndDeckRotation(dealerSeat);
-
-        // TODO:如果没有定主给出1秒暂停，一秒之后还没有人叫主，那么翻开第一张牌判断当局的主
+        dealEndTimer.Start();
+    }
+    #region 扣抵
+    private async void HandleHoleCard()
+    {
+        // 处理底牌，计时器超时执行该函数
+        await WaitIfDeclaring();
+        SetDeclareUIInvisiable();
+        if (!GameCore.HaveTrump())
+        {
+            HandleHoleCardNoTrump();
+        }
+        else
+        {
+            // 有主了锁住
+            Suit suit = GameCore.GetTrumpSuit();
+            GameCore.LockSuit(suit);
+            GD.Print($"当前主为{suit}花色 庄家为{GameCore.GetDealerSeat()}号");
+        }
+        // TODO:如果为抢庄设置为抢庄结束
+        // TODO:庄家拿牌，选牌
     }
 
+    private void DealerGetCards()
+    {
+        // 牌给庄家
+    }
+
+    private async void HandleHoleCardNoTrump()
+    {
+        dealRequest.NotifyHostChooseMode(GameCore.GetDealerSeat());
+        handleholeTcs = new();
+        // 等待选择遇大遇小，并通知所有除了庄家的人当前选择的遇大还是遇小
+        bool isBig = await handleholeTcs?.Task;  // 在点击了遇大/遇小释放
+        dealRequest.NotifyChooseModeResult(isBig);
+
+        await DelayHalf(GameSettings.INFO_EXIST_TIME);
+        GD.Print("显示结束再继续向下走");
+
+        // 开始从上到下依次展示牌，直到遇到主，没有主那么采用大/小
+        List<Rank> ranks = [];
+        if (GameCore.IsSnatchDealer() && !GameCore.IsSameRank())
+        {
+            // 抢庄且两者不一样，哪个队先遇到就是，哪个队
+            ranks = GameCore.GetCurrentRank();
+        }
+        else
+        {
+            // 两家一样或者不是抢主
+            int dealerSeat = GameCore.GetDealerSeat();
+            Rank rank = GameCore.GetCurrentRank(dealerSeat);  // 得到当前庄家需要遇的牌
+            ranks.Add(rank);
+        }
+        // CardData cardData = MeetTrump(ranks, isBig);
+        // TODO: 翻开卡牌，然后得到当前是多少
+        // GameCore.SetDealerSeat(dealer);
+    }
+
+    // private CardData MeetTrump(List<Rank> ranks, bool isBig)
+    // {
+
+    // }
+
+
+    private void OnClientNotifyChooseHoleResultEvent(bool isBig)
+    {
+        handleholeTcs?.SetResult(isBig);
+        handleholeTcs = null;
+    }
+    #endregion
     private async Task DealOneCardFlow(int logicalSeat)
     {
-        await WaitIfDeclaring();
-
         dealRequest.RotateDeck();
-        await DelayHalf();
+        await DelayHalf(GameSettings.DEAL_DURATION_TIME / 2);
 
-        var cardData = GameCore.DealOneCard(logicalSeat);
+        var cardData = GameCore.DealOneCard(logicalSeat);  // 给对应玩家发牌，并返回插入的这张牌
         int currentId = CardData.Serialize(cardData);
 
         long peerId = NetworkManager.Instance.GetPeerIdBySeat(logicalSeat);
@@ -77,10 +167,10 @@ public partial class DealManager : Node
 
         // 飞牌动画
         dealRequest.FlyCard(logicalSeat);
-        await DelayHalf();
+        await DelayHalf(GameSettings.DEAL_DURATION_TIME / 2);
 
         CheckDeclare(logicalSeat);
-
+        await WaitIfDeclaring();
     }
     #region 叫主相关
     private void CheckDeclare(int logicalSeat)
@@ -94,7 +184,7 @@ public partial class DealManager : Node
         if (option == DeclareOption.DARK_TRUMP)  // 等待判断
             declareTcs = new();
     }
-    private void SetDeclareUIInvisiable(int expectLogicalSeat)
+    private void SetDeclareUIInvisiable(int expectLogicalSeat = -1)
     {
         for (int i = 0; i < GameSettings.PLAYER_COUNT; i++)
         {
@@ -107,10 +197,17 @@ public partial class DealManager : Node
 
     private async Task WaitIfDeclaring()
     {
-        // =============================
-        // 等待叫主结束
-        // =============================
         if (declareTcs == null) return;
+        // 完整过程：点击亮主/反主，先判断是否合法，合法后在通知可以选牌
+        // 选牌放在这里，防止漏牌，不合法也不会进入选牌
+        if (activeDeclareSeat != -1)  //暗主没有设置，也不需要让玩家选派
+        {
+            Rank rank = GameCore.GetCurrentRank(activeDeclareSeat);
+            long peerId = NetworkManager.Instance.GetPeerIdBySeat(activeDeclareSeat);
+            if (peerId != -1)
+                dealRequest.NotifyClientChooseTrump(peerId, rank);
+        }
+
         await declareTcs?.Task;
         declareTcs = null;
         activeDeclareSeat = -1;
@@ -121,8 +218,7 @@ public partial class DealManager : Node
         // 点击叫主
         int logicalSeat = NetworkManager.Instance.PeerToSeat[peerId];
         bool canDeclare = GameCore.CheckIfSeatCanDeclareOption(logicalSeat, option);
-        Rank rank = GameCore.GetCurrentRank();
-        dealRequest.NotifyClientDeclareButtonPressed(peerId, rank, canDeclare);
+        dealRequest.NotifyClientDeclareButtonPressed(peerId, canDeclare);
         if (!canDeclare) return;
         activeDeclareSeat = logicalSeat;
 
@@ -134,13 +230,12 @@ public partial class DealManager : Node
     {
         // 确定叫主
         int logicalSeat = NetworkManager.Instance.PeerToSeat[peerId];
-        activeDeclareSeat = -1;
         List<CardData> cardDatas = CardData.Deserialize(ids);
         // GD.Print($"服务器收到客户端{peerId}选的牌");
         // foreach (CardData cardData in cardDatas)
         //     GD.Print($"花色{cardData.suit}，点数{cardData.suit}");
         // GD.Print($"结束");
-        Rank rank = GameCore.GetCurrentRank();
+        Rank rank = GameCore.GetCurrentRank(logicalSeat);
         bool isDeclareRight = RuleEngine.IsDeclareRight(option, cardDatas, rank);
         dealRequest.NotifyClientConfirmButtonPressed(peerId, isDeclareRight);
         if (!isDeclareRight)
@@ -149,11 +244,7 @@ public partial class DealManager : Node
             return;
         }
 
-        // 无主的时候没有花色不知道花色
-        // FIXME:暗主的时候由于没有选牌，所以导致了cardDatas为空
         Suit suit = cardDatas[0].suit;
-        declareTcs?.SetResult((option, suit));
-        declareTcs = null;
 
         // 将叫主的牌放到对应的牌库里面
         bool isBack = option == DeclareOption.DARK_TRUMP;
@@ -161,11 +252,19 @@ public partial class DealManager : Node
         NetworkManager.Instance.PlayCard(logicalSeat, cardDatas, isBack, gamePhase);
         // 不能在服务器删除牌，因为这些牌并没有出
 
-        GameCore.SetTrump(option, suit, logicalSeat);
+        GameCore.SetTrump(option, suit);
+
+        // 如果为抢庄还需要设置当前的庄为现在的位置
+        if (GameCore.IsSnatchDealer())
+            GameCore.SetDealerSeat(logicalSeat);
 
         // 更新其他玩家 UI 更新UI使得不关闭也会有人自动关闭
         for (int i = 0; i < GameSettings.PLAYER_COUNT; i++)
             CheckDeclare(i);
+
+        declareTcs?.SetResult((option, suit));
+        declareTcs = null;
+        activeDeclareSeat = -1;
     }
 
     public void OnCancelRequestEvent()
@@ -180,10 +279,10 @@ public partial class DealManager : Node
     // =============================
     // 工具函数
     // =============================
-    private async Task DelayHalf()
+    private async Task DelayHalf(float time)
     {
         await ToSignal(
-            GetTree().CreateTimer(GameSettings.DEAL_DURATION_TIME / 2),
+            GetTree().CreateTimer(time),
             SceneTreeTimer.SignalName.Timeout);
     }
 

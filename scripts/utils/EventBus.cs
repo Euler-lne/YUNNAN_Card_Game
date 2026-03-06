@@ -54,6 +54,25 @@ namespace Euler.Event
         {
             return ConfirmDardTrumpEvent?.Invoke();
         }
+
+        public static Action ChooseHoleEvent;
+        public static void OnChooseHoleEvent()
+        {
+            ChooseHoleEvent?.Invoke();
+        }
+
+        public static Action<bool> ServerNotifyChooseHoleResultEvent;
+        public static void OnServerNotifyChooseHoleResultEvent(bool isBig)
+        {
+            ServerNotifyChooseHoleResultEvent?.Invoke(isBig);
+        }
+
+        public static Action<bool> ClientNotifyChooseHoleResultEvent;
+        public static void OnClientNotifyChooseHoleResultEvent(bool isBig)
+        {
+            ClientNotifyChooseHoleResultEvent?.Invoke(isBig);
+        }
+
     }
 
 }

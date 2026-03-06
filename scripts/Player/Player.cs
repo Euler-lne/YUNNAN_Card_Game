@@ -38,17 +38,20 @@ public partial class Player : Node2D
 
 	public void ExitrDeclareMode()
 	{
-		playerHandCard.SetAllCardSelectable(true);
+		var cards = playerHandCard.GetHandCards();
+		foreach (var card in cards)
+		{
+			card.SetLight();
+		}
 	}
 
 	public void EnterDeclareMode(Rank rank)
 	{
 		var cards = playerHandCard.GetHandCards();
-
 		foreach (var card in cards)
 		{
 			bool canSelect = RuleEngine.CanSelect(card.cardData, GamePhase.DECLARE, rank);
-			card.CanSelected = canSelect;
+			playerHandCard.SetCardSelectable(card, canSelect);
 		}
 	}
 

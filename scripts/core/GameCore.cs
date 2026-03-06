@@ -22,8 +22,6 @@ public class GameCore
         deckManager.TestCreateDeck();
 
         gameData.CurrentPhase = GamePhase.DEALING;
-
-        //TODO: 扣底
     }
 
     public void ContinueGame()
@@ -33,7 +31,17 @@ public class GameCore
 
     public int GetDealerSeat() => gameData.DealerSeat;
 
+    public bool IsSnatchDealer() => gameData.IsSnatchDealer;
+
+    public bool IsSameRank()
+    {
+        List<Rank> ranks = gameData.GetCurrentRank();
+        return ranks[0] == ranks[1];
+    }
+
     public GamePhase GetCurrentGamePhase() => gameData.CurrentPhase;
+
+    public void SetDealerSeat(int seat) { gameData.DealerSeat = seat; }
 
     public CardData DealOneCard(int seat)
     {
@@ -57,16 +65,11 @@ public class GameCore
     }
 
     #region 叫主相关
-    /// <summary>
-    /// 检查某个玩家当前手牌是否可以叫主
-    /// </summary>
-    /// <param name="playerId">服务器视角下的玩家座位ID</param>
-    /// <returns>玩家可以选择的叫主方式，如果不能叫主返回 DeclareOption.NONE</returns>
     public DeclareOption CheckIfSeatCanDeclare(int playerId)
     {
         var hand = playerManager.GetPlayerHand(playerId);
         var trumpState = gameData.TrumpState;
-        var currentLevel = gameData.GetCurrentRank();
+        var currentLevel = gameData.GetCurrentRank()[GameData.GetTeamIndex(playerId)];
 
         DeclareOption option = RuleEngine.GetDeclareOption(hand, trumpState, currentLevel);
         return option;
@@ -75,23 +78,12 @@ public class GameCore
     {
         var hand = playerManager.GetPlayerHand(playerId);
         var trumpState = gameData.TrumpState;
-        var currentLevel = gameData.GetCurrentRank();
+        var currentLevel = gameData.GetCurrentRank()[GameData.GetTeamIndex(playerId)];
 
         return RuleEngine.CanDeclareOfOption(hand, trumpState, currentLevel, option);
     }
-    /// <summary>
-    /// 设置主花色/叫主类型
-    /// </summary>
-    /// <param name="option">叫主类型</param>
-    /// <param name="suit">玩家选择的花色</param>
-    /// <param name="logicalSeat">叫主玩家座位</param>
-    public void SetTrump(DeclareOption option, Suit suit, int logicalSeat)
+    public void SetTrump(DeclareOption option, Suit suit)
     {
-        GD.Print($"设置主花色: 玩家 {logicalSeat}, 类型 {option}, 花色 {suit}");
-
-        // 庄家是谁
-        gameData.TrumpState.dealerSeat = logicalSeat;
-
         // 判断是否无主
         gameData.TrumpState.haveTrump = true; // 或者根据规则改
 
@@ -101,8 +93,19 @@ public class GameCore
         // 主花色
         gameData.TrumpState.trumpSuit = suit;
     }
+
+    public bool HaveTrump() => gameData.TrumpState.haveTrump;
+
+    public Suit GetTrumpSuit() => gameData.TrumpState.trumpSuit;
+
+    public void LockSuit(Suit suit) { SetTrump(DeclareOption.COUNTER_TRUMP, suit); }
     #endregion
-    public Rank GetCurrentRank()
+    public Rank GetCurrentRank(int seat)
+    {
+        return gameData.GetCurrentRank()[GameData.GetTeamIndex(seat)];
+    }
+
+    public List<Rank> GetCurrentRank()
     {
         return gameData.GetCurrentRank();
     }
