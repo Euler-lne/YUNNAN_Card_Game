@@ -1,4 +1,4 @@
-[gd_scene load_steps=14 format=3 uid="uid://dh0r6wjeod2gf"]
+[gd_scene load_steps=25 format=3 uid="uid://dh0r6wjeod2gf"]
 
 [ext_resource type="Script" uid="uid://d0hcpj6m3yoby" path="res://scripts/manager/GameManager.cs" id="2_p57ef"]
 [ext_resource type="Script" uid="uid://bm1e4brkugvp1" path="res://scripts/table/PlayerHandCard.cs" id="4_0tnpc"]
@@ -12,7 +12,41 @@
 [ext_resource type="Script" uid="uid://e4r1vljgl08q" path="res://scripts/Player/Player.cs" id="7_0tnpc"]
 [ext_resource type="Script" uid="uid://bgf022ubltmcf" path="res://scripts/ui/HoleUI.cs" id="7_dinhu"]
 [ext_resource type="PackedScene" uid="uid://dh5ik1gi0h6pw" path="res://scenes/ui/info.tscn" id="8_kvuet"]
+[ext_resource type="Script" uid="uid://cjolphiec3dl3" path="res://scripts/ui/UserInfoContainerUI.cs" id="10_264po"]
 [ext_resource type="Script" uid="uid://d3xl2dy4m7ndx" path="res://scripts/network/DealRequest.cs" id="10_kvpfn"]
+[ext_resource type="Script" uid="uid://xrau1adhvix0" path="res://scripts/ui/UserInfoUI.cs" id="10_ssvqc"]
+[ext_resource type="Texture2D" uid="uid://7k4ung4135wy" path="res://assets/human_jack_of_diamond_red_design_2.png" id="10_trtic"]
+[ext_resource type="Texture2D" uid="uid://7xoll8aec0ui" path="res://assets/joker_big.png" id="11_rysoc"]
+[ext_resource type="Texture2D" uid="uid://cxmoxsyj3ry68" path="res://assets/human_queen_of_diamond_red_design_2.png" id="12_ssvqc"]
+[ext_resource type="Texture2D" uid="uid://d15yo5u106q7r" path="res://assets/human_king_of_diamond_red_design_2.png" id="13_264po"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_1kice"]
+atlas = ExtResource("10_trtic")
+region = Rect2(153.342, 134.289, 206.803, 235.026)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_trtic"]
+bg_color = Color(0.6, 0.6, 0.6, 0)
+border_width_left = 5
+border_width_top = 5
+border_width_right = 5
+border_width_bottom = 5
+border_color = Color(0, 0, 0.00392157, 1)
+corner_radius_top_left = 5
+corner_radius_top_right = 5
+corner_radius_bottom_right = 5
+corner_radius_bottom_left = 5
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_5newe"]
+atlas = ExtResource("11_rysoc")
+region = Rect2(153.342, 134.289, 206.803, 235.026)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_37s47"]
+atlas = ExtResource("12_ssvqc")
+region = Rect2(153.342, 134.289, 206.803, 235.026)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_bt5mj"]
+atlas = ExtResource("13_264po")
+region = Rect2(153.342, 134.289, 206.803, 235.026)
 
 [node name="Game" type="Node"]
 
@@ -203,26 +237,180 @@ theme = ExtResource("5_kvpfn")
 theme_override_font_sizes/font_size = 40
 text = "取消"
 
-[node name="ScorePanel" type="Control" parent="CanvasLayer"]
-layout_mode = 3
+[node name="SuitLabel" type="Label" parent="CanvasLayer/UIManager"]
+layout_mode = 1
 anchors_preset = 5
 anchor_left = 0.5
 anchor_right = 0.5
-offset_left = -20.0
-offset_right = 20.0
-offset_bottom = 40.0
-grow_horizontal = 2
-
-[node name="StatusLabel" type="Label" parent="CanvasLayer"]
-anchors_preset = 5
-anchor_left = 0.5
-anchor_right = 0.5
-offset_left = -20.0
-offset_right = 20.0
-offset_bottom = 23.0
+offset_left = -40.0
+offset_right = 40.0
+offset_bottom = 55.0
 grow_horizontal = 2
 theme = ExtResource("5_kvpfn")
-text = "状态"
+text = "无"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="LeftCards" type="Label" parent="CanvasLayer/UIManager"]
+layout_mode = 1
+offset_right = 68.0
+offset_bottom = 55.0
+text = "108"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="UserInfos" type="Control" parent="CanvasLayer/UIManager"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+mouse_force_pass_scroll_events = false
+script = ExtResource("10_264po")
+
+[node name="UserInfoLeft" type="Control" parent="CanvasLayer/UIManager/UserInfos"]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -86.0
+offset_right = -86.0
+grow_horizontal = 0
+script = ExtResource("10_ssvqc")
+
+[node name="TextureRect" type="TextureRect" parent="CanvasLayer/UIManager/UserInfos/UserInfoLeft"]
+layout_mode = 1
+offset_left = 2.0
+offset_top = 2.0
+offset_right = 82.0
+offset_bottom = 82.0
+texture = SubResource("AtlasTexture_1kice")
+expand_mode = 1
+
+[node name="Panel" type="Panel" parent="CanvasLayer/UIManager/UserInfos/UserInfoLeft"]
+layout_mode = 1
+offset_right = 86.0
+offset_bottom = 86.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_trtic")
+
+[node name="Label" type="Label" parent="CanvasLayer/UIManager/UserInfos/UserInfoLeft"]
+layout_mode = 1
+offset_left = 17.0
+offset_top = 87.0
+offset_right = 69.0
+offset_bottom = 115.0
+theme_override_font_sizes/font_size = 20
+text = "玩家1"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="UserInfoDown" type="Control" parent="CanvasLayer/UIManager/UserInfos"]
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+grow_vertical = 0
+script = ExtResource("10_ssvqc")
+
+[node name="TextureRect" type="TextureRect" parent="CanvasLayer/UIManager/UserInfos/UserInfoDown"]
+layout_mode = 1
+offset_left = 2.0
+offset_top = -114.0
+offset_right = 82.0
+offset_bottom = -34.0
+texture = SubResource("AtlasTexture_5newe")
+expand_mode = 1
+
+[node name="Panel" type="Panel" parent="CanvasLayer/UIManager/UserInfos/UserInfoDown"]
+layout_mode = 1
+offset_top = -116.0
+offset_right = 86.0
+offset_bottom = -30.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_trtic")
+
+[node name="Label" type="Label" parent="CanvasLayer/UIManager/UserInfos/UserInfoDown"]
+layout_mode = 1
+offset_left = 17.0
+offset_top = -29.0
+offset_right = 69.0
+offset_bottom = -1.0
+theme_override_font_sizes/font_size = 20
+text = "玩家0"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="UserInfoTop" type="Control" parent="CanvasLayer/UIManager/UserInfos"]
+layout_mode = 1
+anchors_preset = 4
+anchor_top = 0.5
+anchor_bottom = 0.5
+grow_vertical = 2
+script = ExtResource("10_ssvqc")
+
+[node name="TextureRect" type="TextureRect" parent="CanvasLayer/UIManager/UserInfos/UserInfoTop"]
+layout_mode = 0
+offset_left = 2.0
+offset_top = 2.0
+offset_right = 82.0
+offset_bottom = 82.0
+texture = SubResource("AtlasTexture_37s47")
+expand_mode = 1
+
+[node name="Panel" type="Panel" parent="CanvasLayer/UIManager/UserInfos/UserInfoTop"]
+layout_mode = 0
+offset_right = 86.0
+offset_bottom = 86.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_trtic")
+
+[node name="Label" type="Label" parent="CanvasLayer/UIManager/UserInfos/UserInfoTop"]
+layout_mode = 0
+offset_left = 17.0
+offset_top = 87.0
+offset_right = 69.0
+offset_bottom = 115.0
+theme_override_font_sizes/font_size = 20
+text = "玩家2"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="UserInfoRight" type="Control" parent="CanvasLayer/UIManager/UserInfos"]
+layout_mode = 1
+anchors_preset = 6
+anchor_left = 1.0
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+grow_horizontal = 0
+grow_vertical = 2
+script = ExtResource("10_ssvqc")
+
+[node name="TextureRect" type="TextureRect" parent="CanvasLayer/UIManager/UserInfos/UserInfoRight"]
+layout_mode = 0
+offset_left = -82.0
+offset_top = 2.0
+offset_right = -2.0
+offset_bottom = 82.0
+texture = SubResource("AtlasTexture_bt5mj")
+expand_mode = 1
+
+[node name="Panel" type="Panel" parent="CanvasLayer/UIManager/UserInfos/UserInfoRight"]
+layout_mode = 0
+offset_left = -86.0
+offset_bottom = 86.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_trtic")
+
+[node name="Label" type="Label" parent="CanvasLayer/UIManager/UserInfos/UserInfoRight"]
+layout_mode = 0
+offset_left = -67.0
+offset_top = 87.0
+offset_right = -15.0
+offset_bottom = 115.0
+theme_override_font_sizes/font_size = 20
+text = "玩家3"
+horizontal_alignment = 1
+vertical_alignment = 1
 
 [node name="Player" type="Node2D" parent="."]
 script = ExtResource("7_0tnpc")

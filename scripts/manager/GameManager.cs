@@ -35,7 +35,7 @@ public partial class GameManager : Node
         if (!Multiplayer.IsServer())
             return;
 
-
+        // TODO:游戏开始之前为每一个客户端设置对应的头像和名字
         gameCore.StartGame();
         // 开始发牌
         dealManager.StartDeal();

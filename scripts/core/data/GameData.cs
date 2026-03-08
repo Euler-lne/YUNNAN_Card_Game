@@ -4,7 +4,7 @@ using Euler.Global;
 
 public class GameData
 {
-    public int DealerSeat { get; set; }          // 庄家座位，-1 表示未定
+    public int DealerSeat { get; set; }          // 庄家座位
     public int OpponentScore { get; set; }        // 闲家累计得分
 
     public bool IsSnatchDealer { get; set; }

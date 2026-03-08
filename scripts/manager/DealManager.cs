@@ -53,7 +53,6 @@ public partial class DealManager : Node
             };
             AddChild(dealEndTimer);
             dealEndTimer.Timeout += HandleHoleCard;
-
         }
     }
     public override void _ExitTree()
@@ -74,7 +73,7 @@ public partial class DealManager : Node
 
         GD.Print($"本局发牌是否为抢庄{GameCore.IsSnatchDealer()}");
 
-        for (int i = 0; i < 8; i++)
+        for (int i = 0; i < total; i++)
         {
             int logicalSeat = (i + dealerSeat) % GameSettings.PLAYER_COUNT;
 
@@ -102,8 +101,13 @@ public partial class DealManager : Node
             GameCore.LockSuit(suit);
             GD.Print($"当前主为{suit}花色 庄家为{GameCore.GetDealerSeat()}号");
         }
-        // TODO:如果为抢庄设置为抢庄结束
+        // 如果为抢庄设置为抢庄结束
+        if (GameCore.IsSnatchDealer())
+            GameCore.SetSnatchDealer(false);
         // TODO:庄家拿牌，选牌
+        DealerGetCards();
+        GD.Print("抠底结束，准备开始游戏");
+        // FIXME:选择了亮主，那么对应玩家之前发过的牌在对应玩家回合可以选中
     }
 
     private void DealerGetCards()
@@ -136,15 +140,28 @@ public partial class DealManager : Node
             Rank rank = GameCore.GetCurrentRank(dealerSeat);  // 得到当前庄家需要遇的牌
             ranks.Add(rank);
         }
-        // CardData cardData = MeetTrump(ranks, isBig);
+
         // TODO: 翻开卡牌，然后得到当前是多少
+
+        CardData cardData = GameCore.DealOneCard();
+        while (!CheckCardData(cardData, ranks))
+        {
+
+            cardData = GameCore.DealOneCard();
+        }
+
         // GameCore.SetDealerSeat(dealer);
     }
 
-    // private CardData MeetTrump(List<Rank> ranks, bool isBig)
-    // {
+    private bool CheckCardData(CardData cardData, List<Rank> ranks)
+    {
+        // 如果长度是1，那么庄家为上一局的庄家
+        // 如果长度是2，那么庄家为翻到的花色，上局庄家对2取模
+        // 如果相等就是上一局庄家，否则为上局的下一个人为庄家
+        // 如果没有遇到还是上一局的庄家
+        return false;
+    }
 
-    // }
 
 
     private void OnClientNotifyChooseHoleResultEvent(bool isBig)
@@ -159,6 +176,7 @@ public partial class DealManager : Node
         await DelayHalf(GameSettings.DEAL_DURATION_TIME / 2);
 
         var cardData = GameCore.DealOneCard(logicalSeat);  // 给对应玩家发牌，并返回插入的这张牌
+        // TODO:通知UI少一只牌，可能需要写一个函数用于获取当前剩余的牌
         int currentId = CardData.Serialize(cardData);
 
         long peerId = NetworkManager.Instance.GetPeerIdBySeat(logicalSeat);
@@ -249,6 +267,7 @@ public partial class DealManager : Node
         // 将叫主的牌放到对应的牌库里面
         bool isBack = option == DeclareOption.DARK_TRUMP;
         GamePhase gamePhase = GameCore.GetCurrentGamePhase();
+        // DOTO:通知UI当前的花色
         NetworkManager.Instance.PlayCard(logicalSeat, cardDatas, isBack, gamePhase);
         // 不能在服务器删除牌，因为这些牌并没有出
 

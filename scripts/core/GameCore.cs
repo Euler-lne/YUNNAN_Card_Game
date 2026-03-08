@@ -6,6 +6,8 @@ public class GameCore
     private readonly DeckManager deckManager;
     private readonly PlayerManager playerManager;
 
+    private List<CardData> tableCards;// 压底的牌
+
     private readonly GameData gameData;
 
     public GameCore()
@@ -33,6 +35,11 @@ public class GameCore
 
     public bool IsSnatchDealer() => gameData.IsSnatchDealer;
 
+    public void SetSnatchDealer(bool value)
+    {
+        gameData.IsSnatchDealer = value;
+    }
+
     public bool IsSameRank()
     {
         List<Rank> ranks = gameData.GetCurrentRank();
@@ -47,6 +54,13 @@ public class GameCore
     {
         CardData card = deckManager.DrawCard();
         playerManager.AddCardToPlayer(seat, card);
+        return card;
+    }
+
+    public CardData DealOneCard()
+    {
+        // 抠底调用的抽牌函数
+        CardData card = deckManager.DrawCard();
         return card;
     }
     public bool IsTrumpLocked()
