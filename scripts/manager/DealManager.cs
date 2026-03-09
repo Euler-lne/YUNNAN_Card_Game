@@ -17,6 +17,7 @@ public partial class DealManager : Node
 
     private TaskCompletionSource<(DeclareOption, Suit)> declareTcs = null;
     private TaskCompletionSource<bool> handleholeTcs = null;
+    private TaskCompletionSource dealerGetCardTcs = null;
 
     private DealRequest dealRequest;
     private int activeDeclareSeat = -1;
@@ -92,7 +93,8 @@ public partial class DealManager : Node
         SetDeclareUIInvisiable();
         if (!GameCore.HaveTrump())
         {
-            HandleHoleCardNoTrump();
+            await HandleHoleCardNoTrump();
+            GD.Print("当前没有主");
         }
         else
         {
@@ -105,23 +107,27 @@ public partial class DealManager : Node
         if (GameCore.IsSnatchDealer())
             GameCore.SetSnatchDealer(false);
         // TODO:庄家拿牌，选牌
-        DealerGetCards();   // 到这里游戏视角只有一张牌
+        await DealerGetCards();   // 到这里游戏视角只有一张牌
         GD.Print("抠底结束，准备开始游戏");
         // FIXME:选择了亮主，那么对应玩家之前发过的牌在对应玩家回合可以选中
         // TODO:卡牌回归
     }
 
-    private async void DealerGetCards()
+    private async Task DealerGetCards()
     {
         int dealerSeat = GameCore.GetDealerSeat();
+        GD.Print($"当前的庄家座位{dealerSeat}");
         dealRequest.RotateToDealer(dealerSeat);
         await DelayHalf(GameSettings.DEAL_DURATION_TIME / 2);
         // 牌给庄家
         dealRequest.FlyCardToDealer(dealerSeat);
-
+        await DelayHalf(GameSettings.DEAL_DURATION_TIME / 2);
+        // TODO:可能需要在playermanager中添加卡牌，playermanager一定要更新卡牌
+        dealRequest.NotifyDealerGetRestCard(dealerSeat, CardData.Serialize(GameCore.GetRestCard()));
+        dealerGetCardTcs = new();  // 这里要等待庄家选择完卡牌
     }
 
-    private async void HandleHoleCardNoTrump()
+    private async Task HandleHoleCardNoTrump()
     {
         dealRequest.NotifyHostChooseMode(GameCore.GetDealerSeat());
         handleholeTcs = new();
@@ -161,6 +167,7 @@ public partial class DealManager : Node
             // TODO:当前只有卡牌移动，还没有执行卡牌的翻面
             dealRequest.GenerateHoleCard(posList[index],
                     cardDatas[index], index == cardDatas.Count - 1);
+            GD.Print($"当前得到的卡牌为，花色{cardDatas[index].suit}数值{cardDatas[index].rank}");
 
             await DelayHalf(GameSettings.DEAL_DURATION_TIME);
 
@@ -192,6 +199,7 @@ public partial class DealManager : Node
             int curretDealer = (lastDealer + meetRankIndex) % GameSettings.PLAYER_COUNT;
             GameCore.SetDealerSeat(curretDealer);
             GameCore.SetTrump(DeclareOption.COUNTER_TRUMP, cardDatas[index].suit);
+            // TODO:这里太快了，可能需要提示一下
         }
         else
         {
@@ -206,16 +214,6 @@ public partial class DealManager : Node
         // 最后把牌聚拢
         dealRequest.GetherHoleCard();
         await DelayHalf(GameSettings.DEAL_DURATION_TIME / 2);
-    }
-
-    private int GetMeetRankIndex(List<Rank> ranks, CardData currentCardData)
-    {
-        for (int i = 0; i < ranks.Count; i++)
-        {
-            if (ranks[i] == currentCardData.rank)
-                return i;
-        }
-        return -1;
     }
 
     private void OnClientNotifyChooseHoleResultEvent(bool isBig)
@@ -243,6 +241,15 @@ public partial class DealManager : Node
 
         CheckDeclare(logicalSeat);
         await WaitIfDeclaring();
+    }
+    private int GetMeetRankIndex(List<Rank> ranks, CardData currentCardData)
+    {
+        for (int i = 0; i < ranks.Count; i++)
+        {
+            if (ranks[i] == currentCardData.rank)
+                return i;
+        }
+        return -1;
     }
     #region 叫主相关
     private void CheckDeclare(int logicalSeat)

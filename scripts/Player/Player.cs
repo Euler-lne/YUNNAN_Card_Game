@@ -70,6 +70,8 @@ public partial class Player : Node2D
 			return new(screenSize.X / 2, 0);
 		else if (viewSeat == 3)
 			return new(0, screenSize.Y / 2);
+		else if (viewSeat == 0)
+			return new(screenSize.X / 2, screenSize.Y);
 
 		GD.PrintErr($"发牌动画不合理的发牌位置{viewSeat}");
 		return Vector2.Zero;

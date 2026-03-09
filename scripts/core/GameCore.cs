@@ -6,7 +6,7 @@ public class GameCore
     private readonly DeckManager deckManager;
     private readonly PlayerManager playerManager;
 
-    private List<CardData> tableCards;// 压底的牌
+    private List<CardData> tableCards = [];// 压底的牌
 
     private readonly GameData gameData;
 
@@ -19,9 +19,9 @@ public class GameCore
 
     public void StartGame()
     {
-        // deckManager.CreateDeck();
-        // deckManager.Shuffle();
-        deckManager.TestCreateDeck();
+        deckManager.CreateDeck();
+        deckManager.Shuffle();
+        // deckManager.TestCreateDeck();
 
         gameData.CurrentPhase = GamePhase.DEALING;
     }

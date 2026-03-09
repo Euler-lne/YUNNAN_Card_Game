@@ -8,7 +8,8 @@ public partial class DealRequest : Node2D
 {
     [Export] private Player player;
     [Export] private Card deckCard;
-    private List<Card> holdCards;
+    [Export] private Node holdCardParent;
+    private List<Card> holdCards = [];
 
     public void SetDealCard(bool visiable)
     {
@@ -131,6 +132,9 @@ public partial class DealRequest : Node2D
     {
         Vector2 endPos = new(endX, endY);
         Card card = deckCard.Duplicate() as Card;
+        card.Rotation = 0f;
+        holdCardParent.AddChild(card);          // 添加到场景树 → 触发 _Ready
+        holdCards.Add(card);
         card.SetCardData(CardData.Deserialize(cardData));
         if (isEnd) deckCard.Visible = false;
         var tween = CreateTween();
@@ -187,8 +191,18 @@ public partial class DealRequest : Node2D
         tween.TweenCallback(Callable.From(() =>
         {
             deckCard.Visible = false;
-            // TODO:如果是自己那么通知发牌
         }));
+    }
+    public void NotifyDealerGetRestCard(int dealer, int[] ids)
+    {
+        long peerId = NetworkManager.Instance.GetPeerIdBySeat(dealer);
+        if (peerId != -1)
+            RpcId(peerId, nameof(RpcNotifyDealerGetRestCard), ids);
+    }
+    [Rpc(MultiplayerApi.RpcMode.Authority, CallLocal = true)]
+    private void RpcNotifyDealerGetRestCard(int[] ids)
+    {
+        // 直接调用一个事件方法，通知获取卡牌
     }
     public void GetherHoleCard()
     {
