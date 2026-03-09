@@ -1,4 +1,4 @@
-[gd_scene load_steps=25 format=3 uid="uid://dh0r6wjeod2gf"]
+[gd_scene load_steps=26 format=3 uid="uid://dh0r6wjeod2gf"]
 
 [ext_resource type="Script" uid="uid://d0hcpj6m3yoby" path="res://scripts/manager/GameManager.cs" id="2_p57ef"]
 [ext_resource type="Script" uid="uid://bm1e4brkugvp1" path="res://scripts/table/PlayerHandCard.cs" id="4_0tnpc"]
@@ -18,6 +18,7 @@
 [ext_resource type="Texture2D" uid="uid://7k4ung4135wy" path="res://assets/human_jack_of_diamond_red_design_2.png" id="10_trtic"]
 [ext_resource type="Texture2D" uid="uid://7xoll8aec0ui" path="res://assets/joker_big.png" id="11_rysoc"]
 [ext_resource type="Texture2D" uid="uid://cxmoxsyj3ry68" path="res://assets/human_queen_of_diamond_red_design_2.png" id="12_ssvqc"]
+[ext_resource type="Texture2D" uid="uid://bdd8t4xtvwut0" path="res://assets/Crown.png" id="13_1kice"]
 [ext_resource type="Texture2D" uid="uid://d15yo5u106q7r" path="res://assets/human_king_of_diamond_red_design_2.png" id="13_264po"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_1kice"]
@@ -270,7 +271,7 @@ mouse_filter = 2
 mouse_force_pass_scroll_events = false
 script = ExtResource("10_264po")
 
-[node name="UserInfoLeft" type="Control" parent="CanvasLayer/UIManager/UserInfos"]
+[node name="UserInfoTop" type="Control" parent="CanvasLayer/UIManager/UserInfos"]
 layout_mode = 1
 anchors_preset = 1
 anchor_left = 1.0
@@ -280,7 +281,7 @@ offset_right = -86.0
 grow_horizontal = 0
 script = ExtResource("10_ssvqc")
 
-[node name="TextureRect" type="TextureRect" parent="CanvasLayer/UIManager/UserInfos/UserInfoLeft"]
+[node name="TextureRect" type="TextureRect" parent="CanvasLayer/UIManager/UserInfos/UserInfoTop"]
 layout_mode = 1
 offset_left = 2.0
 offset_top = 2.0
@@ -289,22 +290,31 @@ offset_bottom = 82.0
 texture = SubResource("AtlasTexture_1kice")
 expand_mode = 1
 
-[node name="Panel" type="Panel" parent="CanvasLayer/UIManager/UserInfos/UserInfoLeft"]
+[node name="Panel" type="Panel" parent="CanvasLayer/UIManager/UserInfos/UserInfoTop"]
 layout_mode = 1
 offset_right = 86.0
 offset_bottom = 86.0
 theme_override_styles/panel = SubResource("StyleBoxFlat_trtic")
 
-[node name="Label" type="Label" parent="CanvasLayer/UIManager/UserInfos/UserInfoLeft"]
+[node name="Label" type="Label" parent="CanvasLayer/UIManager/UserInfos/UserInfoTop"]
 layout_mode = 1
-offset_left = 17.0
+offset_left = 1.0
 offset_top = 87.0
-offset_right = 69.0
+offset_right = 86.0
 offset_bottom = 115.0
 theme_override_font_sizes/font_size = 20
 text = "玩家1"
 horizontal_alignment = 1
 vertical_alignment = 1
+
+[node name="Crown" type="TextureRect" parent="CanvasLayer/UIManager/UserInfos/UserInfoTop"]
+layout_mode = 0
+offset_left = -42.0
+offset_top = 20.0
+offset_right = -2.0
+offset_bottom = 60.0
+texture = ExtResource("13_1kice")
+expand_mode = 1
 
 [node name="UserInfoDown" type="Control" parent="CanvasLayer/UIManager/UserInfos"]
 layout_mode = 1
@@ -332,16 +342,23 @@ theme_override_styles/panel = SubResource("StyleBoxFlat_trtic")
 
 [node name="Label" type="Label" parent="CanvasLayer/UIManager/UserInfos/UserInfoDown"]
 layout_mode = 1
-offset_left = 17.0
 offset_top = -29.0
-offset_right = 69.0
+offset_right = 85.0
 offset_bottom = -1.0
 theme_override_font_sizes/font_size = 20
-text = "玩家0"
+text = "玩家玩家"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="UserInfoTop" type="Control" parent="CanvasLayer/UIManager/UserInfos"]
+[node name="Crown" type="TextureRect" parent="CanvasLayer/UIManager/UserInfos/UserInfoDown"]
+offset_left = 88.0
+offset_top = -92.0
+offset_right = 128.0
+offset_bottom = -52.0
+texture = ExtResource("13_1kice")
+expand_mode = 1
+
+[node name="UserInfoLeft" type="Control" parent="CanvasLayer/UIManager/UserInfos"]
 layout_mode = 1
 anchors_preset = 4
 anchor_top = 0.5
@@ -349,7 +366,7 @@ anchor_bottom = 0.5
 grow_vertical = 2
 script = ExtResource("10_ssvqc")
 
-[node name="TextureRect" type="TextureRect" parent="CanvasLayer/UIManager/UserInfos/UserInfoTop"]
+[node name="TextureRect" type="TextureRect" parent="CanvasLayer/UIManager/UserInfos/UserInfoLeft"]
 layout_mode = 0
 offset_left = 2.0
 offset_top = 2.0
@@ -358,22 +375,29 @@ offset_bottom = 82.0
 texture = SubResource("AtlasTexture_37s47")
 expand_mode = 1
 
-[node name="Panel" type="Panel" parent="CanvasLayer/UIManager/UserInfos/UserInfoTop"]
+[node name="Panel" type="Panel" parent="CanvasLayer/UIManager/UserInfos/UserInfoLeft"]
 layout_mode = 0
 offset_right = 86.0
 offset_bottom = 86.0
 theme_override_styles/panel = SubResource("StyleBoxFlat_trtic")
 
-[node name="Label" type="Label" parent="CanvasLayer/UIManager/UserInfos/UserInfoTop"]
+[node name="Label" type="Label" parent="CanvasLayer/UIManager/UserInfos/UserInfoLeft"]
 layout_mode = 0
-offset_left = 17.0
 offset_top = 87.0
-offset_right = 69.0
+offset_right = 85.0
 offset_bottom = 115.0
 theme_override_font_sizes/font_size = 20
 text = "玩家2"
 horizontal_alignment = 1
 vertical_alignment = 1
+
+[node name="Crown" type="TextureRect" parent="CanvasLayer/UIManager/UserInfos/UserInfoLeft"]
+offset_left = 88.0
+offset_top = 20.0
+offset_right = 128.0
+offset_bottom = 60.0
+texture = ExtResource("13_1kice")
+expand_mode = 1
 
 [node name="UserInfoRight" type="Control" parent="CanvasLayer/UIManager/UserInfos"]
 layout_mode = 1
@@ -403,14 +427,21 @@ theme_override_styles/panel = SubResource("StyleBoxFlat_trtic")
 
 [node name="Label" type="Label" parent="CanvasLayer/UIManager/UserInfos/UserInfoRight"]
 layout_mode = 0
-offset_left = -67.0
+offset_left = -85.0
 offset_top = 87.0
-offset_right = -15.0
 offset_bottom = 115.0
 theme_override_font_sizes/font_size = 20
 text = "玩家3"
 horizontal_alignment = 1
 vertical_alignment = 1
+
+[node name="Crown" type="TextureRect" parent="CanvasLayer/UIManager/UserInfos/UserInfoRight"]
+offset_left = -128.0
+offset_top = 22.0
+offset_right = -88.0
+offset_bottom = 62.0
+texture = ExtResource("13_1kice")
+expand_mode = 1
 
 [node name="Player" type="Node2D" parent="."]
 script = ExtResource("7_0tnpc")
