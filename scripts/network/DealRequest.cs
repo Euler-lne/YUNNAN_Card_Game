@@ -1,12 +1,14 @@
 using Godot;
 using Euler.Global;
 using Euler.Event;
+using System.Collections.Generic;
 
 
-public partial class DealRequest : Node
+public partial class DealRequest : Node2D
 {
     [Export] private Player player;
     [Export] private Card deckCard;
+    private List<Card> holdCards;
 
     public void SetDealCard(bool visiable)
     {
@@ -97,6 +99,126 @@ public partial class DealRequest : Node
         // 显示UI，让对应的主选择遇大遇小
         DealEvent.OnServerNotifyChooseHoleResultEvent(isBig);
     }
+
+    public List<Vector2> GenerateHoleCardPosition()
+    {
+        // 获取屏幕尺寸
+        Vector2 screenSize = GetViewportRect().Size;
+        Vector2 screenCenter = new(screenSize.X / 2, screenSize.Y / 2);
+
+        float cardWidth = CardParams.CARD_WIDTH;
+        float cardHeight = CardParams.CARD_HEIGHT;
+
+        float cardPosY = screenCenter.Y - cardHeight - CardLayoutParams.PUT_CARD_MARGIN;
+        float offsetX = cardWidth + CardLayoutParams.PUT_CARD_MARGIN;
+        float cardPosX = screenCenter.X - 3 * offsetX - offsetX / 2;
+        List<Vector2> posList = [];
+        for (int i = 0; i < 8; i++)
+        {
+            Vector2 pos = new(cardPosX, cardPosY);
+            cardPosX += offsetX;
+            posList.Add(pos);
+        }
+        return posList;
+    }
+
+    public void GenerateHoleCard(Vector2 endPos, CardData cardData, bool isEnd = false)
+    {
+        Rpc(nameof(RpcGenerateHoleCard), endPos.X, endPos.Y, CardData.Serialize(cardData), isEnd);
+    }
+    [Rpc(MultiplayerApi.RpcMode.Authority, CallLocal = true)]
+    private void RpcGenerateHoleCard(float endX, float endY, int cardData, bool isEnd)
+    {
+        Vector2 endPos = new(endX, endY);
+        Card card = deckCard.Duplicate() as Card;
+        card.SetCardData(CardData.Deserialize(cardData));
+        if (isEnd) deckCard.Visible = false;
+        var tween = CreateTween();
+        tween.TweenProperty(
+            card,
+            "global_position",
+            endPos,
+            GameSettings.DEAL_DURATION_TIME / 2)
+            .SetTrans(Tween.TransitionType.Quad)
+            .SetEase(Tween.EaseType.Out);
+
+        tween.TweenCallback(Callable.From(() =>
+        {
+            card.IsBack = false;
+            // TODO：调用卡牌翻面函数
+        }));
+    }
+    public void RotateToDealer(int dealerSeat)
+    {
+        Rpc(nameof(RpcRotateToDealer), dealerSeat);
+    }
+    [Rpc(MultiplayerApi.RpcMode.Authority, CallLocal = true)]
+    private void RpcRotateToDealer(int dealerSeat)
+    {
+        int viewSeat = NetworkManager.Instance.GetViewSeat(dealerSeat);
+        int mySeat = NetworkManager.Instance.MyLogicalSeat;
+        if (viewSeat < mySeat)
+            viewSeat += GameSettings.PLAYER_COUNT;
+        var tween = CreateTween();
+        tween.TweenProperty(deckCard, "rotation",
+            deckCard.Rotation - Mathf.Pi / 2 * (viewSeat - mySeat),
+            GameSettings.DEAL_DURATION_TIME / 2)
+            .SetTrans(Tween.TransitionType.Quad)
+            .SetEase(Tween.EaseType.Out);
+    }
+    public void FlyCardToDealer(int dealerSeat)
+    {
+        Rpc(nameof(RpcFlyCardToDealer), dealerSeat);
+    }
+    [Rpc(MultiplayerApi.RpcMode.Authority, CallLocal = true)]
+    private void RpcFlyCardToDealer(int dealerSeat)
+    {
+        int viewSeat = NetworkManager.Instance.GetViewSeat(dealerSeat);
+        Vector2 targetPos = player.GetDealTargetPosition(viewSeat);
+        var tween = CreateTween();
+        tween.TweenProperty(
+            deckCard,
+            "global_position",
+            targetPos,
+            GameSettings.DEAL_DURATION_TIME / 2)
+            .SetTrans(Tween.TransitionType.Quad)
+            .SetEase(Tween.EaseType.Out);
+
+        tween.TweenCallback(Callable.From(() =>
+        {
+            deckCard.Visible = false;
+            // TODO:如果是自己那么通知发牌
+        }));
+    }
+    public void GetherHoleCard()
+    {
+        Rpc(nameof(RpcGetherHoleCard));
+    }
+    [Rpc(MultiplayerApi.RpcMode.Authority, CallLocal = true)]
+    private void RpcGetherHoleCard()
+    {
+        foreach (Card card in holdCards)
+        {
+            Vector2 screenSize = GetViewportRect().Size;
+            Vector2 endPos = new(screenSize.X / 2, screenSize.Y / 2);
+            card.IsBack = true; // TODO：调用卡牌翻面函数
+            var tween = CreateTween();
+            tween.TweenProperty(
+                card,
+                "global_position",
+                endPos,
+                GameSettings.DEAL_DURATION_TIME / 2)
+                .SetTrans(Tween.TransitionType.Quad)
+                .SetEase(Tween.EaseType.Out);
+
+            tween.TweenCallback(Callable.From(() =>
+            {
+                card.QueueFree();
+            }));
+        }
+        holdCards.Clear();
+        deckCard.Visible = true;
+    }
     #endregion
 
     #region 发牌
@@ -118,7 +240,7 @@ public partial class DealRequest : Node
     }
     #endregion
 
-    #region 动画相关
+    #region 发牌动画相关
     public void InitDeckRotation(int hostSeat)
     {
         Rpc(nameof(RpcInitDeckRotation), hostSeat);
@@ -194,5 +316,8 @@ public partial class DealRequest : Node
             flyingCard.QueueFree();
         }));
     }
+
+
+
     #endregion
 }

@@ -418,7 +418,7 @@ script = ExtResource("7_0tnpc")
 [node name="DealManager" type="Node" parent="."]
 script = ExtResource("5_p57ef")
 
-[node name="DealRequest" type="Node" parent="DealManager" node_paths=PackedStringArray("player", "deckCard")]
+[node name="DealRequest" type="Node2D" parent="DealManager" node_paths=PackedStringArray("player", "deckCard")]
 script = ExtResource("10_kvpfn")
 player = NodePath("../../Player")
 deckCard = NodePath("../../TableRoot/PlayeArea/DeckCards/Card")

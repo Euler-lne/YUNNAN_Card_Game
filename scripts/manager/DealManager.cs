@@ -105,14 +105,20 @@ public partial class DealManager : Node
         if (GameCore.IsSnatchDealer())
             GameCore.SetSnatchDealer(false);
         // TODO:庄家拿牌，选牌
-        DealerGetCards();
+        DealerGetCards();   // 到这里游戏视角只有一张牌
         GD.Print("抠底结束，准备开始游戏");
         // FIXME:选择了亮主，那么对应玩家之前发过的牌在对应玩家回合可以选中
+        // TODO:卡牌回归
     }
 
-    private void DealerGetCards()
+    private async void DealerGetCards()
     {
+        int dealerSeat = GameCore.GetDealerSeat();
+        dealRequest.RotateToDealer(dealerSeat);
+        await DelayHalf(GameSettings.DEAL_DURATION_TIME / 2);
         // 牌给庄家
+        dealRequest.FlyCardToDealer(dealerSeat);
+
     }
 
     private async void HandleHoleCardNoTrump()
@@ -141,28 +147,76 @@ public partial class DealManager : Node
             ranks.Add(rank);
         }
 
-        // TODO: 翻开卡牌，然后得到当前是多少
+        List<CardData> cardDatas = GameCore.GetRestCard();
+        List<Vector2> posList = dealRequest.GenerateHoleCardPosition();
 
-        CardData cardData = GameCore.DealOneCard();
-        while (!CheckCardData(cardData, ranks))
+        if (cardDatas.Count != posList.Count)
+            GD.PrintErr("错误：剩余卡牌数量与卡牌位置数量不一样");
+
+        int meetRankIndex = -1; // 判断是否遇到对应的Rank结束的
+        int index = 0;
+        int maxCardData = -1, minCardData = -1;
+        while (index < cardDatas.Count)
         {
+            // TODO:当前只有卡牌移动，还没有执行卡牌的翻面
+            dealRequest.GenerateHoleCard(posList[index],
+                    cardDatas[index], index == cardDatas.Count - 1);
 
-            cardData = GameCore.DealOneCard();
+            await DelayHalf(GameSettings.DEAL_DURATION_TIME);
+
+            // 判断当前的是否应该结束
+            meetRankIndex = GetMeetRankIndex(ranks, cardDatas[index]);
+            if (meetRankIndex != -1) break;
+            if (maxCardData == -1 && cardDatas[index].rank <= Rank.ACE)
+                maxCardData = CardData.Serialize(cardDatas[index]);
+            else
+            {
+                CardData data = CardData.Deserialize(maxCardData);
+                if (data.rank < cardDatas[index].rank && cardDatas[index].rank <= Rank.ACE)
+                    maxCardData = CardData.Serialize(cardDatas[index]);
+            }
+            if (minCardData == -1 && cardDatas[index].rank <= Rank.ACE)
+                minCardData = CardData.Serialize(cardDatas[index]);
+            else
+            {
+                CardData data = CardData.Deserialize(minCardData);
+                if (data.rank > cardDatas[index].rank && cardDatas[index].rank <= Rank.ACE)
+                    minCardData = CardData.Serialize(cardDatas[index]);
+            }
+            index++;
+        }
+        if (meetRankIndex != -1)
+        {
+            // 说明index遇到主牌了meetRankIndex
+            int lastDealer = GameCore.GetDealerSeat();
+            int curretDealer = (lastDealer + meetRankIndex) % GameSettings.PLAYER_COUNT;
+            GameCore.SetDealerSeat(curretDealer);
+            GameCore.SetTrump(DeclareOption.COUNTER_TRUMP, cardDatas[index].suit);
+        }
+        else
+        {
+            // 没有遇到主牌，当前采取遇大/遇小
+            // 主就是上一局的主不用改变
+            // 花色为遇大/遇小大花色
+            GameCore.SetDealerSeat(GameCore.GetDealerSeat());
+            Suit suit = isBig ? CardData.Deserialize(maxCardData).suit : CardData.Deserialize(minCardData).suit;
+            GameCore.SetTrump(DeclareOption.COUNTER_TRUMP, suit);
         }
 
-        // GameCore.SetDealerSeat(dealer);
+        // 最后把牌聚拢
+        dealRequest.GetherHoleCard();
+        await DelayHalf(GameSettings.DEAL_DURATION_TIME / 2);
     }
 
-    private bool CheckCardData(CardData cardData, List<Rank> ranks)
+    private int GetMeetRankIndex(List<Rank> ranks, CardData currentCardData)
     {
-        // 如果长度是1，那么庄家为上一局的庄家
-        // 如果长度是2，那么庄家为翻到的花色，上局庄家对2取模
-        // 如果相等就是上一局庄家，否则为上局的下一个人为庄家
-        // 如果没有遇到还是上一局的庄家
-        return false;
+        for (int i = 0; i < ranks.Count; i++)
+        {
+            if (ranks[i] == currentCardData.rank)
+                return i;
+        }
+        return -1;
     }
-
-
 
     private void OnClientNotifyChooseHoleResultEvent(bool isBig)
     {
@@ -267,7 +321,7 @@ public partial class DealManager : Node
         // 将叫主的牌放到对应的牌库里面
         bool isBack = option == DeclareOption.DARK_TRUMP;
         GamePhase gamePhase = GameCore.GetCurrentGamePhase();
-        // DOTO:通知UI当前的花色
+        // TODO:通知UI当前的花色
         NetworkManager.Instance.PlayCard(logicalSeat, cardDatas, isBack, gamePhase);
         // 不能在服务器删除牌，因为这些牌并没有出
 

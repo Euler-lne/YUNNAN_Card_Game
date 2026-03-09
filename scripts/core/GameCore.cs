@@ -48,7 +48,12 @@ public class GameCore
 
     public GamePhase GetCurrentGamePhase() => gameData.CurrentPhase;
 
-    public void SetDealerSeat(int seat) { gameData.DealerSeat = seat; }
+    public void SetDealerSeat(int seat)
+    {
+        // TODO:在这个函数通知UI显示当前的DealerSeat
+        gameData.DealerSeat = seat;
+    }
+
 
     public CardData DealOneCard(int seat)
     {
@@ -57,11 +62,11 @@ public class GameCore
         return card;
     }
 
-    public CardData DealOneCard()
+    public List<CardData> GetRestCard()
     {
-        // 抠底调用的抽牌函数
-        CardData card = deckManager.DrawCard();
-        return card;
+        if (tableCards.Count != 0) return tableCards;
+        tableCards = deckManager.GetRestCard();
+        return tableCards;
     }
     public bool IsTrumpLocked()
     {

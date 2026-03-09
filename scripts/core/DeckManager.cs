@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Godot;
 
 public class DeckManager
 {
@@ -79,6 +80,11 @@ public class DeckManager
         CardData card = deck[^1];
         deck.RemoveAt(deck.Count - 1);
         return card;
+    }
+
+    public List<CardData> GetRestCard()
+    {
+        return deck;
     }
 
 
