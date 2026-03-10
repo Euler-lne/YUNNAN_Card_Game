@@ -75,4 +75,36 @@ namespace Euler.Event
 
     }
 
+    public static class UIEvent
+    {
+        public static Action<string, int> ChangeNameEvent;
+        public static void OnChangeNameEvent(string name, int seat)
+        {
+            ChangeNameEvent?.Invoke(name, seat);
+        }
+
+        public static Action<string, int> ChangeAvatarEvent;
+        public static void OnChangeAvatarEvent(string path, int seat)
+        {
+            ChangeAvatarEvent?.Invoke(path, seat);
+        }
+
+        public static Action<bool, int> ChangeTrumpEvent;
+        public static void OnChangeTrumpEvent(bool isTrump, int seat)
+        {
+            ChangeTrumpEvent?.Invoke(isTrump, seat);
+        }
+
+        public static Action<int, int> ChangeCardNumEvent;
+        public static void OnChangeCardNumEvent(int cardNum, int seat)
+        {
+            ChangeCardNumEvent?.Invoke(cardNum, seat);
+        }
+
+        public static Action<Suit> ChangeTrumpSuitEvent;
+        public static void OnChangeTrumpSuitEvent(Suit suit)
+        {
+            ChangeTrumpSuitEvent?.Invoke(suit);
+        }
+    }
 }

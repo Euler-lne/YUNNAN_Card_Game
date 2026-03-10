@@ -30,13 +30,17 @@ public partial class NetworkManager : Node
 	}
 	public int MyLogicalSeat { get; private set; } = -1;
 
+	private string[] nameList = [];
+	private string[] avatarPathList = [];
+
 	public override void _Ready()
 	{
 		if (Instance == null)
 			Instance = this;
 		else
 			QueueFree();
-
+		nameList = GameSettings.GetRandomFourNames();
+		avatarPathList = GameSettings.GetAvatarList();
 		Multiplayer.ConnectedToServer += OnConnectedToServer;
 		Multiplayer.ConnectionFailed += OnConnectionFailed;
 		Multiplayer.PeerDisconnected += OnPeerDisconnected;
@@ -70,6 +74,7 @@ public partial class NetworkManager : Node
 		PeerToSeat[serverId] = 0;
 		MyLogicalSeat = 0;
 		TotalPlayers = 1;
+		SetUI(serverId);
 	}
 
 	private void OnPeerConnected(long id)
@@ -79,6 +84,7 @@ public partial class NetworkManager : Node
 		RpcId(id, nameof(SetMySeat), TotalPlayers);
 
 		TotalPlayers++;
+		SetUI(id);
 		Rpc(nameof(SyncTotalPlayers), TotalPlayers);
 		GD.Print("玩家加入: " + id + " 当前总人数: " + TotalPlayers);
 	}
@@ -97,6 +103,28 @@ public partial class NetworkManager : Node
 
 	[Rpc(MultiplayerApi.RpcMode.Authority)]
 	private void SyncTotalPlayers(int count) => TotalPlayers = count;
+	private void SetUI(long currentPeerId)
+	{
+		// 1. 已有玩家更新UI
+		// 2. 通知新加入的玩家现有的UI
+		int serverSeat = PeerToSeat[currentPeerId];
+		Rpc(nameof(RpcSetUI), nameList[serverSeat], avatarPathList[serverSeat], serverSeat); //通知所有人 有人加入，并更新自己的UI
+
+		foreach (var item in PeerToSeat)
+		{
+			// 给加入的这个人添加别人的UI
+			if (item.Key == currentPeerId) continue;
+			serverSeat = item.Value;
+			RpcId(currentPeerId, nameof(RpcSetUI), nameList[serverSeat], avatarPathList[serverSeat], serverSeat);
+		}
+	}
+	[Rpc(MultiplayerApi.RpcMode.Authority, CallLocal = true)]
+	private void RpcSetUI(string name, string path, int serverSeat)
+	{
+		int selfSeat = GetViewSeat(serverSeat);
+		UIEvent.OnChangeNameEvent(name, selfSeat);
+		UIEvent.OnChangeAvatarEvent(path, selfSeat);
+	}
 	private void OnConnectedToServer()
 	{
 		GD.Print("连接成功");

@@ -5,15 +5,23 @@ public partial class UserInfoUI : Control
 {
 	private TextureRect textureRect;
 	private Label label;
+	private TextureRect crown;
 	public override void _Ready()
 	{
 		textureRect = GetNode<TextureRect>("TextureRect");
 		label = GetNode<Label>("Label");
+		crown = GetNode<TextureRect>("Crown");
+		crown.Visible = false;
 	}
 
 	public void SetLabel(string content)
 	{
 		label.Text = content;
+	}
+
+	public void SetCrownVisible(bool visiable)
+	{
+		crown.Visible = visiable;
 	}
 
 	public void SetTextureRect(string atlasPath)

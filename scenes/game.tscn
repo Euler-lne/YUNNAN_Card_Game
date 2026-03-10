@@ -351,6 +351,7 @@ horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="Crown" type="TextureRect" parent="CanvasLayer/UIManager/UserInfos/UserInfoDown"]
+layout_mode = 0
 offset_left = 88.0
 offset_top = -92.0
 offset_right = 128.0
@@ -392,6 +393,7 @@ horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="Crown" type="TextureRect" parent="CanvasLayer/UIManager/UserInfos/UserInfoLeft"]
+layout_mode = 0
 offset_left = 88.0
 offset_top = 20.0
 offset_right = 128.0
@@ -436,6 +438,7 @@ horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="Crown" type="TextureRect" parent="CanvasLayer/UIManager/UserInfos/UserInfoRight"]
+layout_mode = 0
 offset_left = -128.0
 offset_top = 22.0
 offset_right = -88.0
@@ -449,11 +452,10 @@ script = ExtResource("7_0tnpc")
 [node name="DealManager" type="Node" parent="."]
 script = ExtResource("5_p57ef")
 
-[node name="DealRequest" type="Node2D" parent="DealManager" node_paths=PackedStringArray("player", "deckCard", "holdCardParent")]
+[node name="DealRequest" type="Node2D" parent="DealManager" node_paths=PackedStringArray("player", "deckCard")]
 script = ExtResource("10_kvpfn")
 player = NodePath("../../Player")
 deckCard = NodePath("../../TableRoot/PlayeArea/DeckCards/Card")
-holdCardParent = NodePath("../HoleCardParent")
 
 [node name="HoleCardParent" type="Node" parent="DealManager"]
 

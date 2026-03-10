@@ -30,10 +30,6 @@ namespace Euler.Global
 
         public const float DEAL_END_TIME = 1f;
         public const float INFO_EXIST_TIME = 1f;
-        public const string AVATAR_KING = "res://assets/human_king_of_diamond_red_design_2.png";
-        public const string AVATAR_JACK = "res://assets/human_jack_of_diamond_red_design_2.png";
-        public const string AVATAR_QUEEN = "res://assets/human_queen_of_diamond_red_design_2.png";
-        public const string AVATAR_JOKER = "res://assets/joker_big.png";
         public static string[] GetRandomFourNames()
         {
             // 复制一份数组，避免修改原数组
@@ -48,6 +44,16 @@ namespace Euler.Global
             // 取前4个
             return [shuffled[0], shuffled[1], shuffled[2], shuffled[3]];
         }
+
+        public static string[] GetAvatarList()
+        {
+            return [AVATAR_JOKER, AVATAR_JACK, AVATAR_QUEEN, AVATAR_KING];
+        }
+
+        private const string AVATAR_KING = "res://assets/human_king_of_diamond_red_design_2.png";
+        private const string AVATAR_JACK = "res://assets/human_jack_of_diamond_red_design_2.png";
+        private const string AVATAR_QUEEN = "res://assets/human_queen_of_diamond_red_design_2.png";
+        private const string AVATAR_JOKER = "res://assets/joker_big.png";
 
         private static readonly string[] DEFAULT_NAME_LIST =
         [
