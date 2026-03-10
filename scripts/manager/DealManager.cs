@@ -66,7 +66,12 @@ public partial class DealManager : Node
     {
         if (!Multiplayer.IsServer())
             return;
+        dealRequest.UpdateTrumpSuit(Suit.NONE);
         dealRequest.SetDealCard(true);
+        if (GameCore.IsSnatchDealer())
+            dealRequest.SetTrumpSeatInvisiable();
+        else
+            dealRequest.UpdateTrumpSeat(GameCore.GetDealerSeat());
         int total = GameSettings.PLAYER_COUNT * GameSettings.CARD_PRE_PLAYER;
 
         int dealerSeat = GameCore.GetDealerSeat();
@@ -122,6 +127,7 @@ public partial class DealManager : Node
         // 牌给庄家
         dealRequest.FlyCardToDealer(dealerSeat);
         await DelayHalf(GameSettings.DEAL_DURATION_TIME / 2);
+        // TODO:更新当前剩余卡牌的UI
         // TODO:可能需要在playermanager中添加卡牌，playermanager一定要更新卡牌
         dealRequest.NotifyDealerGetRestCard(dealerSeat, CardData.Serialize(GameCore.GetRestCard()));
         dealerGetCardTcs = new();  // 这里要等待庄家选择完卡牌
@@ -198,8 +204,11 @@ public partial class DealManager : Node
             int lastDealer = GameCore.GetDealerSeat();
             int curretDealer = (lastDealer + meetRankIndex) % GameSettings.PLAYER_COUNT;
             GameCore.SetDealerSeat(curretDealer);
+            dealRequest.UpdateTrumpSeat(curretDealer);
             GameCore.SetTrump(DeclareOption.COUNTER_TRUMP, cardDatas[index].suit);
-            // TODO:这里太快了，可能需要提示一下
+            dealRequest.UpdateTrumpSuit(cardDatas[index].suit);
+            // 这里太快了，可能需要提示一下
+            await DelayHalf(GameSettings.INFO_EXIST_TIME);
         }
         else
         {
@@ -207,8 +216,10 @@ public partial class DealManager : Node
             // 主就是上一局的主不用改变
             // 花色为遇大/遇小大花色
             GameCore.SetDealerSeat(GameCore.GetDealerSeat());
+            dealRequest.UpdateTrumpSeat(GameCore.GetDealerSeat());
             Suit suit = isBig ? CardData.Deserialize(maxCardData).suit : CardData.Deserialize(minCardData).suit;
             GameCore.SetTrump(DeclareOption.COUNTER_TRUMP, suit);
+            dealRequest.UpdateTrumpSuit(suit);
         }
 
         // 最后把牌聚拢
@@ -228,7 +239,7 @@ public partial class DealManager : Node
         await DelayHalf(GameSettings.DEAL_DURATION_TIME / 2);
 
         var cardData = GameCore.DealOneCard(logicalSeat);  // 给对应玩家发牌，并返回插入的这张牌
-        // TODO:通知UI少一只牌，可能需要写一个函数用于获取当前剩余的牌
+
         int currentId = CardData.Serialize(cardData);
 
         long peerId = NetworkManager.Instance.GetPeerIdBySeat(logicalSeat);
@@ -238,7 +249,7 @@ public partial class DealManager : Node
         // 飞牌动画
         dealRequest.FlyCard(logicalSeat);
         await DelayHalf(GameSettings.DEAL_DURATION_TIME / 2);
-
+        // TODO:更新当前剩余卡牌的UI
         CheckDeclare(logicalSeat);
         await WaitIfDeclaring();
     }
@@ -328,15 +339,19 @@ public partial class DealManager : Node
         // 将叫主的牌放到对应的牌库里面
         bool isBack = option == DeclareOption.DARK_TRUMP;
         GamePhase gamePhase = GameCore.GetCurrentGamePhase();
-        // TODO:通知UI当前的花色
-        NetworkManager.Instance.PlayCard(logicalSeat, cardDatas, isBack, gamePhase);
+
+        dealRequest.PlayCard(logicalSeat, cardDatas, isBack, gamePhase);
         // 不能在服务器删除牌，因为这些牌并没有出
 
         GameCore.SetTrump(option, suit);
+        dealRequest.UpdateTrumpSuit(suit);
 
         // 如果为抢庄还需要设置当前的庄为现在的位置
         if (GameCore.IsSnatchDealer())
+        {
             GameCore.SetDealerSeat(logicalSeat);
+            dealRequest.UpdateTrumpSeat(logicalSeat);
+        }
 
         // 更新其他玩家 UI 更新UI使得不关闭也会有人自动关闭
         for (int i = 0; i < GameSettings.PLAYER_COUNT; i++)

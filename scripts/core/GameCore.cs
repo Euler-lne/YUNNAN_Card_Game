@@ -31,57 +31,22 @@ public class GameCore
 
     }
 
-    public int GetDealerSeat() => gameData.DealerSeat;
-
-    public bool IsSnatchDealer() => gameData.IsSnatchDealer;
-
-    public void SetSnatchDealer(bool value)
-    {
-        gameData.IsSnatchDealer = value;
-    }
-
-    public bool IsSameRank()
-    {
-        List<Rank> ranks = gameData.GetCurrentRank();
-        return ranks[0] == ranks[1];
-    }
-
-    public GamePhase GetCurrentGamePhase() => gameData.CurrentPhase;
-
-    public void SetDealerSeat(int seat)
-    {
-        // TODO:在这个函数通知UI显示当前的DealerSeat
-        gameData.DealerSeat = seat;
-    }
-
-
+    #region 发牌
     public CardData DealOneCard(int seat)
     {
         CardData card = deckManager.DrawCard();
         playerManager.AddCardToPlayer(seat, card);
         return card;
     }
-
+    #endregion
+    #region 抠底
     public List<CardData> GetRestCard()
     {
         if (tableCards.Count != 0) return tableCards;
         tableCards = deckManager.GetRestCard();
         return tableCards;
     }
-    public bool IsTrumpLocked()
-    {
-        return gameData.TrumpState.isLocked;
-    }
-    public void PrintDeclareInfo()
-    {
-        gameData.TrumpState.Print();
-    }
-
-    public void RemoveCardFrom(int seat, List<CardData> cardDatas)
-    {
-        // 如果cardDatas为空就删除所有的
-        playerManager.RemoveCardFromPlayer(seat, cardDatas);
-    }
+    #endregion
 
     #region 叫主相关
     public DeclareOption CheckIfSeatCanDeclare(int playerId)
@@ -119,6 +84,29 @@ public class GameCore
 
     public void LockSuit(Suit suit) { SetTrump(DeclareOption.COUNTER_TRUMP, suit); }
     #endregion
+
+    #region 工具函数
+    public int GetDealerSeat() => gameData.DealerSeat;
+
+    public bool IsSnatchDealer() => gameData.IsSnatchDealer;
+
+    public void SetSnatchDealer(bool value)
+    {
+        gameData.IsSnatchDealer = value;
+    }
+
+    public bool IsSameRank()
+    {
+        List<Rank> ranks = gameData.GetCurrentRank();
+        return ranks[0] == ranks[1];
+    }
+
+    public GamePhase GetCurrentGamePhase() => gameData.CurrentPhase;
+
+    public void SetDealerSeat(int seat)
+    {
+        gameData.DealerSeat = seat;
+    }
     public Rank GetCurrentRank(int seat)
     {
         return gameData.GetCurrentRank()[GameData.GetTeamIndex(seat)];
@@ -128,4 +116,23 @@ public class GameCore
     {
         return gameData.GetCurrentRank();
     }
+    public int GetLeftCardNum()
+    {
+        return deckManager.GetRemainingCount();
+    }
+    public bool IsTrumpLocked()
+    {
+        return gameData.TrumpState.isLocked;
+    }
+    public void PrintDeclareInfo()
+    {
+        gameData.TrumpState.Print();
+    }
+
+    public void RemoveCardFrom(int seat, List<CardData> cardDatas)
+    {
+        // 如果cardDatas为空就删除所有的
+        playerManager.RemoveCardFromPlayer(seat, cardDatas);
+    }
+    #endregion
 }

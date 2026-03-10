@@ -18,11 +18,18 @@ public partial class UserInfoContainerUI : Control
 		}
 		UIEvent.ChangeAvatarEvent += OnChangeAvatarEvent;
 		UIEvent.ChangeNameEvent += OnChangeNameEvent;
+		UIEvent.ChangeTrumpEvent += OnChangeTrumpEvent;
 	}
 	public override void _ExitTree()
 	{
 		UIEvent.ChangeAvatarEvent -= OnChangeAvatarEvent;
 		UIEvent.ChangeNameEvent -= OnChangeNameEvent;
+		UIEvent.ChangeTrumpEvent -= OnChangeTrumpEvent;
+	}
+
+	private void OnChangeTrumpEvent(bool isTrump, int seat)
+	{
+		userInfoUI[seat].SetCrownVisible(isTrump);
 	}
 
 	private void OnChangeAvatarEvent(string path, int seat)

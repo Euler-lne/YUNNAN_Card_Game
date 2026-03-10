@@ -20,7 +20,59 @@ public partial class DealRequest : Node2D
     {
         deckCard.Visible = visiable;
     }
+    #region UI相关
+    public void UpdateTrumpSuit(Suit suit)
+    {
+        Rpc(nameof(RpcUpdateTrumpSuit), (int)suit);
+    }
+    [Rpc(MultiplayerApi.RpcMode.Authority, CallLocal = true)]
+    private static void RpcUpdateTrumpSuit(int suit)
+    {
+        UIEvent.OnChangeTrumpSuitEvent((Suit)suit);
+    }
+    public void SetTrumpSeatInvisiable()
+    {
+        for (int i = 0; i < GameSettings.PLAYER_COUNT; i++)
+        {
+            Rpc(nameof(RpcUpdateTrumpSeat), false, i);
+        }
+    }
+    public void UpdateTrumpSeat(int seat)
+    {
+        // 传入seat设置为true，其余设置为false
+        int count = GameSettings.PLAYER_COUNT;
+        int temp = (seat + count / 2) % count;
+        Rpc(nameof(RpcUpdateTrumpSeat), true, seat);
+        Rpc(nameof(RpcUpdateTrumpSeat), true, temp);
 
+        seat = (seat + 1) % count;
+        temp = (seat + count / 2) % count;
+        Rpc(nameof(RpcUpdateTrumpSeat), false, seat);
+        Rpc(nameof(RpcUpdateTrumpSeat), false, temp);
+    }
+    [Rpc(MultiplayerApi.RpcMode.Authority, CallLocal = true)]
+    private void RpcUpdateTrumpSeat(bool isTrump, int seat)
+    {
+        int logicalSeat = NetworkManager.Instance.GetViewSeat(seat);
+        UIEvent.OnChangeTrumpEvent(isTrump, logicalSeat);
+    }
+    #endregion
+    #region 发牌相关
+    public void PlayCard(int playLogicSeat, List<CardData> cardDatas, bool isBack, GamePhase gamePhase)
+    {
+        if (!Multiplayer.IsServer()) return;
+        int[] ids = CardData.Serialize(cardDatas);
+        Rpc(nameof(RpcPlayCardBroadcast), playLogicSeat, ids, isBack, (int)gamePhase);
+    }
+
+    [Rpc(MultiplayerApi.RpcMode.Authority, CallLocal = true)]
+    private void RpcPlayCardBroadcast(int playLogicSeat, int[] ids, bool isBack, int _gamePhase)
+    {
+        int playSeat = NetworkManager.Instance.GetViewSeat(playLogicSeat); // 当前出牌的人在自己视角的逻辑座位
+        GamePhase gamePhase = (GamePhase)_gamePhase;
+        EventBus.OnPlayCardEvent(playSeat, ids, isBack, gamePhase);
+    }
+    #endregion
 
     #region 叫主相关
     public void SetDeclareUIInvisiable(long peerId)

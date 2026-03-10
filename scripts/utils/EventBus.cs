@@ -83,6 +83,12 @@ namespace Euler.Event
             ChangeNameEvent?.Invoke(name, seat);
         }
 
+        public static Action<int> ChangeCardNumEvent;
+        public static void OnChangeCardNumEvent(int num)
+        {
+            ChangeCardNumEvent?.Invoke(num);
+        }
+
         public static Action<string, int> ChangeAvatarEvent;
         public static void OnChangeAvatarEvent(string path, int seat)
         {
@@ -95,11 +101,11 @@ namespace Euler.Event
             ChangeTrumpEvent?.Invoke(isTrump, seat);
         }
 
-        public static Action<int, int> ChangeCardNumEvent;
-        public static void OnChangeCardNumEvent(int cardNum, int seat)
-        {
-            ChangeCardNumEvent?.Invoke(cardNum, seat);
-        }
+        // public static Action<int, int> ChangeCardNumEvent;
+        // public static void OnChangeCardNumEvent(int cardNum, int seat)
+        // {
+        //     ChangeCardNumEvent?.Invoke(cardNum, seat);
+        // }
 
         public static Action<Suit> ChangeTrumpSuitEvent;
         public static void OnChangeTrumpSuitEvent(Suit suit)
