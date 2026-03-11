@@ -1,4 +1,4 @@
-[gd_scene load_steps=26 format=3 uid="uid://dh0r6wjeod2gf"]
+[gd_scene load_steps=27 format=3 uid="uid://dh0r6wjeod2gf"]
 
 [ext_resource type="Script" uid="uid://d0hcpj6m3yoby" path="res://scripts/manager/GameManager.cs" id="2_p57ef"]
 [ext_resource type="Script" uid="uid://bm1e4brkugvp1" path="res://scripts/table/PlayerHandCard.cs" id="4_0tnpc"]
@@ -20,6 +20,7 @@
 [ext_resource type="Texture2D" uid="uid://cxmoxsyj3ry68" path="res://assets/human_queen_of_diamond_red_design_2.png" id="12_ssvqc"]
 [ext_resource type="Texture2D" uid="uid://bdd8t4xtvwut0" path="res://assets/Crown.png" id="13_1kice"]
 [ext_resource type="Texture2D" uid="uid://d15yo5u106q7r" path="res://assets/human_king_of_diamond_red_design_2.png" id="13_264po"]
+[ext_resource type="Script" path="res://scripts/network/TurnRequest.cs" id="20_5newe"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_1kice"]
 atlas = ExtResource("10_trtic")
@@ -491,6 +492,9 @@ deckCard = NodePath("../../TableRoot/PlayeArea/DeckCards/Card")
 holdCardParent = NodePath("../HoleCardParent")
 
 [node name="HoleCardParent" type="Node" parent="DealManager"]
+
+[node name="TurnRequest" type="Node2D" parent="."]
+script = ExtResource("20_5newe")
 
 [node name="GameManager" type="Node" parent="."]
 script = ExtResource("2_p57ef")

@@ -7,7 +7,7 @@ public partial class GameManager : Node
     private UIManager uiManager;
     private Player player;
     private DealManager dealManager;
-
+    private TurnManager turnManager;
     private GameCore gameCore = null;
 
     public override void _Ready()
@@ -24,6 +24,8 @@ public partial class GameManager : Node
             NetworkManager.Instance.AssignServerSeat();
             uiManager.UpdatePlayerCount(NetworkManager.Instance.TotalPlayers);
             uiManager.ConnectStartButtonPressed(StartGame);
+            turnManager = new();
+            turnManager.Init(GetNode<TurnRequest>("../TurnRequest"), gameCore.GetDealerSeat());
             NetworkManager.Instance.OnTotalPlayersChanged += uiManager.UpdatePlayerCount;
             dealManager.DealEndEvent += OnDealEndEvent;
         }
