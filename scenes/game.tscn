@@ -171,12 +171,44 @@ grow_vertical = 2
 layout_mode = 2
 theme_override_font_sizes/font_size = 40
 text = "当前玩家：1"
+horizontal_alignment = 1
+vertical_alignment = 1
 
 [node name="StartButton" type="Button" parent="CanvasLayer/UIManager/VBoxContainer"]
 layout_mode = 2
+size_flags_horizontal = 4
 theme = ExtResource("5_kvpfn")
 theme_override_font_sizes/font_size = 40
 text = "开始"
+
+[node name="DealerGetCardUI" type="VBoxContainer" parent="CanvasLayer/UIManager"]
+visible = false
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -44.0
+offset_top = -46.0
+offset_right = 44.0
+offset_bottom = 46.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Info" type="Label" parent="CanvasLayer/UIManager/DealerGetCardUI"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 40
+text = "	请选择出8张卡牌作为底牌"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Confirm" type="Button" parent="CanvasLayer/UIManager/DealerGetCardUI"]
+layout_mode = 2
+size_flags_horizontal = 4
+theme = ExtResource("5_kvpfn")
+theme_override_font_sizes/font_size = 40
+text = "确定"
 
 [node name="DeclareContainer" type="HBoxContainer" parent="CanvasLayer/UIManager"]
 visible = false

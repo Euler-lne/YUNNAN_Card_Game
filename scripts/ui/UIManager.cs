@@ -8,7 +8,9 @@ public partial class UIManager : Control
 	private Label currentPlayerNumber;
 	private Label suitLabel;
 	private Label leftCards;
-	public DeclareContainer declareContainer;
+	private Button dealerGetCardConfirmButton;
+	private DeclareContainer declareContainer;
+	private VBoxContainer dealerGetCardUI;
 
 	public override void _Ready()
 	{
@@ -17,7 +19,9 @@ public partial class UIManager : Control
 		declareContainer = GetNode<DeclareContainer>("DeclareContainer");
 		suitLabel = GetNode<Label>("SuitLabel");
 		leftCards = GetNode<Label>("LeftCards");
-
+		dealerGetCardConfirmButton = GetNode<Button>("DealerGetCardUI/Confirm");
+		dealerGetCardUI = GetNode<VBoxContainer>("DealerGetCardUI");
+		dealerGetCardUI.Visible = false;
 		declareContainer.Visible = false;
 
 		if (Multiplayer.IsServer())
@@ -32,12 +36,18 @@ public partial class UIManager : Control
 		}
 		UIEvent.ChangeTrumpSuitEvent += OnChangeTrumpSuitEvent;
 		UIEvent.ChangeCardNumEvent += OnChangeCardNumEvent;
+		DealEvent.NotifyDealerSelectCard += OnNotifyDealerSelectCard;
+		DealEvent.NotifyDealerSelectCardResult += OnNotifyDealerSelectCardResult;
+		dealerGetCardConfirmButton.Pressed += OnDealerGetCardConfirmButtonPressed;
 	}
 
 	public override void _ExitTree()
 	{
 		UIEvent.ChangeTrumpSuitEvent -= OnChangeTrumpSuitEvent;
 		UIEvent.ChangeCardNumEvent -= OnChangeCardNumEvent;
+		DealEvent.NotifyDealerSelectCard -= OnNotifyDealerSelectCard;
+		DealEvent.NotifyDealerSelectCardResult -= OnNotifyDealerSelectCardResult;
+		dealerGetCardConfirmButton.Pressed -= OnDealerGetCardConfirmButtonPressed;
 	}
 
 	private void OnChangeCardNumEvent(int leftCardNum)
@@ -73,6 +83,29 @@ public partial class UIManager : Control
 			currentPlayerNumber.Visible = false;
 			actions?.Invoke();
 		};
+	}
+	#endregion
+
+	#region 选底牌
+	private void OnDealerGetCardConfirmButtonPressed()
+	{
+		RpcId(1, nameof(RpcOnDealerGetCardConfirmButtonPressed));
+	}
+	private void OnNotifyDealerSelectCardResult(bool isValid)
+	{
+		if (isValid)
+			dealerGetCardUI.Visible = false;
+	}
+
+	private void OnNotifyDealerSelectCard()
+	{
+		dealerGetCardUI.Visible = true;
+
+	}
+	[Rpc(MultiplayerApi.RpcMode.Authority, CallLocal = true)]
+	private void RpcOnDealerGetCardConfirmButtonPressed()
+	{
+		DealEvent.OnDealerConfrimRequestEvent(declareContainer.GetSelectedCards());
 	}
 	#endregion
 }

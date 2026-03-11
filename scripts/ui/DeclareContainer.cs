@@ -179,4 +179,8 @@ public partial class DeclareContainer : HBoxContainer
 		DealEvent.OnCancelRequestEvent();
 	}
 	#endregion
+
+	#region 工具函数
+	public int[] GetSelectedCards() => selectCards;
+	#endregion
 }

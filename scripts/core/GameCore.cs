@@ -46,6 +46,12 @@ public class GameCore
         tableCards = deckManager.GetRestCard();
         return tableCards;
     }
+    public void DealerGetCard(int seat)
+    {
+        List<CardData> cardDatas = GetRestCard();
+        foreach (var cardData in cardDatas)
+            playerManager.AddCardToPlayer(seat, cardData);
+    }
     #endregion
 
     #region 叫主相关

@@ -28,3 +28,5 @@ offset_bottom = 28.0
 grow_horizontal = 2
 grow_vertical = 2
 theme = ExtResource("1_4yc5t")
+horizontal_alignment = 1
+vertical_alignment = 1

@@ -73,6 +73,23 @@ namespace Euler.Event
             ClientNotifyChooseHoleResultEvent?.Invoke(isBig);
         }
 
+        public static Action<int[]> DealerConfrimRequestEvent;
+        public static void OnDealerConfrimRequestEvent(int[] ids)
+        {
+            DealerConfrimRequestEvent?.Invoke(ids);
+        }
+
+        public static Action NotifyDealerSelectCard;
+        public static void OnNotifyDealerSelectCard()
+        {
+            NotifyDealerSelectCard?.Invoke();
+        }
+        public static Action<bool> NotifyDealerSelectCardResult;
+        public static void OnNotifyDealerSelectCardResult(bool isValid)
+        {
+            NotifyDealerSelectCardResult?.Invoke(isValid);
+        }
+
     }
 
     public static class UIEvent

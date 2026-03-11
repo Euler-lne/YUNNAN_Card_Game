@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using System.Collections.Generic;
 using Euler.Event;
 using System;
+using System.Linq;
 
 /// <summary>
 /// 发牌包括：
@@ -26,19 +27,17 @@ public partial class DealManager : Node
 
     public override void _Ready()
     {
-        dealRequest = GetNode<DealRequest>("DealRequest");
-        DealEvent.CancelRequestEvent += OnCancelRequestEvent;
-        DealEvent.ConfirmRequestEvent += OnConfirmRequestEvent;
-        DealEvent.DeclareRequestEvent += OnDeclareRequestEvent;
+        if (Multiplayer.IsServer())
+        {
+            dealRequest = GetNode<DealRequest>("DealRequest");
+            DealEvent.CancelRequestEvent += OnCancelRequestEvent;
+            DealEvent.ConfirmRequestEvent += OnConfirmRequestEvent;
+            DealEvent.DeclareRequestEvent += OnDeclareRequestEvent;
 
-        DealEvent.ClientNotifyChooseHoleResultEvent += OnClientNotifyChooseHoleResultEvent;
-    }
-    public override void _EnterTree()
-    {
-        DealEvent.CancelRequestEvent -= OnCancelRequestEvent;
-        DealEvent.ConfirmRequestEvent -= OnConfirmRequestEvent;
-        DealEvent.DeclareRequestEvent -= OnDeclareRequestEvent;
-        DealEvent.ClientNotifyChooseHoleResultEvent -= OnClientNotifyChooseHoleResultEvent;
+            DealEvent.ClientNotifyChooseHoleResultEvent += OnClientNotifyChooseHoleResultEvent;
+
+            DealEvent.DealerConfrimRequestEvent += OnDealerConfrimRequestEvent;
+        }
     }
 
     public void Init(GameCore _gameCore)
@@ -59,7 +58,17 @@ public partial class DealManager : Node
     public override void _ExitTree()
     {
         if (dealEndTimer != null)
+        {
             dealEndTimer.Timeout -= HandleHoleCard;
+        }
+        if (Multiplayer.IsServer())
+        {
+            DealEvent.CancelRequestEvent -= OnCancelRequestEvent;
+            DealEvent.ConfirmRequestEvent -= OnConfirmRequestEvent;
+            DealEvent.DeclareRequestEvent -= OnDeclareRequestEvent;
+            DealEvent.ClientNotifyChooseHoleResultEvent -= OnClientNotifyChooseHoleResultEvent;
+            DealEvent.DealerConfrimRequestEvent -= OnDealerConfrimRequestEvent;
+        }
     }
 
     public async void StartDeal()
@@ -111,10 +120,10 @@ public partial class DealManager : Node
         // 如果为抢庄设置为抢庄结束
         if (GameCore.IsSnatchDealer())
             GameCore.SetSnatchDealer(false);
+        // FIXME:选择了亮主，那么对应玩家之前发过的牌在对应玩家回合可以选中
         // TODO:庄家拿牌，选牌
         await DealerGetCards();   // 到这里游戏视角只有一张牌
         GD.Print("抠底结束，准备开始游戏");
-        // FIXME:选择了亮主，那么对应玩家之前发过的牌在对应玩家回合可以选中
         // TODO:卡牌回归
     }
 
@@ -124,13 +133,32 @@ public partial class DealManager : Node
         GD.Print($"当前的庄家座位{dealerSeat}");
         dealRequest.RotateToDealer(dealerSeat);
         await DelayHalf(GameSettings.DEAL_DURATION_TIME / 2);
-        // 牌给庄家
+
+        dealRequest.UpdateLastCardNum(0);  // 只剩下0张牌
+
+        // 发牌给庄家
         dealRequest.FlyCardToDealer(dealerSeat);
         await DelayHalf(GameSettings.DEAL_DURATION_TIME / 2);
-        // TODO:更新当前剩余卡牌的UI
-        // TODO:可能需要在playermanager中添加卡牌，playermanager一定要更新卡牌
+
+        GameCore.DealerGetCard(dealerSeat);
         dealRequest.NotifyDealerGetRestCard(dealerSeat, CardData.Serialize(GameCore.GetRestCard()));
         dealerGetCardTcs = new();  // 这里要等待庄家选择完卡牌
+        await dealerGetCardTcs?.Task;
+        // TODO:可能需要在playermanager中添加卡牌，playermanager一定要更新卡牌
+
+        dealRequest.UpdateLastCardNum(GameCore.GetLeftCardNum());
+
+    }
+    private void OnDealerConfrimRequestEvent(int[] ids)
+    {
+        bool isValid = ids.Length == 8;
+        int dealerSeat = GameCore.GetDealerSeat();
+        dealRequest.NotifyDealerSelectCardResult(isValid, dealerSeat);
+        if (!isValid)
+            return;
+
+        // TODO: 将选中的这些牌从playermanager中移除，更新底牌数据，通知对应的客户端删除卡牌显示
+        dealerGetCardTcs?.SetResult();
     }
 
     private async Task HandleHoleCardNoTrump()
@@ -247,9 +275,10 @@ public partial class DealManager : Node
             dealRequest.ReceiveHand(peerId, currentId);
 
         // 飞牌动画
+        // 更新当前剩余卡牌的UI
+        dealRequest.UpdateLastCardNum(GameCore.GetLeftCardNum());
         dealRequest.FlyCard(logicalSeat);
         await DelayHalf(GameSettings.DEAL_DURATION_TIME / 2);
-        // TODO:更新当前剩余卡牌的UI
         CheckDeclare(logicalSeat);
         await WaitIfDeclaring();
     }

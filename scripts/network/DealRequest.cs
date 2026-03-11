@@ -26,7 +26,7 @@ public partial class DealRequest : Node2D
         Rpc(nameof(RpcUpdateTrumpSuit), (int)suit);
     }
     [Rpc(MultiplayerApi.RpcMode.Authority, CallLocal = true)]
-    private static void RpcUpdateTrumpSuit(int suit)
+    private void RpcUpdateTrumpSuit(int suit)
     {
         UIEvent.OnChangeTrumpSuitEvent((Suit)suit);
     }
@@ -55,6 +55,15 @@ public partial class DealRequest : Node2D
     {
         int logicalSeat = NetworkManager.Instance.GetViewSeat(seat);
         UIEvent.OnChangeTrumpEvent(isTrump, logicalSeat);
+    }
+    public void UpdateLastCardNum(int num)
+    {
+        Rpc(nameof(RpcUpdateLastCardNum), num);
+    }
+    [Rpc(MultiplayerApi.RpcMode.Authority, CallLocal = true)]
+    private void RpcUpdateLastCardNum(int num)
+    {
+        UIEvent.OnChangeCardNumEvent(num);
     }
     #endregion
     #region 发牌相关
@@ -152,29 +161,55 @@ public partial class DealRequest : Node2D
         // 显示UI，让对应的主选择遇大遇小
         DealEvent.OnServerNotifyChooseHoleResultEvent(isBig);
     }
-
-    public List<Vector2> GenerateHoleCardPosition()
+    [Rpc(MultiplayerApi.RpcMode.Authority, CallLocal = true)]
+    public void NotifyDealerGetRestCard(int dealer, int[] ids)
     {
-        // 获取屏幕尺寸
-        Vector2 screenSize = GetViewportRect().Size;
-        Vector2 screenCenter = new(screenSize.X / 2, screenSize.Y / 2);
-
-        float cardWidth = CardParams.CARD_WIDTH;
-        float cardHeight = CardParams.CARD_HEIGHT;
-
-        float cardPosY = screenCenter.Y - cardHeight - CardLayoutParams.PUT_CARD_MARGIN;
-        float offsetX = cardWidth + CardLayoutParams.PUT_CARD_MARGIN;
-        float cardPosX = screenCenter.X - 3 * offsetX - offsetX / 2;
-        List<Vector2> posList = [];
-        for (int i = 0; i < 8; i++)
+        long peerId = NetworkManager.Instance.GetPeerIdBySeat(dealer);
+        if (peerId != -1)
         {
-            Vector2 pos = new(cardPosX, cardPosY);
-            cardPosX += offsetX;
-            posList.Add(pos);
+            foreach (var currentId in ids)
+            {
+                RpcId(peerId, nameof(RpcReceiveHand), currentId);
+            }
+            RpcId(peerId, nameof(RpcNotifyDealerSelectCard));
+            // TODO:通知可以选牌了
         }
-        return posList;
     }
+    [Rpc(MultiplayerApi.RpcMode.Authority, CallLocal = true)]
+    private void RpcNotifyDealerSelectCard()
+    {
+        DealEvent.OnNotifyDealerSelectCard();
+    }
+    public void NotifyDealerSelectCardResult(bool isValid, int dealer)
+    {
+        long peerId = NetworkManager.Instance.GetPeerIdBySeat(dealer);
+        RpcId(peerId, nameof(RpcNotifyDealerSelectCardResult), isValid);
 
+    }
+    [Rpc(MultiplayerApi.RpcMode.Authority, CallLocal = true)]
+    private void RpcNotifyDealerSelectCardResult(bool isValid)
+    {
+        DealEvent.OnNotifyDealerSelectCardResult(isValid);
+    }
+    #region 动画
+    public void RotateToDealer(int dealerSeat)
+    {
+        Rpc(nameof(RpcRotateToDealer), dealerSeat);
+    }
+    [Rpc(MultiplayerApi.RpcMode.Authority, CallLocal = true)]
+    private void RpcRotateToDealer(int dealerSeat)
+    {
+        int viewSeat = NetworkManager.Instance.GetViewSeat(dealerSeat);
+        int mySeat = NetworkManager.Instance.MyLogicalSeat;
+        if (viewSeat < mySeat)
+            viewSeat += GameSettings.PLAYER_COUNT;
+        var tween = CreateTween();
+        tween.TweenProperty(deckCard, "rotation",
+            deckCard.Rotation - Mathf.Pi / 2 * (viewSeat - mySeat),
+            GameSettings.DEAL_DURATION_TIME / 2)
+            .SetTrans(Tween.TransitionType.Quad)
+            .SetEase(Tween.EaseType.Out);
+    }
     public void GenerateHoleCard(Vector2 endPos, CardData cardData, bool isEnd = false)
     {
         Rpc(nameof(RpcGenerateHoleCard), endPos.X, endPos.Y, CardData.Serialize(cardData), isEnd);
@@ -204,24 +239,6 @@ public partial class DealRequest : Node2D
             // TODO：调用卡牌翻面函数
         }));
     }
-    public void RotateToDealer(int dealerSeat)
-    {
-        Rpc(nameof(RpcRotateToDealer), dealerSeat);
-    }
-    [Rpc(MultiplayerApi.RpcMode.Authority, CallLocal = true)]
-    private void RpcRotateToDealer(int dealerSeat)
-    {
-        int viewSeat = NetworkManager.Instance.GetViewSeat(dealerSeat);
-        int mySeat = NetworkManager.Instance.MyLogicalSeat;
-        if (viewSeat < mySeat)
-            viewSeat += GameSettings.PLAYER_COUNT;
-        var tween = CreateTween();
-        tween.TweenProperty(deckCard, "rotation",
-            deckCard.Rotation - Mathf.Pi / 2 * (viewSeat - mySeat),
-            GameSettings.DEAL_DURATION_TIME / 2)
-            .SetTrans(Tween.TransitionType.Quad)
-            .SetEase(Tween.EaseType.Out);
-    }
     public void FlyCardToDealer(int dealerSeat)
     {
         Rpc(nameof(RpcFlyCardToDealer), dealerSeat);
@@ -244,17 +261,6 @@ public partial class DealRequest : Node2D
         {
             deckCard.Visible = false;
         }));
-    }
-    public void NotifyDealerGetRestCard(int dealer, int[] ids)
-    {
-        long peerId = NetworkManager.Instance.GetPeerIdBySeat(dealer);
-        if (peerId != -1)
-            RpcId(peerId, nameof(RpcNotifyDealerGetRestCard), ids);
-    }
-    [Rpc(MultiplayerApi.RpcMode.Authority, CallLocal = true)]
-    private void RpcNotifyDealerGetRestCard(int[] ids)
-    {
-        // 直接调用一个事件方法，通知获取卡牌
     }
     public void GetherHoleCard()
     {
@@ -285,6 +291,30 @@ public partial class DealRequest : Node2D
         holdCards.Clear();
         deckCard.Visible = true;
     }
+    #endregion
+    #region 工具函数
+    public List<Vector2> GenerateHoleCardPosition()
+    {
+        // 获取屏幕尺寸
+        Vector2 screenSize = GetViewportRect().Size;
+        Vector2 screenCenter = new(screenSize.X / 2, screenSize.Y / 2);
+
+        float cardWidth = CardParams.CARD_WIDTH;
+        float cardHeight = CardParams.CARD_HEIGHT;
+
+        float cardPosY = screenCenter.Y - cardHeight - CardLayoutParams.PUT_CARD_MARGIN;
+        float offsetX = cardWidth + CardLayoutParams.PUT_CARD_MARGIN;
+        float cardPosX = screenCenter.X - 3 * offsetX - offsetX / 2;
+        List<Vector2> posList = [];
+        for (int i = 0; i < 8; i++)
+        {
+            Vector2 pos = new(cardPosX, cardPosY);
+            cardPosX += offsetX;
+            posList.Add(pos);
+        }
+        return posList;
+    }
+    #endregion
     #endregion
 
     #region 发牌
