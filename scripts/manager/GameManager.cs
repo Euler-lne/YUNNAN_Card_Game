@@ -4,8 +4,6 @@ using System.Collections.Generic;
 
 public partial class GameManager : Node
 {
-    private TableManager tableManager;
-
     private UIManager uiManager;
     private Player player;
     private DealManager dealManager;
