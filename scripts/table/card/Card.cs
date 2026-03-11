@@ -101,7 +101,6 @@ public partial class Card : Node2D
 			sprite.Modulate = Colors.White;
 			return;
 		}
-
 		if (IsDark)
 		{
 			sprite.Modulate = new Color(0.75f, 0.75f, 0.75f, 1f);

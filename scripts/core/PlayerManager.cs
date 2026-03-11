@@ -30,4 +30,16 @@ public class PlayerManager
     {
         return players[playerIndex].cardList;
     }
+
+    public List<CardData>[] RegenerateCardList(Suit suit, Rank rank)
+    {
+        List<CardData>[] playerCardDatas = new List<CardData>[4];
+        for (int i = 0; i < 4; i++)
+        {
+            var player = players[i];
+            player.GenarateCardList(suit, rank);
+            playerCardDatas[i] = player.cardList;
+        }
+        return playerCardDatas;
+    }
 }

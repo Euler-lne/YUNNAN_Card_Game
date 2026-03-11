@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Euler.Global;
 using Godot;
 
 public class GameCore
@@ -51,6 +52,17 @@ public class GameCore
         List<CardData> cardDatas = GetRestCard();
         foreach (var cardData in cardDatas)
             playerManager.AddCardToPlayer(seat, cardData);
+    }
+    public void DealRemoveCard(List<CardData> cardDatas)
+    {
+        tableCards = cardDatas;
+        playerManager.RemoveCardFromPlayer(GetDealerSeat(), cardDatas);
+    }
+    public List<CardData>[] RegenerateCardList()
+    {
+        Rank rank = GetCurrentRank(GetDealerSeat() % GameSettings.PLAYER_COUNT);
+        Suit suit = GetTrumpSuit();
+        return playerManager.RegenerateCardList(suit, rank);
     }
     #endregion
 

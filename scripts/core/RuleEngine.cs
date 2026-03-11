@@ -98,11 +98,28 @@ public static class RuleEngine
             case DeclareOption.BRIGHT_TRUMP:
                 return cardDatas.Count == 1 && cardDatas[0].rank == rank;
             case DeclareOption.COUNTER_TRUMP:
-                return cardDatas.Count == 2 && cardDatas[0].rank == rank && cardDatas[1].rank == rank;
+                return cardDatas.Count == 2 && cardDatas[0].rank == rank && cardDatas[1].rank == rank && cardDatas[0].suit == cardDatas[1].suit;
             case DeclareOption.DARK_TRUMP:
                 return true;
         }
         return false;
+    }
+
+    public static int GetCardValue(CardData cardData, Suit trumpSuit, Rank trumpRank)
+    {
+        if (cardData.suit == trumpSuit && cardData.rank == Rank.FIVE)
+            return 20;
+        else if (cardData.suit == Suit.NONE && cardData.rank == Rank.BIG_JOKER)
+            return 19;
+        else if (cardData.suit == Suit.NONE && cardData.rank == Rank.SMALL_JOKER)
+            return 18;
+        else if (cardData.suit == Suit.SPADE && cardData.rank == Rank.ACE)
+            return 17;
+        else if (cardData.suit == trumpSuit && cardData.rank == trumpRank)
+            return 16;
+        else if (cardData.rank == trumpRank) //FIXME:副主算主吗？
+            return 15;
+        return (int)cardData.rank;
     }
     #endregion
 

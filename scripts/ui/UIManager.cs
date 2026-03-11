@@ -1,6 +1,7 @@
 using Godot;
 using System;
 using Euler.Event;
+using System.Collections.Generic;
 
 public partial class UIManager : Control
 {
@@ -89,7 +90,7 @@ public partial class UIManager : Control
 	#region 选底牌
 	private void OnDealerGetCardConfirmButtonPressed()
 	{
-		RpcId(1, nameof(RpcOnDealerGetCardConfirmButtonPressed));
+		RpcId(1, nameof(RpcOnDealerGetCardConfirmButtonPressed), declareContainer.GetSelectedCards());
 	}
 	private void OnNotifyDealerSelectCardResult(bool isValid)
 	{
@@ -102,10 +103,10 @@ public partial class UIManager : Control
 		dealerGetCardUI.Visible = true;
 
 	}
-	[Rpc(MultiplayerApi.RpcMode.Authority, CallLocal = true)]
-	private void RpcOnDealerGetCardConfirmButtonPressed()
+	[Rpc(MultiplayerApi.RpcMode.AnyPeer, CallLocal = true)]
+	private void RpcOnDealerGetCardConfirmButtonPressed(int[] ids)
 	{
-		DealEvent.OnDealerConfrimRequestEvent(declareContainer.GetSelectedCards());
+		DealEvent.OnDealerConfrimRequestEvent(ids);
 	}
 	#endregion
 }

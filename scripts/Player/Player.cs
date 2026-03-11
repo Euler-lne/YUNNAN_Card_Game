@@ -17,11 +17,13 @@ public partial class Player : Node2D
 
 
 		EventBus.PlayCardEvent += OnPlayCard;
+		DealEvent.HandleHoleCardBeginEvent += OnHandleHoleCardBeginEvent;
 	}
 
 	public override void _ExitTree()
 	{
 		EventBus.PlayCardEvent -= OnPlayCard;
+		DealEvent.HandleHoleCardBeginEvent -= OnHandleHoleCardBeginEvent;
 	}
 
 	private void OnPlayCard(int playSeat, int[] ids, bool isBack, GamePhase gamePhase)
@@ -35,14 +37,12 @@ public partial class Player : Node2D
 		}
 	}
 
-
-	public void ExitrDeclareMode()
+	private void OnHandleHoleCardBeginEvent()
 	{
-		var cards = playerHandCard.GetHandCards();
-		foreach (var card in cards)
-		{
-			card.SetLight();
-		}
+		List<CardData> cardDatas = tableManager.RemoveAt(0); // 0是自己的位置
+		for (int i = 1; i < GameSettings.PLAYER_COUNT; i++)
+			tableManager.RemoveAt(i);
+		playerHandCard.InsertCard(cardDatas);
 	}
 
 	public void EnterDeclareMode(Rank rank)
@@ -55,9 +55,33 @@ public partial class Player : Node2D
 		}
 	}
 
+	public void ExitrDeclareMode()
+	{
+		playerHandCard.SetAllCardSelectable(false, false);
+	}
+
+	public void EnterDealerSelectCard()
+	{
+		playerHandCard.SetAllCardSelectable(true);
+		long peerId = Multiplayer.GetUniqueId();
+		GD.Print($"{peerId}已经把所有牌设置为可以选");
+	}
+	public void ExitDealerSelectCard(int[] ids)
+	{
+		// 把选中的牌移除
+		List<CardData> cardDatas = CardData.Deserialize(ids);
+		playerHandCard.RemoveSeletedCard(cardDatas);
+		playerHandCard.SetAllCardSelectable(false, false);
+	}
+
 	public void DealCard(CardData currentCard)
 	{
 		playerHandCard.InsertCard(currentCard);
+	}
+
+	public void RegenerateCardList(List<CardData> cardDatas, Rank rank, Suit suit)
+	{
+		playerHandCard.RegenerateCardList(cardDatas, rank, suit);
 	}
 
 	public Vector2 GetDealTargetPosition(int viewSeat)

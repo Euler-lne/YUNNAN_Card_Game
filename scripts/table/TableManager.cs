@@ -27,14 +27,9 @@ public partial class TableManager : Node2D
 	{
 		cardAreas[seat].Insert(cardDatas, isBack, gamePhase);
 	}
-	public void RemoveAll()
+	public List<CardData> RemoveAt(int seat)
 	{
-		for (int i = 0; i < GameSettings.PLAYER_COUNT; i++)
-			RemoveAt(i);
-	}
-	public void RemoveAt(int seat)
-	{
-		cardAreas[seat].RemoveCards();
+		return cardAreas[seat].RemoveCards();
 	}
 	#endregion
 	#region 工具函数

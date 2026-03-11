@@ -35,14 +35,19 @@ public partial class PutCardArea : Node2D
 		GenerateLayout();
 	}
 
-	public void RemoveCards()
+	public List<CardData> RemoveCards()
 	{
+		List<CardData> cardDatas = [];
 		foreach (var card in cards)
+		{
 			card.QueueFree();
+			cardDatas.Add(card.cardData);
+		}
 
 
 		cards.Clear();
 		putLayout.Clear();
+		return cardDatas;
 	}
 
 	public void Test()

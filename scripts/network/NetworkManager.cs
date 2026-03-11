@@ -46,7 +46,22 @@ public partial class NetworkManager : Node
 		Multiplayer.PeerDisconnected += OnPeerDisconnected;
 		Multiplayer.PeerConnected += OnPeerConnected;
 	}
+	#region 出牌相关
+	public void PlayCard(int playLogicSeat, List<CardData> cardDatas, bool isBack, GamePhase gamePhase)
+	{
+		if (!Multiplayer.IsServer()) return;
+		int[] ids = CardData.Serialize(cardDatas);
+		Rpc(nameof(RpcPlayCardBroadcast), playLogicSeat, ids, isBack, (int)gamePhase);
+	}
 
+	[Rpc(MultiplayerApi.RpcMode.Authority, CallLocal = true)]
+	private void RpcPlayCardBroadcast(int playLogicSeat, int[] ids, bool isBack, int _gamePhase)
+	{
+		int playSeat = NetworkManager.Instance.GetViewSeat(playLogicSeat); // 当前出牌的人在自己视角的逻辑座位
+		GamePhase gamePhase = (GamePhase)_gamePhase;
+		EventBus.OnPlayCardEvent(playSeat, ids, isBack, gamePhase);
+	}
+	#endregion
 
 
 	#region 连接相关

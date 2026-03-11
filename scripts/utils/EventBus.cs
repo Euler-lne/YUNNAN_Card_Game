@@ -90,6 +90,12 @@ namespace Euler.Event
             NotifyDealerSelectCardResult?.Invoke(isValid);
         }
 
+        public static Action HandleHoleCardBeginEvent;
+        public static void OnHandleHoleCardBeginEvent()
+        {
+            HandleHoleCardBeginEvent?.Invoke();
+        }
+
     }
 
     public static class UIEvent

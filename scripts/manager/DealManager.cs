@@ -116,15 +116,18 @@ public partial class DealManager : Node
             Suit suit = GameCore.GetTrumpSuit();
             GameCore.LockSuit(suit);
             GD.Print($"当前主为{suit}花色 庄家为{GameCore.GetDealerSeat()}号");
+            // 选择了亮主，那么对应玩家之前发过的牌在对应玩家回合可以选中
+            dealRequest.HandleHoleCardBegin();
         }
         // 如果为抢庄设置为抢庄结束
         if (GameCore.IsSnatchDealer())
             GameCore.SetSnatchDealer(false);
-        // FIXME:选择了亮主，那么对应玩家之前发过的牌在对应玩家回合可以选中
-        // TODO:庄家拿牌，选牌
         await DealerGetCards();   // 到这里游戏视角只有一张牌
+        Suit trumpSuit = GameCore.GetTrumpSuit();
+        Rank rank = GameCore.GetCurrentRank(GameCore.GetDealerSeat());
+        dealRequest.UpdateTrumpSuit(trumpSuit);
+        dealRequest.RegenerateCardList(GameCore.RegenerateCardList(), rank, trumpSuit);
         GD.Print("抠底结束，准备开始游戏");
-        // TODO:卡牌回归
     }
 
     private async Task DealerGetCards()
@@ -144,7 +147,6 @@ public partial class DealManager : Node
         dealRequest.NotifyDealerGetRestCard(dealerSeat, CardData.Serialize(GameCore.GetRestCard()));
         dealerGetCardTcs = new();  // 这里要等待庄家选择完卡牌
         await dealerGetCardTcs?.Task;
-        // TODO:可能需要在playermanager中添加卡牌，playermanager一定要更新卡牌
 
         dealRequest.UpdateLastCardNum(GameCore.GetLeftCardNum());
 
@@ -153,12 +155,15 @@ public partial class DealManager : Node
     {
         bool isValid = ids.Length == 8;
         int dealerSeat = GameCore.GetDealerSeat();
-        dealRequest.NotifyDealerSelectCardResult(isValid, dealerSeat);
+        dealRequest.NotifyDealerSelectCardResult(isValid, dealerSeat, ids);
         if (!isValid)
+        {
+            GD.Print($"不合理，当前选中了{ids.Length}张牌");
             return;
+        }
 
-        // TODO: 将选中的这些牌从playermanager中移除，更新底牌数据，通知对应的客户端删除卡牌显示
         dealerGetCardTcs?.SetResult();
+        GameCore.DealRemoveCard(CardData.Deserialize(ids));
     }
 
     private async Task HandleHoleCardNoTrump()
@@ -201,7 +206,6 @@ public partial class DealManager : Node
             // TODO:当前只有卡牌移动，还没有执行卡牌的翻面
             dealRequest.GenerateHoleCard(posList[index],
                     cardDatas[index], index == cardDatas.Count - 1);
-            GD.Print($"当前得到的卡牌为，花色{cardDatas[index].suit}数值{cardDatas[index].rank}");
 
             await DelayHalf(GameSettings.DEAL_DURATION_TIME);
 
@@ -369,11 +373,12 @@ public partial class DealManager : Node
         bool isBack = option == DeclareOption.DARK_TRUMP;
         GamePhase gamePhase = GameCore.GetCurrentGamePhase();
 
-        dealRequest.PlayCard(logicalSeat, cardDatas, isBack, gamePhase);
+        NetworkManager.Instance.PlayCard(logicalSeat, cardDatas, isBack, gamePhase);
         // 不能在服务器删除牌，因为这些牌并没有出
 
         GameCore.SetTrump(option, suit);
-        dealRequest.UpdateTrumpSuit(suit);
+        if (option != DeclareOption.DARK_TRUMP)
+            dealRequest.UpdateTrumpSuit(suit);
 
         // 如果为抢庄还需要设置当前的庄为现在的位置
         if (GameCore.IsSnatchDealer())

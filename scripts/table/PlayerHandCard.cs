@@ -269,7 +269,6 @@ public partial class PlayerHandCard : Node2D
 			}
 		}
 		RebuildHandUI(true);
-
 	}
 
 	private void SetSelectedPosition(Card card)
@@ -283,23 +282,33 @@ public partial class PlayerHandCard : Node2D
 		handLogic.Insert(currentCard);
 		RebuildHandUI(true);
 	}
+	public void RegenerateCardList(List<CardData> cardDatas, Rank rank, Suit suit)
+	{
+		handLogic.GenarateCardList(suit, rank);
+		RebuildHandUI(true);
+	}
+	public void InsertCard(List<CardData> cardDatas)
+	{
+		foreach (CardData card in cardDatas)
+			handLogic.Insert(card);
+		RebuildHandUI(true);
+	}
 
-	public void SetAllCardSelectable(bool selectable)
+	public void SetAllCardSelectable(bool selectable, bool isDark = true)
 	{
 		foreach (var card in handCards)
 		{
-			SetCardSelectable(card, selectable);
+			SetCardSelectable(card, selectable, isDark);
 		}
 	}
 
-	public void SetCardSelectable(Card card, bool selectable)
+	public void SetCardSelectable(Card card, bool selectable, bool isDark = true)
 	{
-		if (selectable == false)
+		if (selectable == false && isDark)
 			card.SetDark();
-		else
-		{
-			card.CanSelected = selectable;
-		}
+		if (!isDark)
+			card.SetLight();
+		card.CanSelected = selectable;
 		if (card.IsSelected && selectable == false)  // 设置为不可选当前牌选中的时候要设置为不选中
 		{
 			ToggleCardSelection(card);

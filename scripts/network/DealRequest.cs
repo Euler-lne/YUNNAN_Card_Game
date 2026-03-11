@@ -66,22 +66,6 @@ public partial class DealRequest : Node2D
         UIEvent.OnChangeCardNumEvent(num);
     }
     #endregion
-    #region 发牌相关
-    public void PlayCard(int playLogicSeat, List<CardData> cardDatas, bool isBack, GamePhase gamePhase)
-    {
-        if (!Multiplayer.IsServer()) return;
-        int[] ids = CardData.Serialize(cardDatas);
-        Rpc(nameof(RpcPlayCardBroadcast), playLogicSeat, ids, isBack, (int)gamePhase);
-    }
-
-    [Rpc(MultiplayerApi.RpcMode.Authority, CallLocal = true)]
-    private void RpcPlayCardBroadcast(int playLogicSeat, int[] ids, bool isBack, int _gamePhase)
-    {
-        int playSeat = NetworkManager.Instance.GetViewSeat(playLogicSeat); // 当前出牌的人在自己视角的逻辑座位
-        GamePhase gamePhase = (GamePhase)_gamePhase;
-        EventBus.OnPlayCardEvent(playSeat, ids, isBack, gamePhase);
-    }
-    #endregion
 
     #region 叫主相关
     public void SetDeclareUIInvisiable(long peerId)
@@ -172,25 +156,53 @@ public partial class DealRequest : Node2D
                 RpcId(peerId, nameof(RpcReceiveHand), currentId);
             }
             RpcId(peerId, nameof(RpcNotifyDealerSelectCard));
-            // TODO:通知可以选牌了
         }
     }
     [Rpc(MultiplayerApi.RpcMode.Authority, CallLocal = true)]
     private void RpcNotifyDealerSelectCard()
     {
         DealEvent.OnNotifyDealerSelectCard();
+        player.EnterDealerSelectCard();            // 通知可以选牌了
     }
-    public void NotifyDealerSelectCardResult(bool isValid, int dealer)
+    public void NotifyDealerSelectCardResult(bool isValid, int dealer, int[] ids)
     {
         long peerId = NetworkManager.Instance.GetPeerIdBySeat(dealer);
-        RpcId(peerId, nameof(RpcNotifyDealerSelectCardResult), isValid);
-
+        RpcId(peerId, nameof(RpcNotifyDealerSelectCardResult), isValid, ids);
+        // deckCard.Visible = true;
     }
     [Rpc(MultiplayerApi.RpcMode.Authority, CallLocal = true)]
-    private void RpcNotifyDealerSelectCardResult(bool isValid)
+    private void RpcNotifyDealerSelectCardResult(bool isValid, int[] ids)
     {
         DealEvent.OnNotifyDealerSelectCardResult(isValid);
+        if (isValid)
+            player.ExitDealerSelectCard(ids);
     }
+    public void HandleHoleCardBegin()
+    {
+        Rpc(nameof(RpcHandleHoleCardBegin));
+    }
+    [Rpc(MultiplayerApi.RpcMode.Authority, CallLocal = true)]
+    private void RpcHandleHoleCardBegin()
+    {
+        DealEvent.OnHandleHoleCardBeginEvent();
+    }
+
+    public void RegenerateCardList(List<CardData>[] playerCardData, Rank rank, Suit suit)
+    {
+        if (!Multiplayer.IsServer()) return;
+        for (int i = 0; i < GameSettings.PLAYER_COUNT; i++)
+        {
+            long peerId = NetworkManager.Instance.GetPeerIdBySeat(i);
+            int[] ids = CardData.Serialize(playerCardData[i]);
+            RpcId(peerId, nameof(RpcRegenerateCardList), ids, (int)rank, (int)suit);
+        }
+    }
+    [Rpc(MultiplayerApi.RpcMode.Authority, CallLocal = true)]
+    private void RpcRegenerateCardList(int[] ids, int rank, int suit)
+    {
+        player.RegenerateCardList(CardData.Deserialize(ids), (Rank)rank, (Suit)suit);
+    }
+
     #region 动画
     public void RotateToDealer(int dealerSeat)
     {
