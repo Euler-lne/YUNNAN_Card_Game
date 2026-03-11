@@ -27,8 +27,18 @@ public partial class GameManager : Node
             uiManager.UpdatePlayerCount(NetworkManager.Instance.TotalPlayers);
             uiManager.ConnectStartButtonPressed(StartGame);
             NetworkManager.Instance.OnTotalPlayersChanged += uiManager.UpdatePlayerCount;
+            dealManager.DealEndEvent += OnDealEndEvent;
         }
     }
+    public override void _ExitTree()
+    {
+        if (Multiplayer.IsServer())
+        {
+            dealManager.DealEndEvent -= OnDealEndEvent;
+            NetworkManager.Instance.OnTotalPlayersChanged -= uiManager.UpdatePlayerCount;
+        }
+    }
+
 
     public void StartGame()
     {
@@ -41,11 +51,10 @@ public partial class GameManager : Node
         // 开始回合
     }
 
-    public override void _ExitTree()
+    private void OnDealEndEvent()
     {
-        if (Multiplayer.IsServer())
-        {
-            NetworkManager.Instance.OnTotalPlayersChanged -= uiManager.UpdatePlayerCount;
-        }
+        if (!Multiplayer.IsServer())
+            return;
+        GD.Print("回合开始");
     }
 }

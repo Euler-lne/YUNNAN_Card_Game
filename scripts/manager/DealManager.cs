@@ -25,6 +25,8 @@ public partial class DealManager : Node
 
     private Timer dealEndTimer = null;
 
+    public Action DealEndEvent;
+
     public override void _Ready()
     {
         if (Multiplayer.IsServer())
@@ -128,6 +130,7 @@ public partial class DealManager : Node
         dealRequest.UpdateTrumpSuit(trumpSuit);
         dealRequest.RegenerateCardList(GameCore.RegenerateCardList(), rank, trumpSuit);
         GD.Print("抠底结束，准备开始游戏");
+        DealEndEvent?.Invoke();
     }
 
     private async Task DealerGetCards()
@@ -206,7 +209,6 @@ public partial class DealManager : Node
             // TODO:当前只有卡牌移动，还没有执行卡牌的翻面
             dealRequest.GenerateHoleCard(posList[index],
                     cardDatas[index], index == cardDatas.Count - 1);
-
             await DelayHalf(GameSettings.DEAL_DURATION_TIME);
 
             // 判断当前的是否应该结束
@@ -230,6 +232,7 @@ public partial class DealManager : Node
             }
             index++;
         }
+        await DelayHalf(GameSettings.INFO_EXIST_TIME);
         if (meetRankIndex != -1)
         {
             // 说明index遇到主牌了meetRankIndex
@@ -239,8 +242,6 @@ public partial class DealManager : Node
             dealRequest.UpdateTrumpSeat(curretDealer);
             GameCore.SetTrump(DeclareOption.COUNTER_TRUMP, cardDatas[index].suit);
             dealRequest.UpdateTrumpSuit(cardDatas[index].suit);
-            // 这里太快了，可能需要提示一下
-            await DelayHalf(GameSettings.INFO_EXIST_TIME);
         }
         else
         {
