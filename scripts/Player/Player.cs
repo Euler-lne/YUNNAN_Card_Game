@@ -60,19 +60,21 @@ public partial class Player : Node2D
 		playerHandCard.SetAllCardSelectable(false, false);
 	}
 
-	public void EnterDealerSelectCard()
+	public void EnterSelectCard(TurnData turnData)
 	{
-		playerHandCard.SetAllCardSelectable(true);
-		long peerId = Multiplayer.GetUniqueId();
-		GD.Print($"{peerId}已经把所有牌设置为可以选");
+		if (turnData.playType == PlayType.NONE)
+			playerHandCard.SetAllCardSelectable(true);
+		// TODO:其他设置为不可选
 	}
-	public void ExitDealerSelectCard(int[] ids)
+
+	public void ExitSelectCard(int[] ids)
 	{
-		// 把选中的牌移除
 		List<CardData> cardDatas = CardData.Deserialize(ids);
 		playerHandCard.RemoveSeletedCard(cardDatas);
 		playerHandCard.SetAllCardSelectable(false, false);
 	}
+
+
 
 	public void DealCard(CardData currentCard)
 	{

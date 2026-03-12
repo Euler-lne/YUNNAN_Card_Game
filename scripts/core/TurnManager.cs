@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Euler.Event;
 using Euler.Global;
 public class TurnManager
 {
@@ -8,22 +9,27 @@ public class TurnManager
     private int currentSeat;
     private readonly List<CardData>[] playedCards = new List<CardData>[4];
     private TaskCompletionSource playTcs = null;
+    private TurnData turnData;
     public void Init(TurnRequest turnRequest, int dealer)
     {
         this.turnRequest = turnRequest;
         this.dealer = dealer;
+        TurnEvent.PlayCardButtonPressEvent = OnPlayCardButtonPress;
+        turnData = new();
     }
+
+
 
     public async void StartTurn()
     {
         // 通知dealer进行选择
         currentSeat = dealer;
+        turnData = new();
         await WaitPlayerPlayCard();
         IncreaseCurrentSeat();
     }
     private void IncreaseCurrentSeat()
     {
-        turnRequest.SetPlayUI(currentSeat, false);
         currentSeat++;
         currentSeat %= GameSettings.PLAYER_COUNT;
         if (currentSeat == dealer)
@@ -51,16 +57,18 @@ public class TurnManager
         // TODO:等待玩家出牌
         // 1. 通知对应玩家UI显示出牌按钮
         // 2. 等待点击确认按钮，客户端自己简单判断，到服务器再判断一遍
-        turnRequest.SetPlayUI(currentSeat, true);
+        turnRequest.TurnStart(currentSeat, turnData);
         playTcs = new();
         await playTcs?.Task;
         playTcs = null;
     }
 
-    private void OnPlayCardButtonPress()
+    private void OnPlayCardButtonPress(List<CardData> cardDatas)
     {
         // TODO:判断是否合理，函数可以改
-        // playTcs?.SetResult();
-        // playTcs = null;
+        playTcs?.SetResult();
+        playTcs = null;
+        turnRequest.TurnEnd(currentSeat, true, cardDatas);
+        // TODO:更新TurnData，如果是刚开始的时候
     }
 }

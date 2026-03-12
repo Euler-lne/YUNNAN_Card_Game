@@ -20,7 +20,7 @@
 [ext_resource type="Texture2D" uid="uid://cxmoxsyj3ry68" path="res://assets/human_queen_of_diamond_red_design_2.png" id="12_ssvqc"]
 [ext_resource type="Texture2D" uid="uid://bdd8t4xtvwut0" path="res://assets/Crown.png" id="13_1kice"]
 [ext_resource type="Texture2D" uid="uid://d15yo5u106q7r" path="res://assets/human_king_of_diamond_red_design_2.png" id="13_264po"]
-[ext_resource type="Script" path="res://scripts/network/TurnRequest.cs" id="20_5newe"]
+[ext_resource type="Script" uid="uid://efharno63jfq" path="res://scripts/network/TurnRequest.cs" id="20_5newe"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_1kice"]
 atlas = ExtResource("10_trtic")
@@ -293,6 +293,16 @@ text = "108"
 horizontal_alignment = 1
 vertical_alignment = 1
 
+[node name="Score" type="Label" parent="CanvasLayer/UIManager"]
+layout_mode = 1
+offset_left = 130.0
+offset_top = 1.0
+offset_right = 330.0
+offset_bottom = 58.0
+text = "闲家分数："
+horizontal_alignment = 1
+vertical_alignment = 1
+
 [node name="UserInfos" type="Control" parent="CanvasLayer/UIManager"]
 layout_mode = 1
 anchors_preset = 15
@@ -342,12 +352,22 @@ vertical_alignment = 1
 
 [node name="Crown" type="TextureRect" parent="CanvasLayer/UIManager/UserInfos/UserInfoTop"]
 layout_mode = 0
-offset_left = -42.0
+offset_left = -31.0
 offset_top = 20.0
-offset_right = -2.0
-offset_bottom = 60.0
+offset_right = -1.0
+offset_bottom = 50.0
 texture = ExtResource("13_1kice")
 expand_mode = 1
+
+[node name="Level" type="Label" parent="CanvasLayer/UIManager/UserInfos/UserInfoTop"]
+offset_left = -32.0
+offset_top = 53.0
+offset_right = -2.0
+offset_bottom = 81.0
+theme_override_font_sizes/font_size = 20
+text = "2"
+horizontal_alignment = 1
+vertical_alignment = 1
 
 [node name="UserInfoDown" type="Control" parent="CanvasLayer/UIManager/UserInfos"]
 layout_mode = 1
@@ -387,10 +407,20 @@ vertical_alignment = 1
 layout_mode = 0
 offset_left = 88.0
 offset_top = -92.0
-offset_right = 128.0
-offset_bottom = -52.0
+offset_right = 118.0
+offset_bottom = -62.0
 texture = ExtResource("13_1kice")
 expand_mode = 1
+
+[node name="Level" type="Label" parent="CanvasLayer/UIManager/UserInfos/UserInfoDown"]
+offset_left = 88.0
+offset_top = -61.0
+offset_right = 118.0
+offset_bottom = -33.0
+theme_override_font_sizes/font_size = 20
+text = "2"
+horizontal_alignment = 1
+vertical_alignment = 1
 
 [node name="UserInfoLeft" type="Control" parent="CanvasLayer/UIManager/UserInfos"]
 layout_mode = 1
@@ -429,10 +459,20 @@ vertical_alignment = 1
 layout_mode = 0
 offset_left = 88.0
 offset_top = 20.0
-offset_right = 128.0
-offset_bottom = 60.0
+offset_right = 118.0
+offset_bottom = 50.0
 texture = ExtResource("13_1kice")
 expand_mode = 1
+
+[node name="Level" type="Label" parent="CanvasLayer/UIManager/UserInfos/UserInfoLeft"]
+offset_left = 88.0
+offset_top = 53.0
+offset_right = 118.0
+offset_bottom = 81.0
+theme_override_font_sizes/font_size = 20
+text = "2"
+horizontal_alignment = 1
+vertical_alignment = 1
 
 [node name="UserInfoRight" type="Control" parent="CanvasLayer/UIManager/UserInfos"]
 layout_mode = 1
@@ -470,14 +510,44 @@ text = "玩家3"
 horizontal_alignment = 1
 vertical_alignment = 1
 
+[node name="Level" type="Label" parent="CanvasLayer/UIManager/UserInfos/UserInfoRight"]
+layout_mode = 0
+offset_left = -117.0
+offset_top = 53.0
+offset_right = -87.0
+offset_bottom = 81.0
+theme_override_font_sizes/font_size = 20
+text = "2"
+horizontal_alignment = 1
+vertical_alignment = 1
+
 [node name="Crown" type="TextureRect" parent="CanvasLayer/UIManager/UserInfos/UserInfoRight"]
 layout_mode = 0
-offset_left = -128.0
+offset_left = -117.0
 offset_top = 22.0
-offset_right = -88.0
-offset_bottom = 62.0
+offset_right = -87.0
+offset_bottom = 52.0
 texture = ExtResource("13_1kice")
 expand_mode = 1
+
+[node name="PlayCardButton" type="Button" parent="CanvasLayer/UIManager"]
+visible = false
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -44.0
+offset_top = 89.5
+offset_right = 44.0
+offset_bottom = 154.5
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 4
+theme = ExtResource("5_kvpfn")
+theme_override_font_sizes/font_size = 40
+text = "出牌"
 
 [node name="Player" type="Node2D" parent="."]
 script = ExtResource("7_0tnpc")

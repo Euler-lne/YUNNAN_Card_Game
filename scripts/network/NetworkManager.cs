@@ -57,7 +57,7 @@ public partial class NetworkManager : Node
 	[Rpc(MultiplayerApi.RpcMode.Authority, CallLocal = true)]
 	private void RpcPlayCardBroadcast(int playLogicSeat, int[] ids, bool isBack, int _gamePhase)
 	{
-		int playSeat = NetworkManager.Instance.GetViewSeat(playLogicSeat); // 当前出牌的人在自己视角的逻辑座位
+		int playSeat = GetViewSeat(playLogicSeat); // 当前出牌的人在自己视角的逻辑座位
 		GamePhase gamePhase = (GamePhase)_gamePhase;
 		EventBus.OnPlayCardEvent(playSeat, ids, isBack, gamePhase);
 	}

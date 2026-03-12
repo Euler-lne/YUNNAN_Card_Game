@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using Euler.Event;
 using Godot;
 
 public partial class TurnRequest : Node2D
@@ -5,16 +7,28 @@ public partial class TurnRequest : Node2D
     private Player player;
 
     #region UI
-    public void SetPlayUI(int seat, bool visiable)
+    public void TurnStart(int seat, TurnData turnData)
     {
         long peerId = NetworkManager.Instance.GetPeerIdBySeat(seat);
         if (peerId == -1) return;
-        RpcId(peerId, nameof(RpcSetPlayUI), seat, visiable);
+        RpcId(peerId, nameof(RpcTurnStart), TurnData.Serialize(turnData));
     }
     [Rpc(MultiplayerApi.RpcMode.Authority, CallLocal = true)]
-    private void RpcSetPlayUI(int seat, bool visiable)
+    private void RpcTurnStart(int id)
     {
+        TurnEvent.OnTurnStartEvent(TurnData.Deserialize(id));
+    }
 
+    public void TurnEnd(int seat, bool isValid, List<CardData> cardDatas)
+    {
+        long peerId = NetworkManager.Instance.GetPeerIdBySeat(seat);
+        if (peerId == -1) return;
+        RpcId(peerId, nameof(RpcTurnEnd), isValid, CardData.Serialize(cardDatas));
+    }
+    [Rpc(MultiplayerApi.RpcMode.Authority, CallLocal = true)]
+    private void RpcTurnEnd(bool isValid, int[] ids)
+    {
+        TurnEvent.OnTurnEndEvent(isValid, ids);
     }
     #endregion
 }

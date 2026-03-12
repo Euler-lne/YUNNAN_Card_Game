@@ -2,6 +2,7 @@ using Godot;
 using System;
 using System.Collections.Generic;
 using Euler.Event;
+using Euler.Global;
 
 public partial class UserInfoContainerUI : Control
 {
@@ -19,12 +20,23 @@ public partial class UserInfoContainerUI : Control
 		UIEvent.ChangeAvatarEvent += OnChangeAvatarEvent;
 		UIEvent.ChangeNameEvent += OnChangeNameEvent;
 		UIEvent.ChangeTrumpEvent += OnChangeTrumpEvent;
+		UIEvent.ChangeLevelEvent -= OnChangeLevelEvent;
 	}
 	public override void _ExitTree()
 	{
 		UIEvent.ChangeAvatarEvent -= OnChangeAvatarEvent;
 		UIEvent.ChangeNameEvent -= OnChangeNameEvent;
 		UIEvent.ChangeTrumpEvent -= OnChangeTrumpEvent;
+		UIEvent.ChangeLevelEvent -= OnChangeLevelEvent;
+	}
+
+	private void OnChangeLevelEvent(int seat, Rank rank)
+	{
+		// TODO:赢牌调用
+		userInfoUI[seat].SetLevel(rank);
+		seat += 2;
+		seat %= GameSettings.PLAYER_COUNT;
+		userInfoUI[seat].SetLevel(rank);
 	}
 
 	private void OnChangeTrumpEvent(bool isTrump, int seat)

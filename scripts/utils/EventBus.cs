@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 namespace Euler.Event
 {
     public static class EventBus
@@ -124,16 +125,37 @@ namespace Euler.Event
             ChangeTrumpEvent?.Invoke(isTrump, seat);
         }
 
-        // public static Action<int, int> ChangeCardNumEvent;
-        // public static void OnChangeCardNumEvent(int cardNum, int seat)
-        // {
-        //     ChangeCardNumEvent?.Invoke(cardNum, seat);
-        // }
+        public static Action<int, Rank> ChangeLevelEvent;
+        public static void OnChangeLevelEvent(int seat, Rank rank)
+        {
+            ChangeLevelEvent?.Invoke(seat, rank);
+        }
 
         public static Action<Suit> ChangeTrumpSuitEvent;
         public static void OnChangeTrumpSuitEvent(Suit suit)
         {
             ChangeTrumpSuitEvent?.Invoke(suit);
+        }
+    }
+
+    public static class TurnEvent
+    {
+        public static Action<TurnData> TurnStartEvent;
+        public static void OnTurnStartEvent(TurnData turnData)
+        {
+            TurnStartEvent?.Invoke(turnData);
+        }
+
+        public static Action<bool, int[]> TurnEndEvent;
+        public static void OnTurnEndEvent(bool isValid, int[] ids)
+        {
+            TurnEndEvent?.Invoke(isValid, ids);
+        }
+
+        public static Action<List<CardData>> PlayCardButtonPressEvent;
+        public static void OnPlayCardButtonPressEvent(List<CardData> cardDatas)
+        {
+            PlayCardButtonPressEvent?.Invoke(cardDatas);
         }
     }
 }

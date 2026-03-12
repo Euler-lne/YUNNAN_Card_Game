@@ -162,7 +162,7 @@ public partial class DealRequest : Node2D
     private void RpcNotifyDealerSelectCard()
     {
         DealEvent.OnNotifyDealerSelectCard();
-        player.EnterDealerSelectCard();            // 通知可以选牌了
+        player.EnterSelectCard(new());            // 通知可以选牌了
     }
     public void NotifyDealerSelectCardResult(bool isValid, int dealer, int[] ids)
     {
@@ -175,7 +175,7 @@ public partial class DealRequest : Node2D
     {
         DealEvent.OnNotifyDealerSelectCardResult(isValid);
         if (isValid)
-            player.ExitDealerSelectCard(ids);
+            player.ExitSelectCard(ids);
     }
     public void HandleHoleCardBegin()
     {

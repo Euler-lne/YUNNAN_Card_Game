@@ -1,3 +1,4 @@
+using Euler.Event;
 using Godot;
 using System;
 using System.Collections.Generic;
@@ -40,7 +41,7 @@ public partial class GameManager : Node
     }
 
 
-    public void StartGame()
+    private void StartGame()
     {
         if (!Multiplayer.IsServer())
             return;
@@ -56,5 +57,6 @@ public partial class GameManager : Node
         if (!Multiplayer.IsServer())
             return;
         GD.Print("回合开始");
+        turnManager.StartTurn();
     }
 }
