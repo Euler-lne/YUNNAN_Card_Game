@@ -57,6 +57,6 @@ public partial class GameManager : Node
         if (!Multiplayer.IsServer())
             return;
         GD.Print("回合开始");
-        turnManager.StartTurn();
+        turnManager.StartTurn(gameCore.GetDealerSeat());
     }
 }

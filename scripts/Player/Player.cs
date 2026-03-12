@@ -8,6 +8,8 @@ public partial class Player : Node2D
 {
 	private PlayerHandCard playerHandCard;
 	private TableManager tableManager;
+	private int[] selectCards = [];
+
 	public override void _Ready()
 	{
 		// FIXME:建议修改当前的UI布局
@@ -18,12 +20,40 @@ public partial class Player : Node2D
 
 		EventBus.PlayCardEvent += OnPlayCard;
 		DealEvent.HandleHoleCardBeginEvent += OnHandleHoleCardBeginEvent;
+		EventBus.SelectCardEvent += OnSelectCardEvent;
+		EventBus.GetSelectCardEvent += OnGetSelectCardEvent;
+		TurnEvent.TurnStartEvent += TurnStartEvent;
+		TurnEvent.TurnEndEvent += OnTurnEndEvent;
 	}
 
 	public override void _ExitTree()
 	{
 		EventBus.PlayCardEvent -= OnPlayCard;
 		DealEvent.HandleHoleCardBeginEvent -= OnHandleHoleCardBeginEvent;
+		EventBus.SelectCardEvent -= OnSelectCardEvent;
+		EventBus.GetSelectCardEvent -= OnGetSelectCardEvent;
+		TurnEvent.TurnStartEvent -= TurnStartEvent;
+		TurnEvent.TurnEndEvent -= OnTurnEndEvent;
+	}
+
+	private void OnTurnEndEvent(bool isValid, int[] ids)
+	{
+		//TODO:玩家结束回合
+	}
+
+	private void TurnStartEvent(TurnData turnData)
+	{
+		//TODO:玩家开始回合
+	}
+
+	private int[] OnGetSelectCardEvent()
+	{
+		return selectCards;
+	}
+
+	private void OnSelectCardEvent(int[] ids)
+	{
+		selectCards = ids;
 	}
 
 	private void OnPlayCard(int playSeat, int[] ids, bool isBack, GamePhase gamePhase)
@@ -60,11 +90,9 @@ public partial class Player : Node2D
 		playerHandCard.SetAllCardSelectable(false, false);
 	}
 
-	public void EnterSelectCard(TurnData turnData)
+	public void EnterSelectCard()
 	{
-		if (turnData.playType == PlayType.NONE)
-			playerHandCard.SetAllCardSelectable(true);
-		// TODO:其他设置为不可选
+		playerHandCard.SetAllCardSelectable(true);
 	}
 
 	public void ExitSelectCard(int[] ids)

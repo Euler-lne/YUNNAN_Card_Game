@@ -5,8 +5,6 @@ using System.Collections.Generic;
 
 public partial class PlayCardButton : Button
 {
-	[Export] Player player;
-	List<CardData> selectedCard = [];
 	public override void _Ready()
 	{
 		Visible = false;
@@ -28,20 +26,12 @@ public partial class PlayCardButton : Button
 		if (isValid)
 		{
 			Visible = false;
-			player.ExitSelectCard(ids);
-			EventBus.SelectCardEvent -= OnSelectCardEvent;
 		}
 	}
 
 	private void TurnStartEvent(TurnData turnData)
 	{
 		Visible = true;
-		player.EnterSelectCard(turnData);
-		EventBus.SelectCardEvent += OnSelectCardEvent;
-	}
-	private void OnSelectCardEvent(int[] ids)
-	{
-		selectedCard = CardData.Deserialize(ids);
 	}
 
 	private void OnPlayCardButtonPressed()

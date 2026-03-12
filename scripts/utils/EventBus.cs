@@ -15,6 +15,12 @@ namespace Euler.Event
         {
             PlayCardEvent?.Invoke(playSeat, ids, isBack, gamePhase);
         }
+
+        public static Func<int[]> GetSelectCardEvent;
+        public static int[] OnGetSelectCardEvent()
+        {
+            return GetSelectCardEvent?.Invoke();
+        }
     }
     public static class DealEvent
     {

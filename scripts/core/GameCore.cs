@@ -21,8 +21,8 @@ public class GameCore
     public void StartGame()
     {
         deckManager.CreateDeck();
-        // deckManager.Shuffle();
-        deckManager.TestCreateDeck();
+        deckManager.Shuffle();
+        // deckManager.TestCreateDeck();
 
         gameData.CurrentPhase = GamePhase.DEALING;
     }

@@ -107,7 +107,7 @@ public partial class DealRequest : Node2D
     private void RpcNotifyClientConfirmButtonPressed(bool isValid)
     {
         // 告知客户端点击叫主按钮是否合法
-        DealEvent.JudgeConfirmEvent(isValid);
+        DealEvent.OnJudgeConfirmRequestEvent(isValid);
         if (isValid)
             player.ExitrDeclareMode(); // 这里判断为点击按钮成功了
     }
@@ -163,7 +163,7 @@ public partial class DealRequest : Node2D
     private void RpcNotifyDealerSelectCard()
     {
         DealEvent.OnNotifyDealerSelectCard();
-        player.EnterSelectCard(new());            // 通知可以选牌了
+        player.EnterSelectCard();            // 通知可以选牌了
     }
     public void NotifyDealerSelectCardResult(bool isValid, int dealer, int[] ids)
     {

@@ -16,7 +16,7 @@ public partial class DeclareContainer : HBoxContainer
 	private bool isDeclare = true;
 	private DeclareOption currentOption = DeclareOption.NONE;
 
-	private int[] selectCards = [];
+	// private int[] selectCards = [];
 
 	public bool IsDeclare
 	{
@@ -47,17 +47,12 @@ public partial class DeclareContainer : HBoxContainer
 		DealEvent.SetDeclareEvent += OnSetDeclareEvent;
 		DealEvent.JudgeConfirmEvent += OnJudgeConfirmEvent;
 		DealEvent.JudgeDeclareEvent += OnJudgeDeclareEvent;
-
-		EventBus.SelectCardEvent += OnSelectCardEvent;
 	}
 	public override void _ExitTree()
 	{
 		DealEvent.SetDeclareEvent -= OnSetDeclareEvent;
 		DealEvent.JudgeConfirmEvent -= OnJudgeConfirmEvent;
 		DealEvent.JudgeDeclareEvent -= OnJudgeDeclareEvent;
-
-		EventBus.SelectCardEvent -= OnSelectCardEvent;
-
 	}
 
 	private void OnCancelButton()
@@ -70,16 +65,19 @@ public partial class DeclareContainer : HBoxContainer
 
 	private void OnConfirmButton()
 	{
+		int[] selectCards = [];
 		long myPeerId = Multiplayer.GetUniqueId();
 		if (currentOption == DeclareOption.DARK_TRUMP)
 		{
-			CardData cardData = DealEvent.ConfirmDardTrumpEvent();
+			CardData cardData = DealEvent.OnConfirmDardTrumpEvent();
 			selectCards = CardData.Serialize([cardData]);
+		}
+		else
+		{
+			selectCards = EventBus.OnGetSelectCardEvent();
 		}
 		RpcId(1, nameof(ServerConfirmDeclare), myPeerId, (int)currentOption, selectCards);
 	}
-
-
 	private void OnDeclareButtonPressed()
 	{
 
@@ -90,10 +88,6 @@ public partial class DeclareContainer : HBoxContainer
 		// 假设服务器 id = 1
 
 	}
-	private void OnSelectCardEvent(int[] ids)
-	{
-		selectCards = ids;
-	}
 	private void OnSetDeclareEvent(DeclareOption option)
 	{
 		Declare(option);
@@ -103,7 +97,9 @@ public partial class DeclareContainer : HBoxContainer
 	{
 		// 服务器得知按下了叫主按钮然后关闭一些UI显示
 		if (isValid) // 合法那么显示确定按钮
+		{
 			DeclareButtonPressed();
+		}
 		else // 不合法都取消
 			SetInVisiable();
 	}
@@ -178,9 +174,5 @@ public partial class DeclareContainer : HBoxContainer
 	{
 		DealEvent.OnCancelRequestEvent();
 	}
-	#endregion
-
-	#region 工具函数
-	public int[] GetSelectedCards() => selectCards;
 	#endregion
 }

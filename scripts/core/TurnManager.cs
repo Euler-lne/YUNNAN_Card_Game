@@ -20,10 +20,11 @@ public class TurnManager
 
 
 
-    public async void StartTurn()
+    public async void StartTurn(int dealer = -1)
     {
         // 通知dealer进行选择
-        currentSeat = dealer;
+        if (dealer != -1) this.dealer = dealer;
+        currentSeat = this.dealer;
         turnData = new();
         await WaitPlayerPlayCard();
         IncreaseCurrentSeat();
