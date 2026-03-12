@@ -108,7 +108,8 @@ public partial class DealRequest : Node2D
     {
         // 告知客户端点击叫主按钮是否合法
         DealEvent.JudgeConfirmEvent(isValid);
-        player.ExitrDeclareMode(); // 这里判断为点击按钮成功了
+        if (isValid)
+            player.ExitrDeclareMode(); // 这里判断为点击按钮成功了
     }
 
     public void NotifyClientChooseTrump(long peerId, Rank rank)

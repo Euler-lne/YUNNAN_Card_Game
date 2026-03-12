@@ -306,7 +306,7 @@ public partial class DealManager : Node
 
         dealRequest.NotifyDeclareOption(peerId, option);
         if (option == DeclareOption.DARK_TRUMP)  // 等待判断
-            declareTcs = new();
+            declareTcs = new();  // FIXME:暗主一次显示两张牌
     }
     private void SetDeclareUIInvisiable(int expectLogicalSeat = -1)
     {
