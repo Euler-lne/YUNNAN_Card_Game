@@ -10,14 +10,14 @@ public partial class PlayCardButton : Button
 		Visible = false;
 
 		Pressed += OnPlayCardButtonPressed;
-		TurnEvent.TurnStartEvent += TurnStartEvent;
+		TurnEvent.TurnStartEvent += OnTurnStartEvent;
 		TurnEvent.TurnEndEvent += OnTurnEndEvent;
 	}
 
 	public override void _ExitTree()
 	{
 		Pressed -= OnPlayCardButtonPressed;
-		TurnEvent.TurnStartEvent -= TurnStartEvent;
+		TurnEvent.TurnStartEvent -= OnTurnStartEvent;
 		TurnEvent.TurnEndEvent -= OnTurnEndEvent;
 	}
 
@@ -29,7 +29,7 @@ public partial class PlayCardButton : Button
 		}
 	}
 
-	private void TurnStartEvent(TurnData turnData)
+	private void OnTurnStartEvent(TurnData turnData)
 	{
 		Visible = true;
 	}

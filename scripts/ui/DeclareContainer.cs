@@ -74,7 +74,7 @@ public partial class DeclareContainer : HBoxContainer
 		}
 		else
 		{
-			selectCards = EventBus.OnGetSelectCardEvent();
+			selectCards = [.. EventBus.OnGetSelectCardEvent()];
 		}
 		RpcId(1, nameof(ServerConfirmDeclare), myPeerId, (int)currentOption, selectCards);
 	}

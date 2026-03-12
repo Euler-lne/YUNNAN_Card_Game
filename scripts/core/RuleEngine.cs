@@ -117,7 +117,7 @@ public static class RuleEngine
             return 17;
         else if (cardData.suit == trumpSuit && cardData.rank == trumpRank)
             return 16;
-        else if (cardData.rank == trumpRank) //FIXME:副主算主吗？
+        else if (cardData.rank == trumpRank)
             return 15;
         return (int)cardData.rank;
     }

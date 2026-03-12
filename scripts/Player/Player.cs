@@ -3,12 +3,15 @@ using System;
 using System.Collections.Generic;
 using Euler.Global;
 using Euler.Event;
+using System.Linq;
 
 public partial class Player : Node2D
 {
 	private PlayerHandCard playerHandCard;
 	private TableManager tableManager;
-	private int[] selectCards = [];
+	private List<int> selectCards = [];
+	private TurnData turnData;
+	private bool isTurn = false;
 
 	public override void _Ready()
 	{
@@ -22,7 +25,7 @@ public partial class Player : Node2D
 		DealEvent.HandleHoleCardBeginEvent += OnHandleHoleCardBeginEvent;
 		EventBus.SelectCardEvent += OnSelectCardEvent;
 		EventBus.GetSelectCardEvent += OnGetSelectCardEvent;
-		TurnEvent.TurnStartEvent += TurnStartEvent;
+		TurnEvent.TurnStartEvent += OnTurnStartEvent;
 		TurnEvent.TurnEndEvent += OnTurnEndEvent;
 	}
 
@@ -32,28 +35,85 @@ public partial class Player : Node2D
 		DealEvent.HandleHoleCardBeginEvent -= OnHandleHoleCardBeginEvent;
 		EventBus.SelectCardEvent -= OnSelectCardEvent;
 		EventBus.GetSelectCardEvent -= OnGetSelectCardEvent;
-		TurnEvent.TurnStartEvent -= TurnStartEvent;
+		TurnEvent.TurnStartEvent -= OnTurnStartEvent;
 		TurnEvent.TurnEndEvent -= OnTurnEndEvent;
 	}
 
 	private void OnTurnEndEvent(bool isValid, int[] ids)
 	{
 		//TODO:玩家结束回合
+		isTurn = false;
+		selectCards.Clear();
 	}
 
-	private void TurnStartEvent(TurnData turnData)
+	private void OnTurnStartEvent(TurnData turnData)
 	{
 		//TODO:玩家开始回合
+		playerHandCard.SetAllCardIsSelected(false); // 先全部设置为不可选
+		selectCards.Clear();
+		this.turnData = turnData;
+		isTurn = true;
+		if (turnData.playType == PlayType.NONE)
+		{
+			playerHandCard.SetAllCardSelectable(true);
+		}
+		else
+		{
+			Suit suit = turnData.suit;
+			playerHandCard.SetCardUnSelectableExpect(suit);
+		}
 	}
 
-	private int[] OnGetSelectCardEvent()
+	private void OnSelectCardEvent(int id, bool isSelected)
+	{
+		// 更新选中列表
+		if (isSelected)
+			selectCards.Add(id);
+		else
+			selectCards.Remove(id);
+
+		if (!isTurn) return;
+
+		if (turnData.playType == PlayType.NONE)
+			HandleBankerSelection();
+		else
+			HandleNonBankerSelection();
+	}
+	private void HandleBankerSelection()
+	{
+		var handCards = playerHandCard.GetHandCards();
+		int selectCount = selectCards.Count;
+
+		if (selectCount == 0)
+		{
+			// 无选中牌：所有牌可选
+			playerHandCard.SetAllCardSelectable(true);
+		}
+		else
+		{
+			// 获取第一张选中的牌及其类别
+			var firstCard = handCards.First(c => CardData.Serialize(c.cardData) == selectCards[0]);
+			var firstCategory = playerHandCard.GetCardCategory(firstCard);
+			GD.Print(firstCategory);
+
+			foreach (var card in handCards)
+			{
+				if (card.IsSelected)
+					playerHandCard.SetCardSelectable(card, true); // 已选中的可取消
+				else
+					playerHandCard.SetCardSelectable(card, playerHandCard.GetCardCategory(card) == firstCategory);
+			}
+		}
+	}
+
+	private void HandleNonBankerSelection()
+	{
+	}
+
+
+	private List<int> OnGetSelectCardEvent()
 	{
 		return selectCards;
-	}
-
-	private void OnSelectCardEvent(int[] ids)
-	{
-		selectCards = ids;
 	}
 
 	private void OnPlayCard(int playSeat, int[] ids, bool isBack, GamePhase gamePhase)

@@ -534,7 +534,7 @@ offset_bottom = 52.0
 texture = ExtResource("13_1kice")
 expand_mode = 1
 
-[node name="PlayCardButton" type="Button" parent="CanvasLayer/UIManager" node_paths=PackedStringArray("player")]
+[node name="PlayCardButton" type="Button" parent="CanvasLayer/UIManager"]
 visible = false
 layout_mode = 1
 anchors_preset = 8
@@ -553,7 +553,6 @@ theme = ExtResource("5_kvpfn")
 theme_override_font_sizes/font_size = 40
 text = "出牌"
 script = ExtResource("17_37s47")
-player = NodePath("../../../Player")
 
 [node name="Player" type="Node2D" parent="."]
 script = ExtResource("7_0tnpc")

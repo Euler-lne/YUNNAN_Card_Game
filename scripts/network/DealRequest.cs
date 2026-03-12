@@ -194,6 +194,7 @@ public partial class DealRequest : Node2D
         for (int i = 0; i < GameSettings.PLAYER_COUNT; i++)
         {
             long peerId = NetworkManager.Instance.GetPeerIdBySeat(i);
+            if (peerId == -1) continue;
             int[] ids = CardData.Serialize(playerCardData[i]);
             RpcId(peerId, nameof(RpcRegenerateCardList), ids, (int)rank, (int)suit);
         }

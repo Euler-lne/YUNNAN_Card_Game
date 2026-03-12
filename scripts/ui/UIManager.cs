@@ -90,7 +90,7 @@ public partial class UIManager : Control
 	#region 选底牌
 	private void OnDealerGetCardConfirmButtonPressed()
 	{
-		RpcId(1, nameof(RpcOnDealerGetCardConfirmButtonPressed), EventBus.OnGetSelectCardEvent());
+		RpcId(1, nameof(RpcOnDealerGetCardConfirmButtonPressed), EventBus.OnGetSelectCardEvent().ToArray());
 	}
 	private void OnNotifyDealerSelectCardResult(bool isValid)
 	{

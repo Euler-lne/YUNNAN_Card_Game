@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Euler.Global;
 using Euler.Event;
 using System;
+using System.Linq;
 
 public partial class PlayerHandCard : Node2D
 {
@@ -10,6 +11,13 @@ public partial class PlayerHandCard : Node2D
 
 	public bool isLocalPlayer = false;
 	private List<Card> handCards = [];
+	private List<Card> spadeCards = [];
+	private List<Card> heartCards = [];
+	private List<Card> clubCards = [];
+	private List<Card> diamondCards = [];
+	private List<Card> mainCards = [];
+	private HashSet<int> spadeIdSet = [], heartIdSet = [], clubIdSet = [], diamondIdSet = [], mainIdSet = [];
+
 	private List<Vector2> handPositions = [];
 	private Card lastSelectCard = null;
 
@@ -106,6 +114,7 @@ public partial class PlayerHandCard : Node2D
 	private void RebuildHandUI(bool animation = false)
 	{
 		var sorted = handLogic.cardList;
+		UpdateCategorySets();
 
 		GenerateHandPosition(sorted.Count);
 
@@ -167,8 +176,7 @@ public partial class PlayerHandCard : Node2D
 			while (queue.Count > 0)
 				queue.Dequeue().QueueFree();
 		}
-
-		handCards = newHandCards;
+		SetHandCards(newHandCards);
 	}
 
 	#region 鼠标输入选牌
@@ -245,7 +253,7 @@ public partial class PlayerHandCard : Node2D
 		foreach (Node child in GetChildren())
 			child.QueueFree();
 
-		handCards.Clear();
+		ClearHandCard();
 		handLogic.RemoveCard([]);
 		RebuildHandUI();
 	}
@@ -253,21 +261,6 @@ public partial class PlayerHandCard : Node2D
 	public void RemoveSeletedCard(List<CardData> cardDatas)
 	{
 		handLogic.RemoveCard(cardDatas);
-		if (cardDatas.Count == 0)
-		{
-			foreach (Node child in GetChildren())
-				child.QueueFree();
-			handCards.Clear();
-		}
-		for (int i = handCards.Count - 1; i >= 0; i--)
-		{
-			Card card = handCards[i];
-			if (card.IsSelected)
-			{
-				handCards.RemoveAt(i);
-				card.QueueFree();
-			}
-		}
 		RebuildHandUI(true);
 	}
 
@@ -284,7 +277,7 @@ public partial class PlayerHandCard : Node2D
 	}
 	public void RegenerateCardList(List<CardData> cardDatas, Rank rank, Suit suit)
 	{
-		handLogic.GenarateCardList(suit, rank);
+		handLogic.GenarateCardList(suit, rank, cardDatas);
 		RebuildHandUI(true);
 	}
 	public void InsertCard(List<CardData> cardDatas)
@@ -299,6 +292,36 @@ public partial class PlayerHandCard : Node2D
 		foreach (var card in handCards)
 		{
 			SetCardSelectable(card, selectable, isDark);
+		}
+	}
+	public void SetCardUnSelectableExpect(Suit suit)
+	{
+		// 获取指定花色对应的牌列表（注意：这些列表存储的是 Card 对象，而不是 CardData）
+		List<Card> targetCards = suit switch
+		{
+			Suit.SPADE => spadeCards,
+			Suit.CLUB => clubCards,
+			Suit.DIAMOND => diamondCards,
+			Suit.HEART => heartCards,
+			Suit.NONE => mainCards,
+			_ => throw new ArgumentOutOfRangeException(nameof(suit))
+		};
+
+		bool haveSuit = targetCards.Count != 0;
+		if (haveSuit)
+		{
+			// 遍历所有手牌，根据是否在目标列表中设置可选性
+			foreach (var card in handCards)
+			{
+				// 如果当前牌在目标花色列表中，则设为可选，否则设为不可选
+				bool shouldBeSelectable = targetCards.Contains(card);
+				SetCardSelectable(card, shouldBeSelectable); // 默认 isDark = true，不可选牌变暗
+			}
+		}
+		else
+		{
+			// 没有指定花色的牌，所有牌都可选
+			SetAllCardSelectable(true);
 		}
 	}
 
@@ -331,18 +354,82 @@ public partial class PlayerHandCard : Node2D
 	{
 		card.IsSelected = !card.IsSelected;
 		SetSelectedPosition(card);
-		List<CardData> cardDatas = [];
-		foreach (Card _card in handCards)
-		{
-			if (_card.IsSelected)
-				cardDatas.Add(_card.cardData);
-		}
-		EventBus.OnSelectCardEvent(CardData.Serialize(cardDatas));
+		EventBus.OnSelectCardEvent(CardData.Serialize(card.cardData), card.IsSelected);
 	}
 
 	public List<Card> GetHandCards()
 	{
 		return handCards;
+	}
+	public CardCategory GetCardCategory(Card card)
+	{
+		if (spadeCards.Contains(card)) return CardCategory.Spade;
+		if (heartCards.Contains(card)) return CardCategory.Heart;
+		if (clubCards.Contains(card)) return CardCategory.Club;
+		if (diamondCards.Contains(card)) return CardCategory.Diamond;
+		if (mainCards.Contains(card)) return CardCategory.Main;
+		throw new InvalidOperationException("Card not found in any category");
+	}
+	private void SetHandCards(List<Card> cards)
+	{
+		handCards = cards;
+		spadeCards.Clear();
+		heartCards.Clear();
+		clubCards.Clear();
+		diamondCards.Clear();
+		mainCards.Clear();
+		foreach (var card in cards)
+		{
+			int id = CardData.Serialize(card.cardData);
+			if (spadeIdSet.Contains(id))
+				spadeCards.Add(card);
+			else if (heartIdSet.Contains(id))
+				heartCards.Add(card);
+			else if (clubIdSet.Contains(id))
+				clubCards.Add(card);
+			else if (diamondIdSet.Contains(id))
+				diamondCards.Add(card);
+			else if (mainIdSet.Contains(id))
+				mainCards.Add(card);
+		}
+	}
+	private void UpdateCategorySets()
+	{
+		spadeIdSet = [.. CardData.Serialize(handLogic.spadeList)];
+		heartIdSet = [.. CardData.Serialize(handLogic.heartList)];
+		clubIdSet = [.. CardData.Serialize(handLogic.clubList)];
+		diamondIdSet = [.. CardData.Serialize(handLogic.diamondList)];
+		mainIdSet = [.. CardData.Serialize(handLogic.mainList)];
+
+		if (!Multiplayer.IsServer()) return;
+
+		// 调试打印
+		GD.Print($"【UpdateCategorySets】黑桃 ({spadeIdSet.Count} 张): {string.Join(", ", spadeIdSet)}");
+		GD.Print($"红心 ({heartIdSet.Count} 张): {string.Join(", ", heartIdSet)}");
+		GD.Print($"梅花 ({clubIdSet.Count} 张): {string.Join(", ", clubIdSet)}");
+		GD.Print($"方片 ({diamondIdSet.Count} 张): {string.Join(", ", diamondIdSet)}");
+		GD.Print($"主牌 ({mainIdSet.Count} 张): {string.Join(", ", mainIdSet)}");
+	}
+	private void ClearHandCard()
+	{
+		handCards.Clear();
+		spadeCards.Clear();
+		heartCards.Clear();
+		clubCards.Clear();
+		diamondCards.Clear();
+		mainCards.Clear();
+	}
+
+	private void RemoveHandCardAt(int index)
+	{
+		if (index < 0 || index >= handCards.Count) return;
+		Card card = handCards[index];
+		spadeCards.Remove(card);
+		heartCards.Remove(card);
+		clubCards.Remove(card);
+		diamondCards.Remove(card);
+		mainCards.Remove(card);
+		handCards.RemoveAt(index);
 	}
 	#endregion
 }

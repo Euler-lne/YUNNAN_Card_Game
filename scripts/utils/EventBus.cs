@@ -4,10 +4,10 @@ namespace Euler.Event
 {
     public static class EventBus
     {
-        public static Action<int[]> SelectCardEvent;
-        public static void OnSelectCardEvent(int[] ids)
+        public static Action<int, bool> SelectCardEvent;
+        public static void OnSelectCardEvent(int id, bool isSelected)
         {
-            SelectCardEvent?.Invoke(ids);
+            SelectCardEvent?.Invoke(id, isSelected);
         }
 
         public static Action<int, int[], bool, GamePhase> PlayCardEvent;
@@ -16,8 +16,8 @@ namespace Euler.Event
             PlayCardEvent?.Invoke(playSeat, ids, isBack, gamePhase);
         }
 
-        public static Func<int[]> GetSelectCardEvent;
-        public static int[] OnGetSelectCardEvent()
+        public static Func<List<int>> GetSelectCardEvent;
+        public static List<int> OnGetSelectCardEvent()
         {
             return GetSelectCardEvent?.Invoke();
         }

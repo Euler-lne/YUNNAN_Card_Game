@@ -164,9 +164,8 @@ public partial class DealManager : Node
             GD.Print($"不合理，当前选中了{ids.Length}张牌");
             return;
         }
-
-        dealerGetCardTcs?.SetResult();
         GameCore.DealRemoveCard(CardData.Deserialize(ids));
+        dealerGetCardTcs?.SetResult();
     }
 
     private async Task HandleHoleCardNoTrump()

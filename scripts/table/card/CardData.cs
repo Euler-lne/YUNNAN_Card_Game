@@ -40,6 +40,16 @@ public class CardData
         return list;
     }
 
+    public static bool IsCardDataInList(CardData cardData, List<CardData> cardDatas)
+    {
+        foreach (var item in cardDatas)
+        {
+            if (Serialize(cardData) == Serialize(item))
+                return true;
+        }
+        return false;
+    }
+
     public static CardData Deserialize(int id)
     {
         Suit suit = (Suit)(id / 100);
@@ -64,13 +74,15 @@ public class CardList
         cardList = [];
     }
 
-    public void GenarateCardList(Suit suit, Rank rank)
+    public void GenarateCardList(Suit suit, Rank rank, List<CardData> cardDatas = null)
     {
         spadeList.Clear();
         heartList.Clear();
         clubList.Clear();
         diamondList.Clear();
         mainList.Clear();
+        if (cardDatas != null)
+            cardList = cardDatas;
         // 遍历 cardList 的副本，避免修改原集合导致异常
         foreach (CardData cardData in cardList.ToList())
         {
