@@ -1,11 +1,21 @@
 using System.Collections.Generic;
 using Godot;
 using Euler.Global;
+using Euler.Event;
 
 public class GameData
 {
     public int DealerSeat { get; set; }          // 庄家座位
-    public int OpponentScore { get; set; }        // 闲家累计得分
+    private int idlePlayerScore;
+    public int IdlePlayerScore
+    {
+        get { return idlePlayerScore; }
+        set
+        {
+            idlePlayerScore = value;
+            EventBus.OnChangeIdlePlayerScoreEvent(value);
+        }
+    }        // 闲家累计得分
 
     public bool IsSnatchDealer { get; set; }
 
@@ -37,8 +47,8 @@ public class GameData
         TeamLevels = new Dictionary<int, Rank>
         {
             // 两个队
-            [0] = Rank.FIVE,
-            [1] = Rank.FIVE
+            [0] = Rank.TWO,
+            [1] = Rank.TWO
         };
     }
 

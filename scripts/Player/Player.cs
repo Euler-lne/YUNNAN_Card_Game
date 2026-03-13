@@ -12,6 +12,7 @@ public partial class Player : Node2D
 	private List<int> selectCards = [];
 	private TurnData turnData;
 	private bool isTurn = false;
+	private int cardCountOfSuit = -1;
 
 	public override void _Ready()
 	{
@@ -58,20 +59,16 @@ public partial class Player : Node2D
 		playerHandCard.SetAllCardSelectable(true);
 	}
 
-	private void OnTurnEndEvent(bool isValid)
+	private void OnTurnEndEvent()
 	{
-		//TODO:玩家结束回合
-		GD.Print($"Player得到是否合理{isValid}");
-		if (isValid)
-		{
-			isTurn = false;
-			selectCards.Clear();
-		}
+
+		isTurn = false;
+		selectCards.Clear();
+		cardCountOfSuit = -1;
 	}
 
-	private void OnTurnStartEvent(TurnData turnData)
+	private void OnTurnStartEvent(TurnData turnData, bool isDealer)
 	{
-		//TODO:玩家开始回合
 		playerHandCard.SetAllCardIsSelected(false); // 先全部设置为不可选
 		selectCards.Clear();
 		this.turnData = turnData;
@@ -83,7 +80,7 @@ public partial class Player : Node2D
 		else
 		{
 			Suit suit = turnData.suit;
-			playerHandCard.SetCardUnSelectableExpect(suit);
+			cardCountOfSuit = playerHandCard.SetCardUnSelectableExpect(suit);
 		}
 	}
 
@@ -130,6 +127,53 @@ public partial class Player : Node2D
 
 	private void HandleNonBankerSelection()
 	{
+		int selectCount = selectCards.Count;
+		int requiredSuitCount = cardCountOfSuit; // 手牌中指定花色的总数
+		int selectedSuitCount = selectCards.Count(id => CardData.Deserialize(id).suit == turnData.suit); // 已选指定花色数量
+
+		if (selectCount == turnData.PlayNum())
+		{
+			// 达到要求数量：只允许取消已选中的牌
+			foreach (var card in playerHandCard.GetHandCards())
+			{
+				playerHandCard.SetCardSelectable(card, card.IsSelected);
+			}
+		}
+		else if (selectCount < turnData.PlayNum())
+		{
+			if (requiredSuitCount >= turnData.PlayNum())
+			{
+				// 牌足够，只能选指定花色
+				playerHandCard.SetCardUnSelectableExpect(turnData.suit);
+			}
+			else
+			{
+				// 牌不够
+				if (selectedSuitCount < requiredSuitCount)
+				{
+					// 指定花色还没选完，只能选指定花色（其他花色不可选）
+					playerHandCard.SetCardUnSelectableExpect(turnData.suit);
+				}
+				else
+				{
+					// 指定花色已选完，可以选其他花色（所有剩余牌可选）
+					foreach (var card in playerHandCard.GetHandCards())
+					{
+						// 所有牌都设为可选，包括已选中的（可取消）和未选的（可新增）
+						playerHandCard.SetCardSelectable(card, true);
+					}
+				}
+			}
+		}
+		else // selectCount > turnData.playNum (理论上不会发生，但为安全处理)
+		{
+			// 超过数量，只允许取消
+			GD.PrintErr("选的牌超出数量了！");
+			foreach (var card in playerHandCard.GetHandCards())
+			{
+				playerHandCard.SetCardSelectable(card, card.IsSelected);
+			}
+		}
 	}
 
 

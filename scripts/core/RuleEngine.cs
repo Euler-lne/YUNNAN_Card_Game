@@ -111,7 +111,111 @@ public static class RuleEngine
     #endregion
 
     #region 出牌判断
+    public static bool IsFirstGreater(List<int> hand1, List<int> hand2)
+    {
+        GD.Print($"\n[IsFirstGreater] 比较两手牌：");
+        GD.Print($"手1: {string.Join(", ", hand1)}");
+        GD.Print($"手2: {string.Join(", ", hand2)}");
 
+        if (hand1 == null || hand1.Count == 0)
+        {
+            GD.Print("手1为空，返回 false");
+            return false;
+        }
+        if (hand2 == null || hand2.Count == 0)
+        {
+            GD.Print("手2为空，返回 true");
+            return true;
+        }
+
+        var comp1 = new SelectedHandComposition(hand1);
+        var comp2 = new SelectedHandComposition(hand2);
+
+        // 打印分解结果
+        GD.Print($"手1分解: Singles={comp1.Singles.Count}, Doubles={comp1.Doubles.Count}, Tractors={comp1.Tractors.Count}");
+        GD.Print($"手2分解: Singles={comp2.Singles.Count}, Doubles={comp2.Doubles.Count}, Tractors={comp2.Tractors.Count}");
+
+        // 比较单牌
+        if (comp1.Singles.Count != 0)
+        {
+            var values1 = comp1.Singles.Select(s => GetCardValue(CardData.Deserialize(s.Card))).ToList();
+            var values2 = comp2.Singles.Select(s => GetCardValue(CardData.Deserialize(s.Card))).ToList();
+            GD.Print($"单牌 - 手1值: [{string.Join(", ", values1)}], 手2值: [{string.Join(", ", values2)}]");
+            if (values2.Count != 0)
+            {
+                int max2 = values2.Max();
+                GD.Print($"手2单牌最大值: {max2}");
+                if (values1.Any(v => v <= max2))
+                {
+                    GD.Print($"手1中有单牌值 ≤ {max2}，返回 false");
+                    return false;
+                }
+            }
+            else
+            {
+                GD.Print("手2无单牌，跳过比较");
+            }
+        }
+        else
+        {
+            GD.Print("手1无单牌，跳过比较");
+        }
+
+        // 比较对子
+        if (comp1.Doubles.Count != 0)
+        {
+            var values1 = comp1.Doubles.Select(d => d.GetCardValue()).ToList();
+            var values2 = comp2.Doubles.Select(d => d.GetCardValue()).ToList();
+            GD.Print($"对子 - 手1值: [{string.Join(", ", values1)}], 手2值: [{string.Join(", ", values2)}]");
+            if (values2.Count != 0)
+            {
+                int max2 = values2.Max();
+                GD.Print($"手2对子最大值: {max2}");
+                if (values1.Any(v => v <= max2))
+                {
+                    GD.Print($"手1中有对子值 ≤ {max2}，返回 false");
+                    return false;
+                }
+            }
+            else
+            {
+                GD.Print("手2无对子，跳过比较");
+            }
+        }
+        else
+        {
+            GD.Print("手1无对子，跳过比较");
+        }
+
+        // 比较拖拉机
+        if (comp1.Tractors.Count != 0)
+        {
+            var maxValues1 = comp1.Tractors.Select(t => t.BiggestValue()).ToList();
+            var maxValues2 = comp2.Tractors.Select(t => t.BiggestValue()).ToList();
+            GD.Print($"拖拉机 - 手1最大牌值: [{string.Join(", ", maxValues1)}], 手2最大牌值: [{string.Join(", ", maxValues2)}]");
+            if (maxValues2.Count != 0)
+            {
+                int max2 = maxValues2.Max();
+                GD.Print($"手2拖拉机最大牌值: {max2}");
+                if (maxValues1.Any(v => v <= max2))
+                {
+                    GD.Print($"手1中有拖拉机最大牌值 ≤ {max2}，返回 false");
+                    return false;
+                }
+            }
+            else
+            {
+                GD.Print("手2无拖拉机，跳过比较");
+            }
+        }
+        else
+        {
+            GD.Print("手1无拖拉机，跳过比较");
+        }
+
+        GD.Print("所有条件满足，返回 true");
+        return true;
+    }
 
     public static bool IsSameSuit(List<int> selectedCards, CardData trumpCardData)
     {

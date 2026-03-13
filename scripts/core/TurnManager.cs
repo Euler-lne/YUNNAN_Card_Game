@@ -66,7 +66,7 @@ public class TurnManager
         // TODO:等待玩家出牌
         // 1. 通知对应玩家UI显示出牌按钮
         // 2. 等待点击确认按钮，客户端自己简单判断，到服务器再判断一遍
-        turnRequest.TurnStart(currentSeat, turnData);
+        turnRequest.TurnStart(currentSeat, turnData, gameCore.IsDealer(currentSeat));
         playTcs = new();
         await playTcs?.Task;
         playTcs = null;
@@ -85,25 +85,21 @@ public class TurnManager
         bool isValid = false;
         if (currentSeat == dealer)
         {
+            isValid = true;
             if (playType == PlayType.THROW_CARD) // 只有庄家可以出甩牌
             {
                 isValid = JudgeThrowCard(cardDatas);
-                if (isValid)
-                {
-                    NetworkManager.Instance.PlayCard(currentSeat, cardDatas, false, gameCore.GetCurrentGamePhase());
-                    playedCards[currentSeat] = cardDatas;
-                }
-                else
+                if (!isValid)
                 {
                     // TODO:扣分
-                    turnRequest.TurnStart(currentSeat, turnData); // 重来
+                    int increase = gameCore.IsDealer(currentSeat) ? 5 : -5;
+                    gameCore.InscreaseIdlePlayerScore(increase);
                 }
             }
-            else
+            if (isValid)
             {
                 NetworkManager.Instance.PlayCard(currentSeat, cardDatas, false, gameCore.GetCurrentGamePhase());
                 playedCards[currentSeat] = cardDatas;
-                isValid = true;
             }
         }
         else
@@ -111,11 +107,21 @@ public class TurnManager
 
         }
         GD.Print($"当前是否合法{isValid}");
-        turnRequest.TurnEnd(currentSeat, isValid);
         if (isValid)
         {
+            if (currentSeat == dealer)
+            {
+                Suit suit = RuleEngine.GetSuit(cardDatas[0], trumpCardData);
+                turnData = new(playType, suit, playedCards[currentSeat]);
+            }
+            turnRequest.TurnEnd(currentSeat);
             playTcs?.SetResult();
             playTcs = null;
+        }
+        else
+        {
+            turnRequest.TurnStart(currentSeat, turnData, gameCore.IsDealer(currentSeat)); // 重来
+            GD.Print("不合理，重新开始一轮");
         }
 
 
@@ -125,6 +131,6 @@ public class TurnManager
     private bool JudgeThrowCard(List<CardData> cardDatas)
     {
         Suit suit = RuleEngine.GetSuit(cardDatas[0], trumpCardData);
-        return true;
+        return gameCore.IsBiggest(cardDatas, suit, currentSeat);
     }
 }

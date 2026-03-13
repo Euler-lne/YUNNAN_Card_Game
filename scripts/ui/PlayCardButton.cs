@@ -7,6 +7,8 @@ public partial class PlayCardButton : Button
 {
 	private CardData trumpCardData = null;
 	[Export] private ThrowCardUI throwCardInfo;
+	private TurnData turnData;
+	private bool isDealer;
 	public override void _Ready()
 	{
 		Visible = false;
@@ -33,18 +35,16 @@ public partial class PlayCardButton : Button
 		Visible = true;
 	}
 
-	private void OnTurnEndEvent(bool isValid)
+	private void OnTurnEndEvent()
 	{
-		GD.Print($"PlayCardButton得到是否合理{isValid}");
-		if (isValid)
-		{
-			Visible = false;
-		}
+		Visible = false;
 	}
 
-	private void OnTurnStartEvent(TurnData turnData)
+	private void OnTurnStartEvent(TurnData turnData, bool isDealer)
 	{
 		Visible = true;
+		this.isDealer = isDealer;
+		this.turnData = turnData;
 	}
 
 	private void OnSetTrumpCardDataEvent(CardData data)
@@ -65,12 +65,21 @@ public partial class PlayCardButton : Button
 		}
 		TurnEvent.OnPlayCardEvent();
 		PlayType playType = RuleEngine.DetermineSelectedPlayType(selectCards);
-		if (playType == PlayType.THROW_CARD)
+		if (turnData.playType == PlayType.NONE)
 		{
-			throwCardInfo.PlayThrowCard(selectCards);
-			Visible = false;
-			return;
+			if (playType == PlayType.THROW_CARD)
+			{
+				throwCardInfo.PlayThrowCard(selectCards, isDealer);
+				Visible = false;
+				return;
+			}
 		}
+		else
+		{
+			// TODO:需要根据主家的牌判断当前出的牌是否合理
+			// turnData.cardDatas
+		}
+
 		RpcId(1, nameof(RpcOnPlayCardButtonPressed), selectCards.ToArray());
 	}
 

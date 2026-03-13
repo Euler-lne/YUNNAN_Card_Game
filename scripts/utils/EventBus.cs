@@ -21,6 +21,12 @@ namespace Euler.Event
         {
             return GetSelectCardEvent?.Invoke();
         }
+        public static Action<int> ChangeIdlePlayerScoreEvent;
+        public static void OnChangeIdlePlayerScoreEvent(int value)
+        {
+            ChangeIdlePlayerScoreEvent?.Invoke(value);
+        }
+
     }
     public static class DealEvent
     {
@@ -146,16 +152,16 @@ namespace Euler.Event
 
     public static class TurnEvent
     {
-        public static Action<TurnData> TurnStartEvent;
-        public static void OnTurnStartEvent(TurnData turnData)
+        public static Action<TurnData, bool> TurnStartEvent;
+        public static void OnTurnStartEvent(TurnData turnData, bool isDealer)
         {
-            TurnStartEvent?.Invoke(turnData);
+            TurnStartEvent?.Invoke(turnData, isDealer);
         }
 
-        public static Action<bool> TurnEndEvent;
-        public static void OnTurnEndEvent(bool isValid)
+        public static Action TurnEndEvent;
+        public static void OnTurnEndEvent()
         {
-            TurnEndEvent?.Invoke(isValid);
+            TurnEndEvent?.Invoke();
         }
 
         public static Action<List<CardData>> PlayCardButtonPressEvent;

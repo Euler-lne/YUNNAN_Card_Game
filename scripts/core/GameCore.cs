@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Euler.Global;
 using Godot;
 
@@ -22,8 +23,8 @@ public class GameCore
     public void StartGame()
     {
         deckManager.CreateDeck();
-        // deckManager.Shuffle();
-        deckManager.TestCreateDeck();
+        deckManager.Shuffle();
+        // deckManager.TestCreateDeck();
 
         gameData.CurrentPhase = GamePhase.DEALING;
     }
@@ -33,12 +34,17 @@ public class GameCore
 
     }
     # region 甩牌相关
-    public bool IsBiggest(List<CardData> cardDatas, Suit suit)
+    public bool IsBiggest(List<CardData> cardDatas, Suit suit, int seat)
     {
-        List<CardData>[] playerCardData = new List<CardData>[4];
+        if (cardDatas.Count == 0)
+        {
+            GD.Print("GameCore中IsBiggest中传入了一个长度为0的列表");
+            return false;
+        }
+        // 判断cardDatas是否在playerCardData中最大
         for (int i = 0; i < GameSettings.PLAYER_COUNT; i++)
         {
-            playerCardData[i] = suit switch
+            List<CardData> playerCardData = suit switch
             {
                 Suit.SPADE => playerManager.players[i].spadeList,
                 Suit.CLUB => playerManager.players[i].clubList,
@@ -47,8 +53,13 @@ public class GameCore
                 Suit.NONE => playerManager.players[i].mainList,
                 _ => throw new ArgumentOutOfRangeException(nameof(suit), suit, null)
             };
+            if (i == seat) continue;
+            if (!RuleEngine.IsFirstGreater([.. CardData.Serialize(cardDatas)], [.. CardData.Serialize(playerCardData)]))
+            {
+                GD.Print($"座位{i}的卡牌比当前的值大");
+                return false;
+            }
         }
-        // 判断cardDatas是否在playerCardData中最大
         return true;
     }
     #endregion
@@ -171,7 +182,16 @@ public class GameCore
     {
         gameData.TrumpState.Print();
     }
-
+    public bool IsDealer(int seat)
+    {
+        if (gameData.DealerSeat == seat) return true;
+        if ((seat + 2) % GameSettings.PLAYER_COUNT == gameData.DealerSeat) return true;
+        return false;
+    }
+    public void InscreaseIdlePlayerScore(int increase)
+    {
+        gameData.IdlePlayerScore += increase;
+    }
     public void RemoveCardFrom(int seat, List<CardData> cardDatas)
     {
         // 如果cardDatas为空就删除所有的

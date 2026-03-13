@@ -294,7 +294,7 @@ public partial class PlayerHandCard : Node2D
 			SetCardSelectable(card, selectable, isDark);
 		}
 	}
-	public void SetCardUnSelectableExpect(Suit suit)
+	public int SetCardUnSelectableExpect(Suit suit)
 	{
 		// 获取指定花色对应的牌列表（注意：这些列表存储的是 Card 对象，而不是 CardData）
 		List<Card> targetCards = suit switch
@@ -323,7 +323,9 @@ public partial class PlayerHandCard : Node2D
 			// 没有指定花色的牌，所有牌都可选
 			SetAllCardSelectable(true);
 		}
+		return targetCards.Count;
 	}
+
 
 	public void SetCardSelectable(Card card, bool selectable, bool isDark = true)
 	{
@@ -336,13 +338,11 @@ public partial class PlayerHandCard : Node2D
 
 	public void SetAllCardIsSelected(bool isSelected)
 	{
+		GD.Print("全部设置为不选");
 		foreach (var card in handCards)
 		{
 			card.IsSelected = isSelected;
-			if (card.IsSelected != isSelected)
-			{
-				ToggleCardSelection(card);
-			}
+			SetSelectedPosition(card);
 		}
 	}
 	private void ToggleCardSelection(Card card)

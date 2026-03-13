@@ -40,9 +40,11 @@ public partial class ThrowCardUI : VBoxContainer
 		TurnEvent.OnCancelThrowCardEvent();
 	}
 
-	public void PlayThrowCard(List<int> selectedCard)
+	public void PlayThrowCard(List<int> selectedCard, bool isDealer)
 	{
 		this.selectedCard = selectedCard;
+		if (isDealer) label.Text = "甩牌失败闲家将得到5分";
+		else label.Text = "甩牌失败将失去5分";
 		Visible = true;
 	}
 

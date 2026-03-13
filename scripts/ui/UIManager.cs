@@ -9,6 +9,7 @@ public partial class UIManager : Control
 	private Label currentPlayerNumber;
 	private Label suitLabel;
 	private Label leftCards;
+	private Label idlePlayerScore;
 	private Button dealerGetCardConfirmButton;
 	private DeclareContainer declareContainer;
 	private VBoxContainer dealerGetCardUI;
@@ -24,11 +25,14 @@ public partial class UIManager : Control
 		dealerGetCardUI = GetNode<VBoxContainer>("DealerGetCardUI");
 		dealerGetCardUI.Visible = false;
 		declareContainer.Visible = false;
+		idlePlayerScore = GetNode<Label>("Score");
+		idlePlayerScore.Text = "闲家分数：0";
 
 		if (Multiplayer.IsServer())
 		{
 			startButton.Visible = true;
 			currentPlayerNumber.Visible = true;
+			EventBus.ChangeIdlePlayerScoreEvent += OnChangeIdlePlayerScoreEvent;
 		}
 		else
 		{
@@ -49,6 +53,8 @@ public partial class UIManager : Control
 		DealEvent.NotifyDealerSelectCard -= OnNotifyDealerSelectCard;
 		DealEvent.NotifyDealerSelectCardResult -= OnNotifyDealerSelectCardResult;
 		dealerGetCardConfirmButton.Pressed -= OnDealerGetCardConfirmButtonPressed;
+		if (Multiplayer.IsServer())
+		{ EventBus.ChangeIdlePlayerScoreEvent += OnChangeIdlePlayerScoreEvent; }
 	}
 
 	private void OnChangeCardNumEvent(int leftCardNum)
@@ -107,6 +113,18 @@ public partial class UIManager : Control
 	private void RpcOnDealerGetCardConfirmButtonPressed(int[] ids)
 	{
 		DealEvent.OnDealerConfrimRequestEvent(ids);
+	}
+	#endregion
+
+	#region 闲家分数
+	private void OnChangeIdlePlayerScoreEvent(int value)
+	{
+		Rpc(nameof(RpcChangeIdlePlayerScoreEvent), value);
+	}
+	[Rpc(MultiplayerApi.RpcMode.Authority, CallLocal = true)]
+	private void RpcChangeIdlePlayerScoreEvent(int value)
+	{
+		idlePlayerScore.Text = $"闲家分数：{value}";
 	}
 	#endregion
 }
