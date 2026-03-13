@@ -163,5 +163,11 @@ namespace Euler.Event
         {
             PlayCardButtonPressEvent?.Invoke(cardDatas);
         }
+
+        public static Action<CardData> SetTrumpCardDataEvent;
+        public static void OnSetTrumpCardDataEvent(CardData cardData)
+        {
+            SetTrumpCardDataEvent?.Invoke(cardData);
+        }
     }
 }

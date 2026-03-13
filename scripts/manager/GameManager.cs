@@ -57,6 +57,16 @@ public partial class GameManager : Node
         if (!Multiplayer.IsServer())
             return;
         GD.Print("回合开始");
+        CardData trumpCardData = new(gameCore.GetTrumpSuit(), gameCore.GetCurrentRank(gameCore.GetDealerSeat()));
+        turnManager.SetTrumpCardData(trumpCardData);
+        Rpc(nameof(RpcSetTrumpCardData), CardData.Serialize(trumpCardData));
         turnManager.StartTurn(gameCore.GetDealerSeat());
+    }
+
+    [Rpc(MultiplayerApi.RpcMode.Authority, CallLocal = true)]
+    private void RpcSetTrumpCardData(int id)
+    {
+        CardData cardData = CardData.Deserialize(id);
+        TurnEvent.OnSetTrumpCardDataEvent(cardData);
     }
 }

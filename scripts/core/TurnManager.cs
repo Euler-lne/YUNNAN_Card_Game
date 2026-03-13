@@ -10,6 +10,7 @@ public class TurnManager
     private readonly List<CardData>[] playedCards = new List<CardData>[4];
     private TaskCompletionSource playTcs = null;
     private TurnData turnData;
+    private CardData trumpCardData;
     public void Init(TurnRequest turnRequest, int dealer)
     {
         this.turnRequest = turnRequest;
@@ -19,7 +20,10 @@ public class TurnManager
     }
 
 
-
+    public void SetTrumpCardData(CardData trumpCardData)
+    {
+        this.trumpCardData = trumpCardData;
+    }
     public async void StartTurn(int dealer = -1)
     {
         // 通知dealer进行选择

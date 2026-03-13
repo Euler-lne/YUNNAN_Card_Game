@@ -335,7 +335,7 @@ public partial class PlayerHandCard : Node2D
 		if (card.IsSelected && selectable == false)  // 设置为不可选当前牌选中的时候要设置为不选中
 		{
 			ToggleCardSelection(card);
-			GD.Print($"当前牌被选中{card.cardData.suit} {card.cardData.rank}设置为不能选，且取消选中");
+			// GD.Print($"当前牌被选中{card.cardData.suit} {card.cardData.rank}设置为不能选，且取消选中");
 		}
 	}
 
@@ -400,15 +400,6 @@ public partial class PlayerHandCard : Node2D
 		clubIdSet = [.. CardData.Serialize(handLogic.clubList)];
 		diamondIdSet = [.. CardData.Serialize(handLogic.diamondList)];
 		mainIdSet = [.. CardData.Serialize(handLogic.mainList)];
-
-		if (!Multiplayer.IsServer()) return;
-
-		// 调试打印
-		GD.Print($"【UpdateCategorySets】黑桃 ({spadeIdSet.Count} 张): {string.Join(", ", spadeIdSet)}");
-		GD.Print($"红心 ({heartIdSet.Count} 张): {string.Join(", ", heartIdSet)}");
-		GD.Print($"梅花 ({clubIdSet.Count} 张): {string.Join(", ", clubIdSet)}");
-		GD.Print($"方片 ({diamondIdSet.Count} 张): {string.Join(", ", diamondIdSet)}");
-		GD.Print($"主牌 ({mainIdSet.Count} 张): {string.Join(", ", mainIdSet)}");
 	}
 	private void ClearHandCard()
 	{

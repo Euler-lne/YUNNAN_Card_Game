@@ -107,20 +107,78 @@ public static class RuleEngine
 
     public static int GetCardValue(CardData cardData, Suit trumpSuit, Rank trumpRank)
     {
-        if (cardData.suit == trumpSuit && cardData.rank == Rank.FIVE)
-            return 20;
-        else if (cardData.suit == Suit.NONE && cardData.rank == Rank.BIG_JOKER)
-            return 19;
-        else if (cardData.suit == Suit.NONE && cardData.rank == Rank.SMALL_JOKER)
-            return 18;
-        else if (cardData.suit == Suit.SPADE && cardData.rank == Rank.ACE)
-            return 17;
-        else if (cardData.suit == trumpSuit && cardData.rank == trumpRank)
-            return 16;
-        else if (cardData.rank == trumpRank)
-            return 15;
-        return (int)cardData.rank;
+        if (trumpRank != Rank.FIVE)
+        {
+            if (cardData.suit == trumpSuit && cardData.rank == Rank.FIVE)
+                return 20;
+            else if (cardData.suit == Suit.NONE && cardData.rank == Rank.BIG_JOKER)
+                return 19;
+            else if (cardData.suit == Suit.NONE && cardData.rank == Rank.SMALL_JOKER)
+                return 18;
+            else if (cardData.suit == Suit.SPADE && cardData.rank == Rank.ACE)
+                return 17;
+            else if (cardData.suit == trumpSuit && cardData.rank == trumpRank)
+                return 16;
+            else if (cardData.rank == trumpRank)
+                return 15;
+            // 主花色非中心5、非主等级的牌
+            return GetSuitRankIndex(cardData.rank, cardData.suit, trumpSuit, trumpRank, 14);
+        }
+        else // trumpRank == Rank.FIVE
+        {
+            if (cardData.suit == trumpSuit && cardData.rank == Rank.FIVE)
+                return 20;
+            else if (cardData.suit == Suit.NONE && cardData.rank == Rank.BIG_JOKER)
+                return 19;
+            else if (cardData.suit == Suit.NONE && cardData.rank == Rank.SMALL_JOKER)
+                return 18;
+            else if (cardData.suit == Suit.SPADE && cardData.rank == Rank.ACE)
+                return 17;
+            else if (cardData.rank == trumpRank)  // 副主
+                return 16;
+            return GetSuitRankIndex(cardData.rank, cardData.suit, trumpSuit, trumpRank, 15);
+        }
+    }
+
+    // 辅助方法：计算主花色普通牌在同花色剩余点数中的排名（返回连续值，最大14，最小可能为1）
+    private static int GetSuitRankIndex(Rank rank, Suit suit, Suit trumpSuit, Rank trumpRank, int start)
+    {
+        // 收集该花色剩余的点数（从大到小排序）
+        List<Rank> remaining = [];
+        for (Rank r = Rank.ACE; r >= Rank.TWO; r--)
+        {
+            // 排除被提升的牌：中心5、主花色主等级、黑桃A
+            if (suit == trumpSuit && r == Rank.FIVE) continue;  // 中心5
+            if (r == trumpRank) continue;  // 正主和副主
+            if (suit == Suit.SPADE && r == Rank.ACE) continue;  // 常主
+            remaining.Add(r);
+        }
+        int index = remaining.IndexOf(rank); // 找到当前点数的索引（0-based）
+        if (index < 0) return -1; // 理论上不会发生
+        return start - index;
     }
     #endregion
+
+    #region 出牌判断
+    public static PlayType DetermineSelectedPlayType(List<int> selectedCards, CardData trumpCardData)
+    {
+        if (selectedCards.Count == 0) return PlayType.NONE;
+        if (selectedCards.Count == 1) return PlayType.SINGLE;
+        if (selectedCards.Count == 2)
+        {
+            Rank first = CardData.Deserialize(selectedCards[0]).rank;
+            Rank second = CardData.Deserialize(selectedCards[1]).rank;
+            if (first == second) return PlayType.DOUBLE;
+        }
+        if (selectedCards.Count % 2 == 0)
+        {
+            // 判断是否为姊妹对
+
+            return PlayType.EVEN_CORRECT;
+        }
+        return PlayType.THROW_CARD;
+    }
+    #endregion
+
 
 }

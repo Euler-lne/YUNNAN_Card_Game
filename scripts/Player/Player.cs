@@ -12,6 +12,7 @@ public partial class Player : Node2D
 	private List<int> selectCards = [];
 	private TurnData turnData;
 	private bool isTurn = false;
+	private CardData trumpCardData = null;
 
 	public override void _Ready()
 	{
@@ -27,6 +28,8 @@ public partial class Player : Node2D
 		EventBus.GetSelectCardEvent += OnGetSelectCardEvent;
 		TurnEvent.TurnStartEvent += OnTurnStartEvent;
 		TurnEvent.TurnEndEvent += OnTurnEndEvent;
+
+		TurnEvent.SetTrumpCardDataEvent += OnSetTrumpCardDataEvent;
 	}
 
 	public override void _ExitTree()
@@ -37,6 +40,14 @@ public partial class Player : Node2D
 		EventBus.GetSelectCardEvent -= OnGetSelectCardEvent;
 		TurnEvent.TurnStartEvent -= OnTurnStartEvent;
 		TurnEvent.TurnEndEvent -= OnTurnEndEvent;
+
+		TurnEvent.SetTrumpCardDataEvent -= OnSetTrumpCardDataEvent;
+
+	}
+
+	private void OnSetTrumpCardDataEvent(CardData data)
+	{
+		trumpCardData = data;
 	}
 
 	private void OnTurnEndEvent(bool isValid, int[] ids)
@@ -94,7 +105,6 @@ public partial class Player : Node2D
 			// 获取第一张选中的牌及其类别
 			var firstCard = handCards.First(c => CardData.Serialize(c.cardData) == selectCards[0]);
 			var firstCategory = playerHandCard.GetCardCategory(firstCard);
-			GD.Print(firstCategory);
 
 			foreach (var card in handCards)
 			{
@@ -103,6 +113,7 @@ public partial class Player : Node2D
 				else
 					playerHandCard.SetCardSelectable(card, playerHandCard.GetCardCategory(card) == firstCategory);
 			}
+			// 判断当前选择卡牌的类型
 		}
 	}
 
