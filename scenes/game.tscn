@@ -1,4 +1,4 @@
-[gd_scene load_steps=28 format=3 uid="uid://dh0r6wjeod2gf"]
+[gd_scene load_steps=29 format=3 uid="uid://dh0r6wjeod2gf"]
 
 [ext_resource type="Script" uid="uid://d0hcpj6m3yoby" path="res://scripts/manager/GameManager.cs" id="2_p57ef"]
 [ext_resource type="Script" uid="uid://bm1e4brkugvp1" path="res://scripts/table/PlayerHandCard.cs" id="4_0tnpc"]
@@ -21,6 +21,7 @@
 [ext_resource type="Texture2D" uid="uid://bdd8t4xtvwut0" path="res://assets/Crown.png" id="13_1kice"]
 [ext_resource type="Texture2D" uid="uid://d15yo5u106q7r" path="res://assets/human_king_of_diamond_red_design_2.png" id="13_264po"]
 [ext_resource type="Script" uid="uid://dxidwxf4ogvpq" path="res://scripts/ui/PlayCardButton.cs" id="17_37s47"]
+[ext_resource type="Script" uid="uid://c103xwqjnaarn" path="res://scripts/ui/ThrowCardUI.cs" id="17_bt5mj"]
 [ext_resource type="Script" uid="uid://efharno63jfq" path="res://scripts/network/TurnRequest.cs" id="20_5newe"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_1kice"]
@@ -534,7 +535,41 @@ offset_bottom = 52.0
 texture = ExtResource("13_1kice")
 expand_mode = 1
 
-[node name="PlayCardButton" type="Button" parent="CanvasLayer/UIManager"]
+[node name="ThrowCardUI" type="VBoxContainer" parent="CanvasLayer/UIManager"]
+visible = false
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -200.0
+offset_top = -27.5
+offset_right = 200.0
+offset_bottom = 27.5
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("17_bt5mj")
+
+[node name="ThrowCardInfo" type="Label" parent="CanvasLayer/UIManager/ThrowCardUI"]
+layout_mode = 2
+text = "甩牌失败将给闲家加分"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Buttons" type="HBoxContainer" parent="CanvasLayer/UIManager/ThrowCardUI"]
+layout_mode = 2
+size_flags_horizontal = 4
+
+[node name="Confirm" type="Button" parent="CanvasLayer/UIManager/ThrowCardUI/Buttons"]
+layout_mode = 2
+text = "确定"
+
+[node name="Cancel" type="Button" parent="CanvasLayer/UIManager/ThrowCardUI/Buttons"]
+layout_mode = 2
+text = "取消"
+
+[node name="PlayCardButton" type="Button" parent="CanvasLayer/UIManager" node_paths=PackedStringArray("throwCardInfo")]
 visible = false
 layout_mode = 1
 anchors_preset = 8
@@ -553,6 +588,7 @@ theme = ExtResource("5_kvpfn")
 theme_override_font_sizes/font_size = 40
 text = "出牌"
 script = ExtResource("17_37s47")
+throwCardInfo = NodePath("../ThrowCardUI")
 
 [node name="Player" type="Node2D" parent="."]
 script = ExtResource("7_0tnpc")

@@ -198,7 +198,7 @@ public partial class DealManager : Node
         List<Vector2> posList = dealRequest.GenerateHoleCardPosition();
 
         if (cardDatas.Count != posList.Count)
-            GD.PrintErr("错误：剩余卡牌数量与卡牌位置数量不一样");
+            GD.PrintErr($"错误：剩余卡牌数量与卡牌位置数量不一样，剩余卡牌{cardDatas.Count} 位置数{posList.Count}");
 
         int meetRankIndex = -1; // 判断是否遇到对应的Rank结束的
         int index = 0;

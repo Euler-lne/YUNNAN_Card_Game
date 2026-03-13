@@ -26,7 +26,7 @@ public partial class GameManager : Node
             uiManager.UpdatePlayerCount(NetworkManager.Instance.TotalPlayers);
             uiManager.ConnectStartButtonPressed(StartGame);
             turnManager = new();
-            turnManager.Init(GetNode<TurnRequest>("../TurnRequest"), gameCore.GetDealerSeat());
+            turnManager.Init(GetNode<TurnRequest>("../TurnRequest"), gameCore.GetDealerSeat(), gameCore);
             NetworkManager.Instance.OnTotalPlayersChanged += uiManager.UpdatePlayerCount;
             dealManager.DealEndEvent += OnDealEndEvent;
         }
@@ -57,8 +57,9 @@ public partial class GameManager : Node
         if (!Multiplayer.IsServer())
             return;
         GD.Print("回合开始");
+        gameCore.SetCurrentGamePhase(GamePhase.PLAYING);
         CardData trumpCardData = new(gameCore.GetTrumpSuit(), gameCore.GetCurrentRank(gameCore.GetDealerSeat()));
-        turnManager.SetTrumpCardData(trumpCardData);
+        turnManager.SetFirstTurn();
         Rpc(nameof(RpcSetTrumpCardData), CardData.Serialize(trumpCardData));
         turnManager.StartTurn(gameCore.GetDealerSeat());
     }

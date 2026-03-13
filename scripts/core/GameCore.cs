@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Euler.Global;
 using Godot;
@@ -21,8 +22,8 @@ public class GameCore
     public void StartGame()
     {
         deckManager.CreateDeck();
-        deckManager.Shuffle();
-        // deckManager.TestCreateDeck();
+        // deckManager.Shuffle();
+        deckManager.TestCreateDeck();
 
         gameData.CurrentPhase = GamePhase.DEALING;
     }
@@ -31,6 +32,26 @@ public class GameCore
     {
 
     }
+    # region 甩牌相关
+    public bool IsBiggest(List<CardData> cardDatas, Suit suit)
+    {
+        List<CardData>[] playerCardData = new List<CardData>[4];
+        for (int i = 0; i < GameSettings.PLAYER_COUNT; i++)
+        {
+            playerCardData[i] = suit switch
+            {
+                Suit.SPADE => playerManager.players[i].spadeList,
+                Suit.CLUB => playerManager.players[i].clubList,
+                Suit.DIAMOND => playerManager.players[i].diamondList,
+                Suit.HEART => playerManager.players[i].heartList,
+                Suit.NONE => playerManager.players[i].mainList,
+                _ => throw new ArgumentOutOfRangeException(nameof(suit), suit, null)
+            };
+        }
+        // 判断cardDatas是否在playerCardData中最大
+        return true;
+    }
+    #endregion
 
     #region 发牌
     public CardData DealOneCard(int seat)
@@ -120,6 +141,10 @@ public class GameCore
     }
 
     public GamePhase GetCurrentGamePhase() => gameData.CurrentPhase;
+    public void SetCurrentGamePhase(GamePhase gamePhase)
+    {
+        gameData.CurrentPhase = gamePhase;
+    }
 
     public void SetDealerSeat(int seat)
     {

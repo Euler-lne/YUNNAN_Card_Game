@@ -332,11 +332,6 @@ public partial class PlayerHandCard : Node2D
 		if (!isDark)
 			card.SetLight();
 		card.CanSelected = selectable;
-		if (card.IsSelected && selectable == false)  // 设置为不可选当前牌选中的时候要设置为不选中
-		{
-			ToggleCardSelection(card);
-			// GD.Print($"当前牌被选中{card.cardData.suit} {card.cardData.rank}设置为不能选，且取消选中");
-		}
 	}
 
 	public void SetAllCardIsSelected(bool isSelected)

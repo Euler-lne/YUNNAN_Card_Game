@@ -12,7 +12,6 @@ public partial class Player : Node2D
 	private List<int> selectCards = [];
 	private TurnData turnData;
 	private bool isTurn = false;
-	private CardData trumpCardData = null;
 
 	public override void _Ready()
 	{
@@ -29,7 +28,9 @@ public partial class Player : Node2D
 		TurnEvent.TurnStartEvent += OnTurnStartEvent;
 		TurnEvent.TurnEndEvent += OnTurnEndEvent;
 
-		TurnEvent.SetTrumpCardDataEvent += OnSetTrumpCardDataEvent;
+		TurnEvent.CancelThrowCardEvent += OnCancelThrowCardEvent;
+		TurnEvent.PlayCardEvent += OnPlayCardEvent;
+
 	}
 
 	public override void _ExitTree()
@@ -41,20 +42,31 @@ public partial class Player : Node2D
 		TurnEvent.TurnStartEvent -= OnTurnStartEvent;
 		TurnEvent.TurnEndEvent -= OnTurnEndEvent;
 
-		TurnEvent.SetTrumpCardDataEvent -= OnSetTrumpCardDataEvent;
-
+		TurnEvent.CancelThrowCardEvent -= OnCancelThrowCardEvent;
+		TurnEvent.PlayCardEvent -= OnPlayCardEvent;
 	}
 
-	private void OnSetTrumpCardDataEvent(CardData data)
+	private void OnPlayCardEvent()
 	{
-		trumpCardData = data;
+		playerHandCard.SetAllCardSelectable(false, false);
 	}
 
-	private void OnTurnEndEvent(bool isValid, int[] ids)
+	private void OnCancelThrowCardEvent()
+	{
+		playerHandCard.SetAllCardIsSelected(false);
+		selectCards.Clear();
+		playerHandCard.SetAllCardSelectable(true);
+	}
+
+	private void OnTurnEndEvent(bool isValid)
 	{
 		//TODO:玩家结束回合
-		isTurn = false;
-		selectCards.Clear();
+		GD.Print($"Player得到是否合理{isValid}");
+		if (isValid)
+		{
+			isTurn = false;
+			selectCards.Clear();
+		}
 	}
 
 	private void OnTurnStartEvent(TurnData turnData)
@@ -113,7 +125,6 @@ public partial class Player : Node2D
 				else
 					playerHandCard.SetCardSelectable(card, playerHandCard.GetCardCategory(card) == firstCategory);
 			}
-			// 判断当前选择卡牌的类型
 		}
 	}
 

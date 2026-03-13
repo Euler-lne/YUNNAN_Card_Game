@@ -152,10 +152,10 @@ namespace Euler.Event
             TurnStartEvent?.Invoke(turnData);
         }
 
-        public static Action<bool, int[]> TurnEndEvent;
-        public static void OnTurnEndEvent(bool isValid, int[] ids)
+        public static Action<bool> TurnEndEvent;
+        public static void OnTurnEndEvent(bool isValid)
         {
-            TurnEndEvent?.Invoke(isValid, ids);
+            TurnEndEvent?.Invoke(isValid);
         }
 
         public static Action<List<CardData>> PlayCardButtonPressEvent;
@@ -164,10 +164,22 @@ namespace Euler.Event
             PlayCardButtonPressEvent?.Invoke(cardDatas);
         }
 
+        public static Action PlayCardEvent;
+        public static void OnPlayCardEvent()
+        {
+            PlayCardEvent?.Invoke();
+        }
+
         public static Action<CardData> SetTrumpCardDataEvent;
         public static void OnSetTrumpCardDataEvent(CardData cardData)
         {
             SetTrumpCardDataEvent?.Invoke(cardData);
+        }
+
+        public static Action CancelThrowCardEvent;
+        public static void OnCancelThrowCardEvent()
+        {
+            CancelThrowCardEvent?.Invoke();
         }
     }
 }

@@ -84,6 +84,7 @@ public class CardList
         if (cardDatas != null)
             cardList = cardDatas;
         // 遍历 cardList 的副本，避免修改原集合导致异常
+        RuleEngine.UpdateCardValues(suit, rank);
         foreach (CardData cardData in cardList.ToList())
         {
             Insert(cardData, suit, rank);
@@ -177,13 +178,13 @@ public class CardList
     }
     private void InsertFrom(List<CardData> cardDatas, CardData cardData, Suit trumpSuit, Rank trumpRank)
     {
-        int value = RuleEngine.GetCardValue(cardData, trumpSuit, trumpRank);
+        int value = RuleEngine.GetCardValue(cardData);
         int l = 0, r = cardDatas.Count;
         while (l < r)
         {
             int mid = (l + r) >> 1;
             CardData midCardData = cardDatas[mid];
-            int midValue = RuleEngine.GetCardValue(midCardData, trumpSuit, trumpRank);
+            int midValue = RuleEngine.GetCardValue(midCardData);
             if (midValue < value)
                 l = mid + 1;
             else

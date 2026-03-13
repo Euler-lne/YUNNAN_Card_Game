@@ -42,20 +42,23 @@ public class DeckManager
     public void TestCreateDeck()
     {
         deck.Clear();
-        for (int i = 0; i < 4; i++)
+        deck.Add(new CardData(Suit.NONE, Rank.SMALL_JOKER));
+        deck.Add(new CardData(Suit.NONE, Rank.BIG_JOKER));
+        deck.Add(new CardData(Suit.NONE, Rank.SMALL_JOKER));
+        deck.Add(new CardData(Suit.NONE, Rank.BIG_JOKER));
+        for (int i = 0; i < 2; i++)
         {
-            deck.Add(new CardData(Suit.HEART, Rank.TEN));
-        }
-        for (int i = 4; i < 108; i++)
-        {
-            if (i % 4 == 0)
-                deck.Add(new CardData(Suit.HEART, Rank.TWO));
-            if (i % 4 == 1)
-                deck.Add(new CardData(Suit.CLUB, Rank.TWO));
-            if (i % 4 == 2)
-                deck.Add(new CardData(Suit.DIAMOND, Rank.TWO));
-            if (i % 4 == 3)
-                deck.Add(new CardData(Suit.SPADE, Rank.TWO));
+            foreach (Rank rank in Enum.GetValues(typeof(Rank)))
+            {
+                if (rank == Rank.SMALL_JOKER || rank == Rank.BIG_JOKER)
+                    continue;
+                foreach (Suit suit in Enum.GetValues(typeof(Suit)))
+                {
+                    if (suit == Suit.NONE)
+                        continue;
+                    deck.Add(new CardData(suit, rank));
+                }
+            }
         }
     }
 

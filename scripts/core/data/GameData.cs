@@ -37,8 +37,8 @@ public class GameData
         TeamLevels = new Dictionary<int, Rank>
         {
             // 两个队
-            [0] = Rank.TWO,
-            [1] = Rank.TWO
+            [0] = Rank.FIVE,
+            [1] = Rank.FIVE
         };
     }
 
