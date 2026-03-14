@@ -1,53 +1,36 @@
-using System;
 using System.Collections.Generic;
 
 public class TurnData
 {
     public PlayType playType;
     public Suit suit;
-    public List<CardData> cardDatas = [];
+    public int playNum;
 
-    public TurnData(PlayType playType, Suit suit, List<CardData> cardDatas)
+    public TurnData(PlayType playType, int playNum, Suit suit)
     {
         this.playType = playType;
+        this.playNum = playNum;
         this.suit = suit;
-        this.cardDatas = cardDatas ?? new List<CardData>();
     }
 
     public TurnData()
     {
         playType = PlayType.NONE;
         suit = Suit.NONE;
-        cardDatas.Clear();
     }
 
-    public int PlayNum() => cardDatas.Count;
-
-    public static int[] Serialize(TurnData turnData)
+    public static int Serialize(TurnData turnData)
     {
-        var result = new List<int>
-        {
-            // 将 playType 和 suit 合并到一个 int（各占8位，足够容纳枚举值）
-            ((int)turnData.playType << 8) | (int)turnData.suit,
-            turnData.cardDatas.Count
-        };
-        foreach (var card in turnData.cardDatas)
-            result.Add(CardData.Serialize(card));
-        return [.. result];
+        // 分配位数：playNum 需要6位（最多63），playType 和 suit 各需3位（最多7）
+        // 布局：高6位 - playNum，中间3位 - playType，低3位 - suit
+        return (turnData.playNum << 6) | ((int)turnData.playType << 3) | (int)turnData.suit;
     }
 
-    public static TurnData Deserialize(int[] data)
+    public static TurnData Deserialize(int id)
     {
-        if (data == null || data.Length < 2)
-            throw new ArgumentException("Invalid data");
-
-        int header = data[0];
-        PlayType playType = (PlayType)(header >> 8);
-        Suit suit = (Suit)(header & 0xFF);
-        int count = data[1];
-        var cardDatas = new List<CardData>(count);
-        for (int i = 0; i < count; i++)
-            cardDatas.Add(CardData.Deserialize(data[2 + i]));
-        return new TurnData(playType, suit, cardDatas);
+        int suit = id & 0x7;               // 取低3位
+        int playType = (id >> 3) & 0x7;    // 取中间3位
+        int playNum = id >> 6;              // 取高6位
+        return new TurnData((PlayType)playType, playNum, (Suit)suit);
     }
 }

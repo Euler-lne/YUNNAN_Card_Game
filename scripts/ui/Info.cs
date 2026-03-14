@@ -1,6 +1,7 @@
 using Godot;
 using Euler.Global;
 using System;
+using Euler.Event;
 
 public partial class Info : Panel
 {
@@ -17,11 +18,13 @@ public partial class Info : Panel
 		};
 		AddChild(timer);
 		timer.Timeout += TimerOut;
+		UIEvent.SetInfoEvent += SetInfo;
 	}
 
 	public override void _ExitTree()
 	{
 		timer.Timeout -= TimerOut;
+		UIEvent.SetInfoEvent -= SetInfo;
 	}
 
 
@@ -30,7 +33,7 @@ public partial class Info : Panel
 		Visible = false;
 	}
 
-	public void SetInfo(string content)
+	private void SetInfo(string content)
 	{
 		Visible = true;
 		label.Text = content;

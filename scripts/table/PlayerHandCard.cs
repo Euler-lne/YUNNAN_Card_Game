@@ -89,7 +89,7 @@ public partial class PlayerHandCard : Node2D
 		float totalSpan = (count - 1) * offset + cardWidth;
 
 		// 计算第一个卡牌的中心 X 坐标
-		float startX = (screenSize.X - totalSpan) / 2 + cardWidth / 2;
+		float startX = (screenSize.X - totalSpan) / 2 + cardWidth / 2 + CardLayoutParams.HORIZONTAL_OFFSET;
 
 		// Y 坐标：距离屏幕底部一定距离，并确保卡牌完整显示（假设卡牌中心在底部上方卡牌高度的一半处）
 
@@ -338,7 +338,6 @@ public partial class PlayerHandCard : Node2D
 
 	public void SetAllCardIsSelected(bool isSelected)
 	{
-		GD.Print("全部设置为不选");
 		foreach (var card in handCards)
 		{
 			card.IsSelected = isSelected;

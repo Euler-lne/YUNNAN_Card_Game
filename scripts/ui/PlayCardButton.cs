@@ -40,7 +40,7 @@ public partial class PlayCardButton : Button
 		Visible = false;
 	}
 
-	private void OnTurnStartEvent(TurnData turnData, bool isDealer)
+	private void OnTurnStartEvent(TurnData turnData, bool isDealer, CardData trumpCardData)
 	{
 		Visible = true;
 		this.isDealer = isDealer;
@@ -58,11 +58,9 @@ public partial class PlayCardButton : Button
 
 		// 判断当前选择卡牌的类型
 		List<int> selectCards = EventBus.OnGetSelectCardEvent();
-		if (!RuleEngine.IsSameSuit(selectCards, trumpCardData))
-		{
-			GD.Print("选择了不一样类型的牌");
+
+		if (selectCards.Count == 0)  // 选了0张牌直接返回
 			return;
-		}
 		TurnEvent.OnPlayCardEvent();
 		PlayType playType = RuleEngine.DetermineSelectedPlayType(selectCards);
 		if (turnData.playType == PlayType.NONE)
@@ -73,11 +71,6 @@ public partial class PlayCardButton : Button
 				Visible = false;
 				return;
 			}
-		}
-		else
-		{
-			// TODO:需要根据主家的牌判断当前出的牌是否合理
-			// turnData.cardDatas
 		}
 
 		RpcId(1, nameof(RpcOnPlayCardButtonPressed), selectCards.ToArray());

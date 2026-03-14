@@ -50,9 +50,24 @@ public partial class PutCardArea : Node2D
 		return cardDatas;
 	}
 
+	public List<Card> RemoveCardsExpectPoint()
+	{
+		List<Card> pointCards = [];
+		foreach (var card in cards)
+		{
+			if (card.cardData.IsPoint())
+				pointCards.Add(card);
+			else
+				card.QueueFree();
+		}
+		cards.Clear();
+		putLayout.Clear();
+		return pointCards;
+	}
+
 	public void Test()
 	{
-		for (int i = 0; i < 10; i++)
+		for (int i = 0; i < 9; i++)
 		{
 			GenerateCard(true);
 		}

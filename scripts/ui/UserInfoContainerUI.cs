@@ -15,12 +15,13 @@ public partial class UserInfoContainerUI : Control
 		userInfoUI[3] = GetNode<UserInfoUI>("UserInfoLeft");
 		foreach (var item in userInfoUI.Values)
 		{
-			item.Visible = false;
+			// item.Visible = false;
 		}
 		UIEvent.ChangeAvatarEvent += OnChangeAvatarEvent;
 		UIEvent.ChangeNameEvent += OnChangeNameEvent;
 		UIEvent.ChangeTrumpEvent += OnChangeTrumpEvent;
-		UIEvent.ChangeLevelEvent -= OnChangeLevelEvent;
+		UIEvent.ChangeLevelEvent += OnChangeLevelEvent;
+		UIEvent.ChangeCurrentPlayerEvent += OnChangeCurrentPlayerEvent;
 	}
 	public override void _ExitTree()
 	{
@@ -28,6 +29,15 @@ public partial class UserInfoContainerUI : Control
 		UIEvent.ChangeNameEvent -= OnChangeNameEvent;
 		UIEvent.ChangeTrumpEvent -= OnChangeTrumpEvent;
 		UIEvent.ChangeLevelEvent -= OnChangeLevelEvent;
+		UIEvent.ChangeCurrentPlayerEvent -= OnChangeCurrentPlayerEvent;
+	}
+
+	private void OnChangeCurrentPlayerEvent(int playerSeat)
+	{
+		for (int i = 0; i < GameSettings.PLAYER_COUNT; i++)
+		{
+			userInfoUI[i].SetPanelColor(i == playerSeat);
+		}
 	}
 
 	private void OnChangeLevelEvent(int seat, Rank rank)

@@ -190,17 +190,18 @@ public static class RuleEngine
         // 比较拖拉机
         if (comp1.Tractors.Count != 0)
         {
-            var maxValues1 = comp1.Tractors.Select(t => t.BiggestValue()).ToList();
-            var maxValues2 = comp2.Tractors.Select(t => t.BiggestValue()).ToList();
-            GD.Print($"拖拉机 - 手1最大牌值: [{string.Join(", ", maxValues1)}], 手2最大牌值: [{string.Join(", ", maxValues2)}]");
-            if (maxValues2.Count != 0)
+            if (comp2.Tractors.Count != 0)
             {
-                int max2 = maxValues2.Max();
-                GD.Print($"手2拖拉机最大牌值: {max2}");
-                if (maxValues1.Any(v => v <= max2))
+                foreach (var tractor in comp1.Tractors)
                 {
-                    GD.Print($"手1中有拖拉机最大牌值 ≤ {max2}，返回 false");
-                    return false;
+                    int len = tractor.GetCount(); // 当前拖拉机的长度为len
+                    List<Tractor> tractors = comp2.GetTratorsLenGreat(len); // 得到所有长度大于等于len的连对
+                    if (tractors.Count == 0) continue;
+                    if (tractors[^1].BiggestValue() >= tractor.BiggestValue())
+                    {
+                        GD.Print($"手1中有拖拉机值{tractor.BiggestValue()} ≤ {tractors[^1].BiggestValue()}，返回 false");
+                        return false;
+                    }
                 }
             }
             else

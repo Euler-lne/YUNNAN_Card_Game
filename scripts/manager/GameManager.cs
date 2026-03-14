@@ -29,6 +29,7 @@ public partial class GameManager : Node
             turnManager.Init(GetNode<TurnRequest>("../TurnRequest"), gameCore.GetDealerSeat(), gameCore);
             NetworkManager.Instance.OnTotalPlayersChanged += uiManager.UpdatePlayerCount;
             dealManager.DealEndEvent += OnDealEndEvent;
+            turnManager.TurnOver += OnTurnOver;
         }
     }
     public override void _ExitTree()
@@ -37,9 +38,9 @@ public partial class GameManager : Node
         {
             dealManager.DealEndEvent -= OnDealEndEvent;
             NetworkManager.Instance.OnTotalPlayersChanged -= uiManager.UpdatePlayerCount;
+            turnManager.TurnOver -= OnTurnOver;
         }
     }
-
 
     private void StartGame()
     {
@@ -62,6 +63,13 @@ public partial class GameManager : Node
         turnManager.SetFirstTurn();
         Rpc(nameof(RpcSetTrumpCardData), CardData.Serialize(trumpCardData));
         turnManager.StartTurn(gameCore.GetDealerSeat());
+    }
+
+    private void OnTurnOver(List<CardData> pointCards)
+    {
+        if (!Multiplayer.IsServer())
+            return;
+        GD.Print("开始计算分数");
     }
 
     [Rpc(MultiplayerApi.RpcMode.Authority, CallLocal = true)]

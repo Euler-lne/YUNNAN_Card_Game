@@ -58,6 +58,11 @@ public class CardData
         return new CardData(suit, rank);
     }
 
+    public bool IsPoint()
+    {
+        return rank == Rank.FIVE || rank == Rank.TEN || rank == Rank.KING;
+    }
+
 }
 
 public class CardList
@@ -239,8 +244,6 @@ public class CardList
             }
             GenarateCardList();
         }
-
-
     }
 
     private void RemoveFrom(List<CardData> cardDatas, CardData cardData)

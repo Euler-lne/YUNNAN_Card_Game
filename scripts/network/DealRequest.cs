@@ -11,6 +11,16 @@ public partial class DealRequest : Node2D
     [Export] private Node holdCardParent;
     private List<Card> holdCards = [];
 
+    public void EndDeal()
+    {
+        Rpc(nameof(RpcEndDeal));
+    }
+    [Rpc(MultiplayerApi.RpcMode.Authority, CallLocal = true)]
+    public void RpcEndDeal()
+    {
+        DealEvent.OnSetDeclareEvent(DeclareOption.NONE);
+    }
+
     public void SetDealCard(bool visiable)
     {
         Rpc(nameof(RpcSetDealCard), visiable);

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 
 public class SelectedHandComposition
@@ -8,34 +9,62 @@ public class SelectedHandComposition
     public List<DoubleCard> Doubles { get; private set; }
     public List<Tractor> Tractors { get; private set; }
 
-    public class SingleCard
+    public List<Tractor> GetTratorsLenGreat(int len)
     {
-        public int Card { get; set; }
+        List<Tractor> tractors = [];
+        foreach (var item in Tractors)
+        {
+            if (item.GetCount() >= len)
+            {
+                tractors.Add(item);
+            }
+        }
+        return tractors;
     }
 
-    public class DoubleCard
+    public Tractor GetLargestTractor()
     {
-        public int Card1 { get; set; }
-        public int Card2 { get; set; }
-
-        public int GetCardValue() => RuleEngine.GetCardValue(CardData.Deserialize(Card1));
+        List<int> len = [];
+        int maxLen = -1;
+        for (int i = 0; i < Tractors.Count; i++)
+        {
+            len.Add(Tractors[i].GetCount());
+            if (maxLen < Tractors[i].GetCount())
+                maxLen = Tractors[i].GetCount();
+        }
+        for (int i = Tractors.Count - 1; i >= 0; i--)
+        {
+            if (Tractors[i].GetCount() == maxLen)
+                return Tractors[i];
+        }
+        return null;
     }
 
-    public class Tractor
+    public DoubleCard GetLargestDouble()
     {
-        public List<DoubleCard> Pairs { get; set; }
-        public int GetCount() => Pairs.Count;
-        public int BiggestValue()
-        {
-            if (Pairs.Count == 0) return -1;
-            return RuleEngine.GetCardValue(CardData.Deserialize(Pairs[^1].Card1));
-        }
+        if (Doubles.Count == 0)
+            return null;
+        return Doubles[^1];
+    }
 
-        public int SmallesValue()
+    public int GetLargestSingleCardValue()
+    {
+        int maxValue = -1;
+        if (Singles.Count != 0)
+            maxValue = RuleEngine.GetCardValue(CardData.Deserialize(Singles[^1].Card));
+        if (Doubles.Count != 0)
         {
-            if (Pairs.Count == 0) return -1;
-            return RuleEngine.GetCardValue(CardData.Deserialize(Pairs[0].Card1));
+            int doubleMax = RuleEngine.GetCardValue(CardData.Deserialize(Doubles[^1].Card1));
+            if (maxValue < doubleMax)
+                maxValue = doubleMax;
         }
+        if (Tractors.Count != 0)
+        {
+            int tractorMax = Tractors[^1].BiggestValue();
+            if (maxValue < tractorMax)
+                maxValue = tractorMax;
+        }
+        return maxValue;
     }
 
     public SelectedHandComposition(List<int> selectedIds)
@@ -133,5 +162,43 @@ public class SelectedHandComposition
         Doubles = [.. Doubles.OrderBy(d => RuleEngine.GetCardValue(CardData.Deserialize(d.Card1)))];
 
         // Tractors 已有序，无需额外排序
+    }
+
+
+}
+public class SingleCard
+{
+    public int Card { get; set; }
+}
+
+public class DoubleCard
+{
+    public int Card1 { get; set; }
+    public int Card2 { get; set; }
+
+    public int GetCardValue() => RuleEngine.GetCardValue(CardData.Deserialize(Card1));
+}
+
+public class Tractor
+{
+    public List<DoubleCard> Pairs { get; set; }
+    public int GetCount() => Pairs.Count;
+    public int BiggestValue()
+    {
+        if (Pairs.Count == 0) return -1;
+        return RuleEngine.GetCardValue(CardData.Deserialize(Pairs[^1].Card1));
+    }
+
+    public int SmallesValue()
+    {
+        if (Pairs.Count == 0) return -1;
+        return RuleEngine.GetCardValue(CardData.Deserialize(Pairs[0].Card1));
+    }
+
+    public static bool IsFirstGreater(Tractor tractor1, Tractor tractor2)
+    {
+        if (tractor1.GetCount() > tractor2.GetCount()) return true;
+        if (tractor1.BiggestValue() > tractor2.BiggestValue()) return true;
+        return false;
     }
 }

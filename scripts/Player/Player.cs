@@ -12,6 +12,8 @@ public partial class Player : Node2D
 	private List<int> selectCards = [];
 	private TurnData turnData;
 	private bool isTurn = false;
+	private CardData trumpCardData;
+	private bool isDealerSelect = false;
 	private int cardCountOfSuit = -1;
 
 	public override void _Ready()
@@ -67,11 +69,12 @@ public partial class Player : Node2D
 		cardCountOfSuit = -1;
 	}
 
-	private void OnTurnStartEvent(TurnData turnData, bool isDealer)
+	private void OnTurnStartEvent(TurnData turnData, bool isDealer, CardData trumpCardData)
 	{
 		playerHandCard.SetAllCardIsSelected(false); // 先全部设置为不可选
 		selectCards.Clear();
 		this.turnData = turnData;
+		this.trumpCardData = trumpCardData;
 		isTurn = true;
 		if (turnData.playType == PlayType.NONE)
 		{
@@ -81,6 +84,7 @@ public partial class Player : Node2D
 		{
 			Suit suit = turnData.suit;
 			cardCountOfSuit = playerHandCard.SetCardUnSelectableExpect(suit);
+			// GD.Print($"当前花色{suit}有{cardCountOfSuit}张");
 		}
 	}
 
@@ -92,12 +96,30 @@ public partial class Player : Node2D
 		else
 			selectCards.Remove(id);
 
-		if (!isTurn) return;
-
-		if (turnData.playType == PlayType.NONE)
-			HandleBankerSelection();
-		else
-			HandleNonBankerSelection();
+		if (isTurn)
+		{
+			if (turnData.playType == PlayType.NONE)
+				HandleBankerSelection();
+			else
+				HandleNonBankerSelection();
+		}
+		else if (isDealerSelect)
+		{
+			if (selectCards.Count == 8)
+			{
+				foreach (var card in playerHandCard.GetHandCards())
+				{
+					if (card.IsSelected)
+						playerHandCard.SetCardSelectable(card, true); // 已选中的可取消
+					else
+						playerHandCard.SetCardSelectable(card, false);
+				}
+			}
+			else
+			{
+				playerHandCard.SetAllCardSelectable(true);
+			}
+		}
 	}
 	private void HandleBankerSelection()
 	{
@@ -129,9 +151,14 @@ public partial class Player : Node2D
 	{
 		int selectCount = selectCards.Count;
 		int requiredSuitCount = cardCountOfSuit; // 手牌中指定花色的总数
-		int selectedSuitCount = selectCards.Count(id => CardData.Deserialize(id).suit == turnData.suit); // 已选指定花色数量
+		int selectedSuitCount = selectCards.Count(id =>
+		{
+			CardData cd = CardData.Deserialize(id);
+			Suit actualSuit = RuleEngine.GetSuit(cd, trumpCardData); // 需要访问 trumpCardData
+			return actualSuit == turnData.suit;
+		});
 
-		if (selectCount == turnData.PlayNum())
+		if (selectCount == turnData.playNum)
 		{
 			// 达到要求数量：只允许取消已选中的牌
 			foreach (var card in playerHandCard.GetHandCards())
@@ -139,9 +166,9 @@ public partial class Player : Node2D
 				playerHandCard.SetCardSelectable(card, card.IsSelected);
 			}
 		}
-		else if (selectCount < turnData.PlayNum())
+		else if (selectCount < turnData.playNum)
 		{
-			if (requiredSuitCount >= turnData.PlayNum())
+			if (requiredSuitCount >= turnData.playNum)
 			{
 				// 牌足够，只能选指定花色
 				playerHandCard.SetCardUnSelectableExpect(turnData.suit);
@@ -218,11 +245,15 @@ public partial class Player : Node2D
 
 	public void EnterSelectCard()
 	{
+		isDealerSelect = true;
+		playerHandCard.SetAllCardIsSelected(false);
+		selectCards.Clear();
 		playerHandCard.SetAllCardSelectable(true);
 	}
 
 	public void ExitSelectCard(int[] ids)
 	{
+		isDealerSelect = false;
 		List<CardData> cardDatas = CardData.Deserialize(ids);
 		playerHandCard.RemoveSeletedCard(cardDatas);
 		playerHandCard.SetAllCardSelectable(false, false);

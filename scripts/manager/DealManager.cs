@@ -130,6 +130,7 @@ public partial class DealManager : Node
         dealRequest.UpdateTrumpSuit(trumpSuit);
         dealRequest.RegenerateCardList(GameCore.RegenerateCardList(), rank, trumpSuit);
         GD.Print("抠底结束，准备开始游戏");
+        dealRequest.EndDeal();
         DealEndEvent?.Invoke();
     }
 
@@ -161,7 +162,12 @@ public partial class DealManager : Node
         dealRequest.NotifyDealerSelectCardResult(isValid, dealerSeat, ids);
         if (!isValid)
         {
+            // UIEvent.OnSetInfoEvent($"当前手牌{ids.Length}张，需要8张");
             GD.Print($"不合理，当前选中了{ids.Length}张牌");
+            foreach (var card in CardData.Deserialize(ids))
+            {
+                GD.Print($"花色{card.suit} 点数{card.rank}");
+            }
             return;
         }
         GameCore.DealRemoveCard(CardData.Deserialize(ids));

@@ -148,20 +148,38 @@ namespace Euler.Event
         {
             ChangeTrumpSuitEvent?.Invoke(suit);
         }
+
+        public static Action<string> SetInfoEvent;
+        public static void OnSetInfoEvent(string info)
+        {
+            SetInfoEvent?.Invoke(info);
+        }
+
+        public static Action<int> ChangeCurrentPlayerEvent;
+        public static void OnChangeCurrentPlayerEvent(int currentSeat)
+        {
+            ChangeCurrentPlayerEvent?.Invoke(currentSeat);
+        }
     }
 
     public static class TurnEvent
     {
-        public static Action<TurnData, bool> TurnStartEvent;
-        public static void OnTurnStartEvent(TurnData turnData, bool isDealer)
+        public static Action<TurnData, bool, CardData> TurnStartEvent;
+        public static void OnTurnStartEvent(TurnData turnData, bool isDealer, CardData trumpCardData)
         {
-            TurnStartEvent?.Invoke(turnData, isDealer);
+            TurnStartEvent?.Invoke(turnData, isDealer, trumpCardData);
         }
 
         public static Action TurnEndEvent;
         public static void OnTurnEndEvent()
         {
             TurnEndEvent?.Invoke();
+        }
+
+        public static Action<bool> NewTurnEvent;
+        public static void OnNewTurnEvent(bool isDealer)
+        {
+            NewTurnEvent?.Invoke(isDealer);
         }
 
         public static Action<List<CardData>> PlayCardButtonPressEvent;

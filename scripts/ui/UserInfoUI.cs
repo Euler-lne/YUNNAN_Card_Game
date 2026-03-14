@@ -7,13 +7,31 @@ public partial class UserInfoUI : Control
 	private Label label;
 	private TextureRect crown;
 	private Label level;
+	private Panel panel;
 	public override void _Ready()
 	{
 		textureRect = GetNode<TextureRect>("TextureRect");
 		label = GetNode<Label>("Label");
 		crown = GetNode<TextureRect>("Crown");
 		level = GetNode<Label>("Level");
+		panel = GetNode<Panel>("Panel");
 		crown.Visible = false;
+	}
+
+	public void SetPanelColor(bool isPlayer)
+	{
+		if (panel.GetThemeStylebox("panel") is not StyleBoxFlat style)
+		{
+			style = new StyleBoxFlat();
+		}
+		else
+		{
+			style = style.Duplicate() as StyleBoxFlat;
+		}
+
+		style.BorderColor = isPlayer ? Colors.Green : Colors.Black;
+
+		panel.AddThemeStyleboxOverride("panel", style);
 	}
 
 	public void SetLabel(string content)

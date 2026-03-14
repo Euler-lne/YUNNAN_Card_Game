@@ -7,11 +7,9 @@ public partial class HoleUI : Control
 	private Button bigButton;
 	private Button smallButton;
 	private HBoxContainer hBoxContainer;
-	private Info info;
 
 	public override void _Ready()
 	{
-		info = GetNode<Info>("Info");
 		bigButton = GetNode<Button>("HBoxContainer/BigButton");
 		smallButton = GetNode<Button>("HBoxContainer/SmallButton");
 
@@ -40,9 +38,9 @@ public partial class HoleUI : Control
 	private void SetInfo(bool isBig)
 	{
 		if (isBig)
-			info.SetInfo("庄家选择遇大");
+			UIEvent.OnSetInfoEvent("庄家选择遇大");
 		else
-			info.SetInfo("庄家选择遇小");
+			UIEvent.OnSetInfoEvent("庄家选择遇小");
 
 	}
 

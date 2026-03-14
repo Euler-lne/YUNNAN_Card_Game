@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using Euler.Global;
 using Godot;
@@ -28,6 +29,36 @@ public class GameCore
 
         gameData.CurrentPhase = GamePhase.DEALING;
     }
+    #region 出牌相关
+    public void RemoveCardFromPlayer(int playerIndex, List<CardData> cardDatas)
+    {
+        CardList cardList = playerManager.players[playerIndex];
+        cardList.RemoveCard(cardDatas);
+    }
+    public List<int> GetSuitCards(int seat, List<CardData> cardDatas, Suit suit)
+    {
+        if (cardDatas.Count == 0)
+        {
+            return [];
+        }
+        List<CardData> suitCards = suit switch
+        {
+            Suit.SPADE => playerManager.players[seat].spadeList,
+            Suit.CLUB => playerManager.players[seat].clubList,
+            Suit.DIAMOND => playerManager.players[seat].diamondList,
+            Suit.HEART => playerManager.players[seat].heartList,
+            Suit.NONE => playerManager.players[seat].mainList,
+            _ => throw new ArgumentOutOfRangeException(nameof(suit), suit, null)
+        };
+
+        return [.. CardData.Serialize(suitCards)];
+    }
+
+    public bool IsFinalTurn()
+    {
+        return playerManager.players[0].cardList.Count == 0;
+    }
+    #endregion
 
     public void ContinueGame()
     {
@@ -198,4 +229,5 @@ public class GameCore
         playerManager.RemoveCardFromPlayer(seat, cardDatas);
     }
     #endregion
+
 }

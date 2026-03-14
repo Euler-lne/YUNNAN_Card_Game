@@ -16,9 +16,12 @@ namespace Euler.Global
     {
         // 固定左右边距（像素）
         public const float HORIZONTAL_MARGIN = 50f;
+        public const float HORIZONTAL_OFFSET = 30f;
         public const float BOTTOM_MARGIN_UNSELECT = CardParams.CARD_HEIGHT * 0.75f;
         public const float BOTTOM_MARGIN_MOVE = CardParams.CARD_HEIGHT - BOTTOM_MARGIN_UNSELECT;
         public const float PUT_CARD_MARGIN = 5f;
+        public const float PUT_CARD_TOP_MARGIN = 55f;
+        public const float PUT_CARD_H_MARGIN = 70f;
         public const float PUT_CARD_SPACING = 20f;
     }
 
@@ -26,7 +29,7 @@ namespace Euler.Global
     {
         public const int PLAYER_COUNT = 4;
         public const int CARD_PRE_PLAYER = 25;
-        public const float DEAL_DURATION_TIME = 0f;
+        public const float DEAL_DURATION_TIME = 0.2f;
 
         public const float DEAL_END_TIME = 1f;
         public const float INFO_EXIST_TIME = 1f;
