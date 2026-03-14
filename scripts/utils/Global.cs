@@ -23,6 +23,9 @@ namespace Euler.Global
         public const float PUT_CARD_TOP_MARGIN = 55f;
         public const float PUT_CARD_H_MARGIN = 70f;
         public const float PUT_CARD_SPACING = 20f;
+        public const float SCORE_POINT_X = 150f;
+        public const float SCORE_POINT_Y = 0;
+
     }
 
     public static class GameSettings

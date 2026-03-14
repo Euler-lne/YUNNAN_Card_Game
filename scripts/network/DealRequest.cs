@@ -29,6 +29,9 @@ public partial class DealRequest : Node2D
     private void RpcSetDealCard(bool visiable)
     {
         deckCard.Visible = visiable;
+        Vector2 screenSize = GetViewportRect().Size;
+        Vector2 screenCenter = new(screenSize.X / 2, screenSize.Y / 2);
+        deckCard.GlobalPosition = screenCenter;
     }
     #region UI相关
     public void UpdateTrumpSuit(Suit suit)
@@ -431,13 +434,8 @@ public partial class DealRequest : Node2D
             .SetTrans(Tween.TransitionType.Quad)
             .SetEase(Tween.EaseType.Out);
 
-        tween.TweenCallback(Callable.From(() =>
-        {
-            flyingCard.QueueFree();
-        }));
+        tween.TweenCallback(Callable.From(flyingCard.QueueFree));
     }
-
-
 
     #endregion
 }

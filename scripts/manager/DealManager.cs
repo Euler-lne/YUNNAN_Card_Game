@@ -411,15 +411,10 @@ public partial class DealManager : Node
     #endregion
 
 
-    // =============================
-    // 工具函数
-    // =============================
     private async Task DelayHalf(float time)
     {
         await ToSignal(
             GetTree().CreateTimer(time),
             SceneTreeTimer.SignalName.Timeout);
     }
-
-
 }

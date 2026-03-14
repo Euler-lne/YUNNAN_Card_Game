@@ -1,7 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Data;
-using System.Linq;
 using Euler.Global;
 using Godot;
 
@@ -109,6 +107,10 @@ public class GameCore
         if (tableCards.Count != 0) return tableCards;
         tableCards = deckManager.GetRestCard();
         return tableCards;
+    }
+    public void ClearTableCard()
+    {
+        tableCards.Clear();
     }
     public void DealerGetCard(int seat)
     {
@@ -223,10 +225,83 @@ public class GameCore
     {
         gameData.IdlePlayerScore += increase;
     }
+    public void ReSetPlayerScore()
+    {
+        gameData.IdlePlayerScore = 0;
+    }
+
+    public int GetIdleScore() => gameData.IdlePlayerScore;
+
+    public static ScoreResult GetScoreResult(int score)
+    {
+        if (score < 0)
+            return ScoreResult.DealerUp3;
+        if (score == 0)
+            return ScoreResult.DealerUp3;
+        if (score < 40)
+            return ScoreResult.DealerUp2;
+        if (score < 80)
+            return ScoreResult.DealerUp1;
+        if (score == 80)
+            return ScoreResult.DealerStrong;
+        if (score < 120)
+            return ScoreResult.DealerDown;
+        if (score < 160)
+            return ScoreResult.IdleUp2;
+        if (score < 200)
+            return ScoreResult.IdleUp3;
+        return ScoreResult.IdleUp3;
+    }
     public void RemoveCardFrom(int seat, List<CardData> cardDatas)
     {
         // 如果cardDatas为空就删除所有的
         playerManager.RemoveCardFromPlayer(seat, cardDatas);
+    }
+
+    public void WinRound(int winnerSeat, ScoreResult scoreResult, List<CardData> winnerCard)
+    {
+        Rank rank = GetCurrentRank(GetDealerSeat());
+        bool isLastWinCardIsRank = false;
+        if (rank == Rank.JACK || rank == Rank.ACE)
+        {
+            isLastWinCardIsRank = IsLastWinCardIsRank(rank, winnerCard);
+        }
+        if (isLastWinCardIsRank)
+        {
+            bool isDealerWin = scoreResult < ScoreResult.DealerStrong;
+            bool isIdleUp = scoreResult > ScoreResult.DealerStrong;
+            if (isDealerWin && IsDealer(winnerSeat))
+            {
+                if (rank == Rank.JACK)
+                    gameData.WinRoundJA(winnerSeat, scoreResult);
+                else
+                {
+                    GD.Print($"玩家{winnerSeat}赢得了游戏");
+                    gameData.WinnerSeat = winnerSeat;
+                }
+                return;
+            }
+            else if (isIdleUp && !IsDealer(winnerSeat))
+            {
+                int oldDealer = GetDealerSeat();
+                gameData.WinRoundJA(winnerSeat, scoreResult);
+                gameData.RollBack(rank, oldDealer);
+                return;
+            }
+        }
+        bool isWinnerDealer = IsDealer(winnerSeat);
+        gameData.WinRound(winnerSeat, scoreResult, isWinnerDealer);
+
+    }
+
+    public bool HaveWinner() => gameData.WinnerSeat != -1;
+
+    private bool IsLastWinCardIsRank(Rank rank, List<CardData> winnerCard)
+    {
+        foreach (var card in winnerCard)
+            if (card.rank != rank)
+                return false;
+        return true;
     }
     #endregion
 

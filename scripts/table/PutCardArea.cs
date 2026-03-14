@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using Euler.Global;
 public partial class PutCardArea : Node2D
 {
-	[Export] PackedScene cardScene; // 测试用
+	[Export] PackedScene cardScene;
 	private List<Card> cards = [];
 	private PutAreaLayout putAreaLayout;
 	private bool isCenter;
@@ -20,17 +20,22 @@ public partial class PutCardArea : Node2D
 		this.putAreaLayout = putAreaLayout;
 	}
 
+	public PutAreaLayout GetPutAreaLayout() => putAreaLayout;
+
+
 	public void Insert(List<CardData> cardDatas, bool isBack = false, GamePhase gamePhase = GamePhase.PLAYING)
 	{
 		isCenter = gamePhase == GamePhase.PLAYING;
 		if (!isCenter && cardDatas.Count == 0 && isBack)
 		{
-			GenerateCard(isBack);
+			Card card = GenerateCard(isBack, this);
+			cards.Add(card);
 		}
 		else
 			foreach (var cardData in cardDatas)
 			{
-				GenerateCard(isBack, cardData);
+				Card card = GenerateCard(isBack, this, cardData);
+				cards.Add(card);
 			}
 		GenerateLayout();
 	}
@@ -43,12 +48,12 @@ public partial class PutCardArea : Node2D
 			card.QueueFree();
 			cardDatas.Add(card.cardData);
 		}
-
-
 		cards.Clear();
 		putLayout.Clear();
 		return cardDatas;
 	}
+
+	public List<Card> GetCards() => cards;
 
 	public List<Card> RemoveCardsExpectPoint()
 	{
@@ -69,20 +74,21 @@ public partial class PutCardArea : Node2D
 	{
 		for (int i = 0; i < 9; i++)
 		{
-			GenerateCard(true);
+			Card card = GenerateCard(true, this);
+			cards.Add(card);
 		}
 		GenerateLayout();
 	}
-	private void GenerateCard(bool isBack, CardData cardData = null)
+	private Card GenerateCard(bool isBack, Node2D parent, CardData cardData = null)
 	{
 		Card card = cardScene.Instantiate<Card>();
-		AddChild(card);
-		cards.Add(card);
+		parent.AddChild(card);
 		if (cardData != null)
 			card.SetCardData(cardData);
 		card.IsBack = isBack;
 		card.SetLight();
 		card.Scale = new(CardParams.CARD_PUT_SCALE * CardParams.CARD_SCALE, CardParams.CARD_PUT_SCALE * CardParams.CARD_SCALE);
+		return card;
 	}
 
 	private void GenerateLayout()
@@ -141,4 +147,14 @@ public partial class PutCardArea : Node2D
 		}
 	}
 
+	public List<Card> GenerateCard(int[] cardIds, TableManager parent)
+	{
+		List<Card> cards = [];
+		foreach (int cardId in cardIds)
+		{
+			Card card = GenerateCard(true, parent, CardData.Deserialize(cardId));
+			cards.Add(card);
+		}
+		return cards;
+	}
 }

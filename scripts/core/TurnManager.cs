@@ -24,7 +24,7 @@ public class TurnManager
 
     private GameCore gameCore;
     private List<CardData> pointCards = [];
-    public Action<List<CardData>> TurnOver;
+    public Action TurnOver;
 
     public void Init(TurnRequest turnRequest, int dealer, GameCore gameCore)
     {
@@ -94,41 +94,85 @@ public class TurnManager
     {
         GD.Print($"回合结束 当前seat={currentSeat}");
 
-        // TODO
-
         int winner = GetWinnerSeat();
         GD.Print($"本轮赢家{winner}");
         dealer = winner;
 
         // 清空牌
-        turnRequest.NewTurn(gameCore.IsDealer(dealer));
+        turnRequest.NewTurn(gameCore.IsDealer(dealer), dealer);
         if (!gameCore.IsDealer(dealer))
             AddPointCard();
         if (!gameCore.IsFinalTurn())
             StartTurn();
         else
         {
-            TurnFinish();
-        }
-    }
-    private void AddPointCard()
-    {
-        for (int i = 0; i < playedCards.Length; i++)
-        {
-            foreach (var item in playedCards[i])
-            {
-                if (item.IsPoint())
-                    pointCards.Add(item);
-            }
+            TurnFinish(winner);
         }
     }
 
-    private void TurnFinish()
+    private async void TurnFinish(int lastWinner)
     {
         turnRequest.TurnOver();
-        //TODO: 计算当前的分数判断游戏，进入下一个回合
-        GD.Print("游戏结束");
-        TurnOver?.Invoke(pointCards);
+        bool isDealerWin = gameCore.IsDealer(lastWinner); // 闲家赢了可以翻底牌
+                                                          // 将卡牌闲家赢得的牌展开
+        turnRequest.ExpandScoreCard(pointCards.Count);
+        await WaitAsync(GameSettings.INFO_EXIST_TIME);
+        for (int i = pointCards.Count - 1; i >= 0; i--)
+        {
+            CardData card = pointCards[i];
+            turnRequest.MoveCardToScore(card);
+            await WaitAsync(GameSettings.DEAL_DURATION_TIME);
+            int increase = card.rank == Rank.FIVE ? 5 : 10;
+            gameCore.InscreaseIdlePlayerScore(increase);
+            pointCards.RemoveAt(i);
+        }
+        if (!isDealerWin)
+        {
+            // 翻出底牌，用双牌赢的话就*2，用单牌赢的话就不翻倍
+            List<CardData> cardDatas = playedCards[lastWinner];
+            SelectedHandComposition winnerCmp = new([.. CardData.Serialize(cardDatas)]);
+            int times = 1;
+            PlayType playType = winnerCmp.GetPlayType();
+            if (playType == PlayType.DOUBLE)
+                times = 2;
+            else if (playType == PlayType.EVEN_CORRECT)
+                times = winnerCmp.GetEvenCorrectLen();
+            List<CardData> tableCards = gameCore.GetRestCard();
+            for (int i = tableCards.Count - 1; i >= 0; i--)
+            {
+                CardData card = tableCards[i];
+                if (!card.IsPoint()) continue;
+                turnRequest.MoveCardToScore(card);
+                await WaitAsync(GameSettings.DEAL_DURATION_TIME * 0.75f);
+                int increase = card.rank == Rank.FIVE ? 5 : 10;
+                gameCore.InscreaseIdlePlayerScore(increase * times);
+                tableCards.RemoveAt(i);
+            }
+            turnRequest.ClearPointCards();
+        }
+        List<CardData> winnerCards = playedCards[lastWinner];
+        int score = gameCore.GetIdleScore();
+        ScoreResult scoreResult = GameCore.GetScoreResult(score);
+        string info = scoreResult switch
+        {
+            ScoreResult.DealerUp3 => $"闲家分数{score}升3级",
+            ScoreResult.DealerUp2 => $"闲分数{score}升2级",
+            ScoreResult.DealerUp1 => $"闲分数{score}升1级",
+            ScoreResult.DealerStrong => $"闲分数{score}抢庄局",
+            ScoreResult.DealerDown => $"闲分数{score}闲家上台",
+            ScoreResult.IdleUp2 => $"闲分数{score}闲家升1级",
+            ScoreResult.IdleUp3 => $"闲分数{score}闲家升2级",
+            _ => throw new NotImplementedException(),
+        };
+        gameCore.WinRound(lastWinner, scoreResult, winnerCards);
+        List<Rank> ranks = gameCore.GetCurrentRank();
+        for (int i = 0; i < ranks.Count; i++)
+        {
+            turnRequest.ChangeLevel(i, ranks[i]);
+        }
+        turnRequest.SetInfo(-1, info);
+        await WaitAsync(GameSettings.INFO_EXIST_TIME);
+        TurnOver?.Invoke();
     }
 
     private async Task WaitPlayerPlayCard()
@@ -215,7 +259,6 @@ public class TurnManager
             if (!isValid)
             {
                 int increase = gameCore.IsDealer(currentSeat) ? 5 : -5;
-
                 gameCore.InscreaseIdlePlayerScore(increase);
             }
         }
@@ -293,16 +336,34 @@ public class TurnManager
         return true;
     }
 
+    #region 工具函数
     private bool JudgeThrowCard(List<CardData> cardDatas)
     {
         Suit suit = RuleEngine.GetSuit(cardDatas[0], trumpCardData);
 
         return gameCore.IsBiggest(cardDatas, suit, currentSeat);
     }
+    public async Task WaitAsync(float seconds)
+    {
+        await Task.Delay((int)(seconds * 1000));
+    }
+    private void AddPointCard()
+    {
+        for (int i = 0; i < playedCards.Length; i++)
+        {
+            foreach (var item in playedCards[i])
+            {
+                if (item.IsPoint())
+                    pointCards.Add(item);
+            }
+        }
+    }
+    #endregion
 
     #region 计算当前赢家
     private int GetWinnerSeat()
     {
+        // FIXME:当前判断赢家如果两者的牌力值相同有时候返回前者有时候返回后者
         List<int> index = [];
         List<Suit> suits = [];
         List<SelectedHandComposition> selectedHandCompositions = [];

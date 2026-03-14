@@ -22,6 +22,23 @@ public class SelectedHandComposition
         return tractors;
     }
 
+    public PlayType GetPlayType()
+    {
+        if (Singles.Count == 1 && Doubles.Count == 0 && Tractors.Count == 0)
+            return PlayType.SINGLE;
+        else if (Singles.Count == 0 && Doubles.Count == 1 && Tractors.Count == 0)
+            return PlayType.DOUBLE;
+        else if (Singles.Count == 0 && Doubles.Count == 0 && Tractors.Count == 1)
+            return PlayType.EVEN_CORRECT;
+        return PlayType.THROW_CARD;
+    }
+
+    public int GetEvenCorrectLen()
+    {
+        if (Tractors.Count != 1) return -1;
+        return Tractors[0].GetCount() * 2;
+    }
+
     public Tractor GetLargestTractor()
     {
         List<int> len = [];

@@ -46,7 +46,8 @@ public partial class GameManager : Node
     {
         if (!Multiplayer.IsServer())
             return;
-
+        gameCore.ClearTableCard();
+        gameCore.ReSetPlayerScore();
         gameCore.StartGame();
         // 开始发牌
         dealManager.StartDeal();
@@ -65,11 +66,19 @@ public partial class GameManager : Node
         turnManager.StartTurn(gameCore.GetDealerSeat());
     }
 
-    private void OnTurnOver(List<CardData> pointCards)
+    private void OnTurnOver()
     {
         if (!Multiplayer.IsServer())
             return;
-        GD.Print("开始计算分数");
+        if (gameCore.HaveWinner())
+        {
+            GD.Print("GameCore得知有赢家了");
+        }
+        else
+        {
+            // FIXME:第二轮的叫主失效了
+            StartGame();
+        }
     }
 
     [Rpc(MultiplayerApi.RpcMode.Authority, CallLocal = true)]

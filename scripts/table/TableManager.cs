@@ -3,10 +3,12 @@ using System;
 using System.Collections.Generic;
 using Euler.Global;
 using Euler.Event;
+using System.Linq;
 public partial class TableManager : Node2D
 {
 	private readonly Dictionary<int, PutCardArea> cardAreas = [];
 	private Vector2 center = new();
+	private Vector2 scorePos = new(CardLayoutParams.SCORE_POINT_X, CardLayoutParams.SCORE_POINT_Y);
 
 	private List<Card> pointCards = [];
 
@@ -26,15 +28,88 @@ public partial class TableManager : Node2D
 		center = GetCenter();
 
 		TurnEvent.NewTurnEvent += OnNewTurnEvent;
-
+		TurnEvent.ExpandScoreCardEvent += OnExpandScoreCardEvent;
+		TurnEvent.MoveCardToScoreEvent += OnMoveCardToScoreEvent;
+		TurnEvent.ExpandTableCardEvent += OnExpandTableCardEvent;
+		TurnEvent.CancelThrowCardEvent += OnCancelThrowCardEvent;
 	}
 	public override void _EnterTree()
 	{
 		TurnEvent.NewTurnEvent -= OnNewTurnEvent;
+		TurnEvent.ExpandScoreCardEvent -= OnExpandScoreCardEvent;
+		TurnEvent.MoveCardToScoreEvent -= OnMoveCardToScoreEvent;
+		TurnEvent.ExpandTableCardEvent -= OnExpandTableCardEvent;
+		TurnEvent.CancelThrowCardEvent -= OnCancelThrowCardEvent;
+	}
+
+	private void OnCancelThrowCardEvent()
+	{
+		foreach (var card in pointCards)
+		{
+			card.QueueFree();
+		}
+		pointCards.Clear();
+	}
+
+	private void OnExpandTableCardEvent(int[] cardIds)
+	{
+		pointCards = cardAreas[0].GenerateCard(cardIds, this);
+		OnExpandScoreCardEvent(pointCards.Count);
+	}
+
+	private void OnMoveCardToScoreEvent(int cardId)
+	{
+		int index = 0;
+		for (; index < pointCards.Count; index++)
+		{
+			if (CardData.Serialize(pointCards[index].cardData) == cardId)
+				break;
+		}
+		if (index == pointCards.Count)
+		{
+			// FIXME:老是这里报错
+			GD.PrintErr($"出现问题，客户端{Multiplayer.GetUniqueId()}里面没有服务器的卡牌{cardId}");
+			return;
+		}
+		Card card = pointCards[index];
+		pointCards.RemoveAt(index);
+		var tween = CreateTween();
+		card.Rotation = 0f;
+		tween.TweenProperty(
+			card,
+			"global_position",
+			scorePos,
+			GameSettings.DEAL_DURATION_TIME / 2)
+			.SetTrans(Tween.TransitionType.Quad)
+			.SetEase(Tween.EaseType.Out);
+		tween.TweenCallback(Callable.From(card.QueueFree));
 
 	}
 
-	private void OnNewTurnEvent(bool isDealer)
+	private void OnExpandScoreCardEvent(int len)
+	{
+		if (len != pointCards.Count)
+		{
+			GD.PrintErr($"出现问题，当前服务器的分卡数量{len}，客户端{Multiplayer.GetUniqueId()}的分卡数量{pointCards.Count}");
+		}
+		List<Vector2> expandArea = GenerateExpandArea(len);
+		for (int i = 0; i < pointCards.Count; i++)
+		{
+			Card card = pointCards[i];
+			// 创建移动到屏幕中心的动画
+			var tween = CreateTween();
+			card.Rotation = 0f;
+			tween.TweenProperty(
+				card,
+				"global_position",
+				expandArea[i],
+				GameSettings.DEAL_DURATION_TIME)
+				.SetTrans(Tween.TransitionType.Quad)
+				.SetEase(Tween.EaseType.Out);
+		}
+	}
+
+	private void OnNewTurnEvent(bool isDealer, int dealerSeat)
 	{
 		if (isDealer)
 		{
@@ -48,7 +123,8 @@ public partial class TableManager : Node2D
 			List<Card> newCards = [];
 			for (int i = 0; i < GameSettings.PLAYER_COUNT; i++)
 			{
-				List<Card> cards = cardAreas[i].RemoveCardsExpectPoint();
+				int index = (i + dealerSeat) % GameSettings.PLAYER_COUNT;
+				List<Card> cards = cardAreas[index].RemoveCardsExpectPoint();
 				newCards.AddRange(cards);
 			}
 			MovePointCardToCenter(newCards);
@@ -192,11 +268,53 @@ public partial class TableManager : Node2D
 	}
 	private Vector2 GetCenter()
 	{
-		PutAreaLayout buttom = CalculateLayout(0);
-		PutAreaLayout right = CalculateLayout(1);
+		PutAreaLayout buttom = cardAreas[0].GetPutAreaLayout();
+		PutAreaLayout right = cardAreas[1].GetPutAreaLayout();
 		float x = (buttom.start.X + buttom.end.X) / 2;
 		float y = (right.start.Y + right.end.Y) / 2;
 		return new(x, y);
+	}
+
+	private List<Vector2> GenerateExpandArea(int count)
+	{
+		List<Vector2> layout = [];
+		PutAreaLayout buttom = cardAreas[0].GetPutAreaLayout();
+		float putHeight = CardParams.CARD_HEIGHT * CardParams.CARD_PUT_SCALE;
+		float startX = buttom.start.X - putHeight / 2, endX = buttom.end.X + putHeight / 2;
+		float margin = CardLayoutParams.PUT_CARD_MARGIN;
+		float Y = center.Y + putHeight + margin;
+		// 单张牌直接居中
+		if (count == 1)
+		{
+			float centerX = (startX + endX) / 2;
+			layout.Add(new Vector2(centerX, Y));
+			return layout;
+		}
+		float cardWidth = CardParams.CARD_WIDTH * CardParams.CARD_PUT_SCALE;
+		float totalWidth = endX - startX;
+
+		// 计算牌与牌之间的间隔
+		float spacing;
+		if (count * cardWidth <= totalWidth)
+		{
+			// 不重叠，保持 cardWidth 间距
+			spacing = cardWidth;
+		}
+		else
+		{
+			// 需要重叠压缩，均匀分布
+			spacing = totalWidth / (count - 1);
+		}
+
+		// 居中计算起始 X 坐标
+		float totalSpan = (count - 1) * spacing;
+		float startCenterX = (startX + endX - totalSpan) / 2;
+		for (int i = 0; i < count; i++)
+		{
+			float x = startCenterX + i * spacing;
+			layout.Add(new Vector2(x, Y));
+		}
+		return layout;
 	}
 	#endregion
 }

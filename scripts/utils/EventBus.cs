@@ -176,10 +176,10 @@ namespace Euler.Event
             TurnEndEvent?.Invoke();
         }
 
-        public static Action<bool> NewTurnEvent;
-        public static void OnNewTurnEvent(bool isDealer)
+        public static Action<bool, int> NewTurnEvent;
+        public static void OnNewTurnEvent(bool isDealer, int dealerSeat)
         {
-            NewTurnEvent?.Invoke(isDealer);
+            NewTurnEvent?.Invoke(isDealer, dealerSeat);
         }
 
         public static Action<List<CardData>> PlayCardButtonPressEvent;
@@ -204,6 +204,30 @@ namespace Euler.Event
         public static void OnCancelThrowCardEvent()
         {
             CancelThrowCardEvent?.Invoke();
+        }
+
+        public static Action<int> ExpandScoreCardEvent;
+        public static void OnExpandScoreCardEvent(int len)
+        {
+            ExpandScoreCardEvent?.Invoke(len);
+        }
+
+        public static Action<int> MoveCardToScoreEvent;
+        public static void OnMoveCardToScoreEvent(int cardId)
+        {
+            MoveCardToScoreEvent?.Invoke(cardId);
+        }
+
+        public static Action<int[]> ExpandTableCardEvent;
+        public static void OnExpandTableCardEvent(int[] ids)
+        {
+            ExpandTableCardEvent?.Invoke(ids);
+        }
+
+        public static Action ClearPointCardsEvent;
+        public static void OnClearPointCardsEvent()
+        {
+            ClearPointCardsEvent?.Invoke();
         }
     }
 }

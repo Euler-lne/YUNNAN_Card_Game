@@ -34,6 +34,7 @@ public partial class TurnRequest : Node2D
 
     public void SetInfo(int seat, string info)
     {
+        if (seat == -1) Rpc(nameof(RpcSetInfo), info);
         long peerId = NetworkManager.Instance.GetPeerIdBySeat(seat);
         if (peerId == -1) return;
         RpcId(peerId, nameof(RpcSetInfo), info);
@@ -62,14 +63,67 @@ public partial class TurnRequest : Node2D
     }
 
 
-    public void NewTurn(bool isDealer)
+    public void NewTurn(bool isDealer, int dealer)
     {
-        Rpc(nameof(RpcNewTurn), isDealer);
+        int dealerSeat = NetworkManager.Instance.GetViewSeat(dealer);
+        Rpc(nameof(RpcNewTurn), isDealer, dealerSeat);
     }
     [Rpc(MultiplayerApi.RpcMode.Authority, CallLocal = true)]
-    private void RpcNewTurn(bool isDealer)
+    private void RpcNewTurn(bool isDealer, int dealerSeat)
     {
-        TurnEvent.OnNewTurnEvent(isDealer);
+        TurnEvent.OnNewTurnEvent(isDealer, dealerSeat);
+    }
+
+    public void ChangeLevel(int seat, Rank rank)
+    {
+        Rpc(nameof(RpcChangeLevel), seat, (int)rank);
+    }
+    [Rpc(MultiplayerApi.RpcMode.Authority, CallLocal = true)]
+    private void RpcChangeLevel(int seat, int rank)
+    {
+        int logicSeat = NetworkManager.Instance.GetViewSeat(seat);
+        UIEvent.OnChangeLevelEvent(logicSeat, (Rank)rank);
+    }
+    #endregion
+
+    #region 最后
+    public void ExpandScoreCard(int len)
+    {
+        Rpc(nameof(RpcExpandScoreCard), len);
+    }
+    [Rpc(MultiplayerApi.RpcMode.Authority, CallLocal = true)]
+    private void RpcExpandScoreCard(int len)
+    {
+        TurnEvent.OnExpandScoreCardEvent(len);
+    }
+
+    public void ExpandTableCard(List<CardData> tableCards)
+    {
+        Rpc(nameof(RpcExpandTableCard), CardData.Serialize(tableCards));
+    }
+    public void RpcExpandTableCard(int[] ids)
+    {
+        TurnEvent.OnExpandTableCardEvent(ids);
+    }
+
+    public void MoveCardToScore(CardData cardData)
+    {
+        Rpc(nameof(RpcMoveCardToScore), CardData.Serialize(cardData));
+    }
+
+    [Rpc(MultiplayerApi.RpcMode.Authority, CallLocal = true)]
+    private void RpcMoveCardToScore(int id)
+    {
+        TurnEvent.OnMoveCardToScoreEvent(id);
+    }
+    public void ClearPointCards()
+    {
+        Rpc(nameof(RpcClearPointCards));
+    }
+    [Rpc(MultiplayerApi.RpcMode.Authority, CallLocal = true)]
+    private void RpcClearPointCards()
+    {
+        TurnEvent.OnClearPointCardsEvent();
     }
     #endregion
 }
