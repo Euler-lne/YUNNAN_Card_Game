@@ -96,7 +96,7 @@ public partial class MainMenu : Panel
 	private void OnConfirmJoin()
 	{
 		string ip = ipInput.Text;
-		if (!ValidateIp(ip))
+		if (!ValidateHost(ip))
 		{
 			GD.PrintErr("IP地址格式不正确");
 			return;
@@ -110,16 +110,9 @@ public partial class MainMenu : Panel
 		inputDialog.Visible = false;
 	}
 
-	private bool ValidateIp(string ip)
+	private bool ValidateHost(string host)
 	{
-		string[] parts = ip.Split('.');
-		if (parts.Length != 4) return false;
-		foreach (string part in parts)
-		{
-			if (!int.TryParse(part, out int num)) return false;
-			if (num < 0 || num > 255) return false;
-		}
-		return true;
+		return Uri.CheckHostName(host) != UriHostNameType.Unknown;
 	}
 
 	private bool ValidatePort(string portText, out int port)
