@@ -3,5 +3,10 @@
     <TargetFramework>net8.0</TargetFramework>
     <EnableDynamicLoading>true</EnableDynamicLoading>
     <RootNamespace>YunNanCardGame</RootNamespace>
+    <PublishAot>true</PublishAot>
   </PropertyGroup>
+  <ItemGroup>
+    <TrimmerRootAssembly Include="GodotSharp"/>
+    <TrimmerRootAssembly Include="$(TargetName)"/>
+  </ItemGroup>
 </Project>
