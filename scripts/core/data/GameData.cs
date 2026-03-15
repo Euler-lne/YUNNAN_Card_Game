@@ -107,8 +107,13 @@ public class GameData
                 IsSnatchDealer = true;
                 break;
             case ScoreResult.DealerDown:
-                if (!isWinnerDealer)
+                if (!isWinnerDealer) // 赢的人是上一局的闲家
                     DealerSeat = winnerSeat;
+                else
+                {
+                    DealerSeat++; // 赢的人是上一局的庄家，反正都要改庄
+                    DealerSeat %= GameSettings.PLAYER_COUNT;
+                }
                 break;
             case ScoreResult.IdleUp2:
                 if (!isWinnerDealer)
@@ -119,6 +124,8 @@ public class GameData
                 else
                 {
                     IncreaseLeve(DealerSeat, 1);
+                    DealerSeat++;
+                    DealerSeat %= GameSettings.PLAYER_COUNT;
                 }
                 break;
             case ScoreResult.IdleUp3:
@@ -130,6 +137,8 @@ public class GameData
                 else
                 {
                     IncreaseLeve(DealerSeat, 2);
+                    DealerSeat++;
+                    DealerSeat %= GameSettings.PLAYER_COUNT;
                 }
                 break;
             default:
