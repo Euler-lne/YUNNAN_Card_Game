@@ -40,12 +40,8 @@ public class GameCore
         CardList cardList = playerManager.players[playerIndex];
         cardList.RemoveCard(cardDatas);
     }
-    public List<int> GetSuitCards(int seat, List<CardData> cardDatas, Suit suit)
+    public List<int> GetSuitCards(int seat, Suit suit)
     {
-        if (cardDatas.Count == 0)
-        {
-            return [];
-        }
         List<CardData> suitCards = suit switch
         {
             Suit.SPADE => playerManager.players[seat].spadeList,

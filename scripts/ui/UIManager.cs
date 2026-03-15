@@ -79,6 +79,10 @@ public partial class UIManager : Control
 	#region 服务器开始游戏相关
 	public void UpdatePlayerCount(int count)
 	{
+		if (Multiplayer.IsServer())
+		{
+			startButton.Disabled = count != 4; // 人数不等于4时禁用
+		}
 		currentPlayerNumber.Text = "当前人数: " + count;
 	}
 

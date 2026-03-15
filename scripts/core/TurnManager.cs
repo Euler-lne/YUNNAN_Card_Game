@@ -112,17 +112,17 @@ public class TurnManager
 
     private async void TurnFinish(int lastWinner)
     {
+        await WaitAsync(GameSettings.MOVE_DURATION_TIME);  // 等待分卡移动到中心
         turnRequest.TurnOver();
         bool isDealerWin = gameCore.IsDealer(lastWinner); // 闲家赢了可以翻底牌
                                                           // 将卡牌闲家赢得的牌展开
         turnRequest.ExpandScoreCard(pointCards.Count);
-        await WaitAsync(GameSettings.INFO_EXIST_TIME);
+        await WaitAsync(GameSettings.EXPAND_DURATION_TIME);
         for (int i = pointCards.Count - 1; i >= 0; i--)
         {
             CardData card = pointCards[i];
             turnRequest.MoveCardToScore(card);
-            // TODO:这里可能太快了
-            await WaitAsync(GameSettings.DEAL_DURATION_TIME);
+            await WaitAsync(GameSettings.MOVE_DURATION_TIME);
             int increase = card.rank == Rank.FIVE ? 5 : 10;
             gameCore.InscreaseIdlePlayerScore(increase);
             pointCards.RemoveAt(i);
@@ -130,6 +130,7 @@ public class TurnManager
         if (!isDealerWin)
         {
             // 翻出底牌，用双牌赢的话就*2，用单牌赢的话就不翻倍
+            GD.Print("闲家获胜准备翻地");
             List<CardData> cardDatas = playedCards[lastWinner];
             SelectedHandComposition winnerCmp = new([.. CardData.Serialize(cardDatas)]);
             int times = 1;
@@ -139,13 +140,14 @@ public class TurnManager
             else if (playType == PlayType.EVEN_CORRECT)
                 times = winnerCmp.GetEvenCorrectLen();
             List<CardData> tableCards = gameCore.GetRestCard();
+            turnRequest.ExpandTableCard(tableCards);
+            await WaitAsync(GameSettings.EXPAND_DURATION_TIME);
             for (int i = tableCards.Count - 1; i >= 0; i--)
             {
                 CardData card = tableCards[i];
                 if (!card.IsPoint()) continue;
                 turnRequest.MoveCardToScore(card);
-                // TODO:这里可能太快了
-                await WaitAsync(GameSettings.DEAL_DURATION_TIME * 0.75f);
+                await WaitAsync(GameSettings.MOVE_DURATION_TIME);
                 int increase = card.rank == Rank.FIVE ? 5 : 10;
                 gameCore.InscreaseIdlePlayerScore(increase * times);
                 tableCards.RemoveAt(i);
@@ -268,14 +270,18 @@ public class TurnManager
             return false;
         }
         // 同花色牌
+        if (playedCards[dealer].Count == 0)
+        {
+            GD.PrintErr("出现问题，当前庄家没有出牌，就调用了闲家出牌逻辑");
+            return false;
+        }
         List<int> suitCards = gameCore.GetSuitCards(
             currentSeat,
-            cardDatas,
-            RuleEngine.GetSuit(cardDatas[0], trumpCardData)
+            RuleEngine.GetSuit(playedCards[dealer][0], trumpCardData)
         );
         int suitNum = suitCards.Count;
         // 不够跟牌
-        if (suitNum <= turnData.playNum)
+        if (suitNum <= turnData.playNum)  // 判断是否有庄家的牌，花色是否够
             return true;
         // 结构分析
         SelectedHandComposition selectCmp = new([.. CardData.Serialize(cardDatas)]);
@@ -556,10 +562,11 @@ public class TurnManager
         int maxIndex = -1;
         for (int i = 0; i < values.Length; i++)
         {
-            if (values[i] > maxValue)
+            int index = (i + dealer) % GameSettings.PLAYER_COUNT;
+            if (values[index] > maxValue)
             {
-                maxValue = values[i];
-                maxIndex = i;
+                maxValue = values[index];
+                maxIndex = index;
             }
         }
         if (maxIndex == -1)

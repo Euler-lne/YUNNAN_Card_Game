@@ -214,8 +214,7 @@ public partial class DealManager : Node
             // TODO:当前只有卡牌移动，还没有执行卡牌的翻面
             dealRequest.GenerateHoleCard(posList[index],
                     cardDatas[index], index == cardDatas.Count - 1);
-            // TODO:这里可能太快了
-            await DelayHalf(GameSettings.DEAL_DURATION_TIME);
+            await DelayHalf(GameSettings.MOVE_DURATION_TIME);
 
             // 判断当前的是否应该结束
             meetRankIndex = GetMeetRankIndex(ranks, cardDatas[index]);
@@ -263,7 +262,7 @@ public partial class DealManager : Node
 
         // 最后把牌聚拢
         dealRequest.GetherHoleCard();
-        await DelayHalf(GameSettings.DEAL_DURATION_TIME / 2);
+        await DelayHalf(GameSettings.MOVE_DURATION_TIME / 2);
     }
 
     private void OnClientNotifyChooseHoleResultEvent(bool isBig)
@@ -312,7 +311,7 @@ public partial class DealManager : Node
 
         dealRequest.NotifyDeclareOption(peerId, option);
         if (option == DeclareOption.DARK_TRUMP)  // 等待判断
-            declareTcs = new();  // FIXME:暗主一次显示两张牌
+            declareTcs = new();
     }
     private void SetDeclareUIInvisiable(int expectLogicalSeat = -1)
     {

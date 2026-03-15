@@ -42,7 +42,6 @@ public partial class UserInfoContainerUI : Control
 
 	private void OnChangeLevelEvent(int seat, Rank rank)
 	{
-		// TODO:赢牌调用
 		userInfoUI[seat].SetLevel(rank);
 		seat += 2;
 		seat %= GameSettings.PLAYER_COUNT;

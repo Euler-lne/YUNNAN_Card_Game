@@ -67,7 +67,6 @@ public partial class TableManager : Node2D
 		}
 		if (index == pointCards.Count)
 		{
-			// FIXME:老是这里报错
 			GD.PrintErr($"出现问题，客户端{Multiplayer.GetUniqueId()}里面没有服务器的卡牌{cardId}");
 			return;
 		}
@@ -79,7 +78,7 @@ public partial class TableManager : Node2D
 			card,
 			"global_position",
 			scorePos,
-			GameSettings.DEAL_DURATION_TIME / 2)
+			GameSettings.MOVE_DURATION_TIME / 2)
 			.SetTrans(Tween.TransitionType.Quad)
 			.SetEase(Tween.EaseType.Out);
 		tween.TweenCallback(Callable.From(card.QueueFree));
@@ -103,7 +102,7 @@ public partial class TableManager : Node2D
 				card,
 				"global_position",
 				expandArea[i],
-				GameSettings.DEAL_DURATION_TIME)
+				GameSettings.EXPAND_DURATION_TIME)
 				.SetTrans(Tween.TransitionType.Quad)
 				.SetEase(Tween.EaseType.Out);
 		}
@@ -153,13 +152,11 @@ public partial class TableManager : Node2D
 				card,
 				"global_position",
 				center,
-				GameSettings.DEAL_DURATION_TIME / 2)
+				GameSettings.MOVE_DURATION_TIME / 2)
 				.SetTrans(Tween.TransitionType.Quad)
 				.SetEase(Tween.EaseType.Out);
 		}
 	}
-
-
 
 	#region 操作出牌
 	public void InsertCard(int seat, List<CardData> cardDatas, bool isBack = false, GamePhase gamePhase = GamePhase.PLAYING)

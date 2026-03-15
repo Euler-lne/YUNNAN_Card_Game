@@ -256,7 +256,7 @@ public partial class DealRequest : Node2D
             card,
             "global_position",
             endPos,
-            GameSettings.DEAL_DURATION_TIME / 2)
+            GameSettings.MOVE_DURATION_TIME / 2)
             .SetTrans(Tween.TransitionType.Quad)
             .SetEase(Tween.EaseType.Out);
 
@@ -306,14 +306,11 @@ public partial class DealRequest : Node2D
                 card,
                 "global_position",
                 endPos,
-                GameSettings.DEAL_DURATION_TIME / 2)
+                GameSettings.MOVE_DURATION_TIME / 2)
                 .SetTrans(Tween.TransitionType.Quad)
                 .SetEase(Tween.EaseType.Out);
 
-            tween.TweenCallback(Callable.From(() =>
-            {
-                card.QueueFree();
-            }));
+            tween.TweenCallback(Callable.From(card.QueueFree));
         }
         holdCards.Clear();
         deckCard.Visible = true;

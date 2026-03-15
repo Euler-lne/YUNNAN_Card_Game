@@ -68,7 +68,7 @@ public partial class NetworkManager : Node
 	public void HostGame(int port)
 	{
 		var peer = new ENetMultiplayerPeer();
-		peer.CreateServer(port, 4);
+		peer.CreateServer(port, 3);
 		Multiplayer.MultiplayerPeer = peer;
 
 		GD.Print("Server started");
