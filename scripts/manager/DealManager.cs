@@ -268,6 +268,7 @@ public partial class DealManager : Node
 
     private void OnClientNotifyChooseHoleResultEvent(bool isBig)
     {
+        GD.Print($"客户端点击了按钮{isBig}按钮");
         handleholeTcs?.SetResult(isBig);
         handleholeTcs = null;
     }
@@ -346,6 +347,7 @@ public partial class DealManager : Node
     private void OnDeclareRequestEvent(DeclareOption option, long peerId)
     {
         // 点击叫主
+        GD.Print($"客户端{peerId}点击了叫主{option}");
         int logicalSeat = NetworkManager.Instance.PeerToSeat[peerId];
         bool canDeclare = GameCore.CheckIfSeatCanDeclareOption(logicalSeat, option);
         dealRequest.NotifyClientDeclareButtonPressed(peerId, canDeclare);
@@ -361,10 +363,10 @@ public partial class DealManager : Node
         // 确定叫主
         int logicalSeat = NetworkManager.Instance.PeerToSeat[peerId];
         List<CardData> cardDatas = CardData.Deserialize(ids);
-        // GD.Print($"服务器收到客户端{peerId}选的牌");
-        // foreach (CardData cardData in cardDatas)
-        //     GD.Print($"花色{cardData.suit}，点数{cardData.suit}");
-        // GD.Print($"结束");
+        GD.Print($"服务器收到客户端{peerId}选的牌");
+        foreach (CardData cardData in cardDatas)
+            GD.Print($"花色{cardData.suit}，点数{cardData.suit}");
+        GD.Print($"结束");
         Rank rank = GameCore.GetCurrentRank(logicalSeat);
         DeclareError declareError = RuleEngine.GetDeclareError(option, cardDatas, rank);
         bool isDeclareRight = declareError == DeclareError.None;

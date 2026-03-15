@@ -188,6 +188,11 @@ public class TurnManager
 
     private void OnPlayCardButtonPress(List<CardData> cardDatas)
     {
+        GD.Print($"位置{currentSeat}点击了出牌");
+        foreach (var card in cardDatas)
+        {
+            GD.Print($"卡牌花色{card.suit} 卡牌大小{card.rank}");
+        }
         if (playTcs == null)
         {
             // GD.Print("当前没有等待玩家出牌");
@@ -394,19 +399,23 @@ public class TurnManager
                     killIndex.Add(index[i]);
             }
             if (killIndex.Count == 0 || suits[dealerIndex] == Suit.NONE) return dealer;
+            GD.Print("有人杀牌");
             // 有人杀牌
             bool dealerHasTractor = dealerCmp.Tractors.Count > 0;
             bool dealerHasDouble = dealerCmp.Doubles.Count > 0;
             if (dealerHasTractor) // 连对模式
             {
+                GD.Print("连对模式");
                 return GetGreatIndexOfEvenCorrectNone(killIndex, selectedHandCompositions);
             }
             else if (dealerHasDouble) // 对子模式
             {
+                GD.Print("对子模式");
                 return GetGreatIndexOfDoubleNone(killIndex, selectedHandCompositions);
             }
             else
             {
+                GD.Print("单牌模式");
                 // 单牌模式，看最大的牌就可以了
                 return GetGreatIndexOfSingleNone(killIndex, selectedHandCompositions);
             }
