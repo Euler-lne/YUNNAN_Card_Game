@@ -107,6 +107,7 @@ public partial class DealManager : Node
         // 处理底牌，计时器超时执行该函数
         await WaitIfDeclaring();
         SetDeclareUIInvisiable();
+        await DelayHalf(GameSettings.INFO_EXIST_TIME);
         if (!GameCore.HaveTrump())
         {
             await HandleHoleCardNoTrump();

@@ -26,7 +26,6 @@ public class CardData
 
         for (int i = 0; i < hand.Count; i++)
             ids[i] = Serialize(hand[i]); // 你自己定义的唯一ID
-
         return ids;
     }
 

@@ -142,7 +142,7 @@ public class TurnManager
             GD.Print($"闲家获胜准备翻倍数量{times}");
             List<CardData> tableCards = gameCore.GetRestCard();
             turnRequest.ExpandTableCard(tableCards);
-            gameCore.InscreaseIdlePlayerScore(90);
+            // gameCore.InscreaseIdlePlayerScore(90);
             await WaitAsync(GameSettings.EXPAND_DURATION_TIME);
             for (int i = tableCards.Count - 1; i >= 0; i--)
             {
