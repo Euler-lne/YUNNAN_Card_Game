@@ -21,9 +21,6 @@ public class GameData
     public bool IsSnatchDealer { get; set; }
 
     public Dictionary<int, Rank> TeamLevels { get; private set; }
-
-    public int RoundIndex { get; set; }
-
     public GamePhase CurrentPhase { get; set; }
 
     public TrumpState TrumpState { get; set; }
@@ -45,7 +42,6 @@ public class GameData
         TrumpState = new TrumpState();
         DealerSeat = 0;
         IsSnatchDealer = true;
-        RoundIndex = 1;
         WinnerSeat = -1;
 
         TeamLevels = new Dictionary<int, Rank>
