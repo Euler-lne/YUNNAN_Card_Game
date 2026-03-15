@@ -78,6 +78,20 @@ public partial class DealRequest : Node2D
     {
         UIEvent.OnChangeCardNumEvent(num);
     }
+
+    public void SetInfo(int seat, string info)
+    {
+        if (seat == -1) Rpc(nameof(RpcSetInfo), info);
+        long peerId = NetworkManager.Instance.GetPeerIdBySeat(seat);
+        if (peerId == -1) return;
+        RpcId(peerId, nameof(RpcSetInfo), info);
+    }
+    [Rpc(MultiplayerApi.RpcMode.Authority, CallLocal = true)]
+    private void RpcSetInfo(string info)
+    {
+        UIEvent.OnSetInfoEvent(info);
+    }
+
     #endregion
 
     #region 叫主相关
@@ -121,8 +135,7 @@ public partial class DealRequest : Node2D
     {
         // 告知客户端点击叫主按钮是否合法
         DealEvent.OnJudgeConfirmRequestEvent(isValid);
-        if (isValid)
-            player.ExitrDeclareMode(); // 这里判断为点击按钮成功了
+        player.ExitrDeclareMode(isValid); // 这里判断为点击按钮成功了
     }
 
     public void NotifyClientChooseTrump(long peerId, Rank rank)

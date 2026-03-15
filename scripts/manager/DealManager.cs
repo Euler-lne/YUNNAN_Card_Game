@@ -365,11 +365,20 @@ public partial class DealManager : Node
         //     GD.Print($"花色{cardData.suit}，点数{cardData.suit}");
         // GD.Print($"结束");
         Rank rank = GameCore.GetCurrentRank(logicalSeat);
-        bool isDeclareRight = RuleEngine.IsDeclareRight(option, cardDatas, rank);
+        DeclareError declareError = RuleEngine.GetDeclareError(option, cardDatas, rank);
+        bool isDeclareRight = declareError == DeclareError.None;
         dealRequest.NotifyClientConfirmButtonPressed(peerId, isDeclareRight);
         if (!isDeclareRight)
         {
-            // TODO:可以通知客户端当前选择的牌不满足条件
+            string message = declareError switch
+            {
+                DeclareError.InvalidCount => "牌数不正确",
+                DeclareError.RankMismatch => "点数必须为当前等级",
+                DeclareError.SuitMismatch => "反主的两张牌花色必须相同",
+                DeclareError.InvalidOption => "无效的声明选项",
+                _ => "未知错误"
+            };
+            dealRequest.SetInfo(logicalSeat, message);
             return;
         }
 

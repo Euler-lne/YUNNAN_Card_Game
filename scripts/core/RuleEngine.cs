@@ -92,21 +92,36 @@ public static class RuleEngine
 
         return true;
     }
-
-    public static bool IsDeclareRight(DeclareOption option, List<CardData> cardDatas, Rank rank)
+    public static DeclareError GetDeclareError(DeclareOption option, List<CardData> cardDatas, Rank rank)
     {
+        if (cardDatas == null || cardDatas.Count == 0)
+            return DeclareError.InvalidCount;
+
         switch (option)
         {
-            case DeclareOption.NONE:
-                break;
             case DeclareOption.BRIGHT_TRUMP:
-                return cardDatas.Count == 1 && cardDatas[0].rank == rank;
+                if (cardDatas.Count != 1)
+                    return DeclareError.InvalidCount;
+                if (cardDatas[0].rank != rank)
+                    return DeclareError.RankMismatch;
+                return DeclareError.None;
+
             case DeclareOption.COUNTER_TRUMP:
-                return cardDatas.Count == 2 && cardDatas[0].rank == rank && cardDatas[1].rank == rank && cardDatas[0].suit == cardDatas[1].suit;
+                if (cardDatas.Count != 2)
+                    return DeclareError.InvalidCount;
+                if (cardDatas[0].rank != rank || cardDatas[1].rank != rank)
+                    return DeclareError.RankMismatch;
+                if (cardDatas[0].suit != cardDatas[1].suit)
+                    return DeclareError.SuitMismatch;
+                return DeclareError.None;
+
             case DeclareOption.DARK_TRUMP:
-                return true;
+                // 暗主总是合规，如需额外检查可在此添加
+                return DeclareError.None;
+
+            default:
+                return DeclareError.InvalidOption;
         }
-        return false;
     }
     #endregion
 

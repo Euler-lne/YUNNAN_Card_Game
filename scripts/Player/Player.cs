@@ -238,9 +238,12 @@ public partial class Player : Node2D
 		}
 	}
 
-	public void ExitrDeclareMode()
+	public void ExitrDeclareMode(bool isValid)
 	{
-		playerHandCard.SetAllCardSelectable(false, false);
+		if (isValid)
+			playerHandCard.SetAllCardSelectable(false, false);
+		else
+		{ playerHandCard.SetAllCardIsSelected(false); selectCards.Clear(); }
 	}
 
 	public void EnterSelectCard()

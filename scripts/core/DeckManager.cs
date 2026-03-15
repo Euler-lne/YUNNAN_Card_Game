@@ -46,16 +46,16 @@ public class DeckManager
         deck.Add(new CardData(Suit.NONE, Rank.BIG_JOKER));
         deck.Add(new CardData(Suit.NONE, Rank.SMALL_JOKER));
         deck.Add(new CardData(Suit.NONE, Rank.BIG_JOKER));
-        for (int i = 0; i < 2; i++)
+        for (int j = 0; j < 2; j++)
         {
-            foreach (Rank rank in Enum.GetValues(typeof(Rank)))
+            Rank[] ranks = (Rank[])Enum.GetValues(typeof(Rank));
+            for (int i = ranks.Length - 1; i >= 0; i--)
             {
-                if (rank == Rank.SMALL_JOKER || rank == Rank.BIG_JOKER)
-                    continue;
-                foreach (Suit suit in Enum.GetValues(typeof(Suit)))
+                Rank rank = ranks[i];
+                if (rank == Rank.SMALL_JOKER || rank == Rank.BIG_JOKER) continue;
+                foreach (Suit suit in (Suit[])Enum.GetValues(typeof(Suit)))
                 {
-                    if (suit == Suit.NONE)
-                        continue;
+                    if (suit == Suit.NONE) continue;
                     deck.Add(new CardData(suit, rank));
                 }
             }

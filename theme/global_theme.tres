@@ -1084,3 +1084,4 @@ Label/constants/shadow_outline_size = 1
 Label/font_sizes/font_size = 40
 Label/fonts/font = SubResource("FontFile_04bdp")
 Label/styles/normal = SubResource("StyleBoxFlat_fatts")
+LineEdit/font_sizes/font_size = 40
