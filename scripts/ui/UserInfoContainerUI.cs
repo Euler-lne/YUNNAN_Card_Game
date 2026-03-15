@@ -15,7 +15,7 @@ public partial class UserInfoContainerUI : Control
 		userInfoUI[3] = GetNode<UserInfoUI>("UserInfoLeft");
 		foreach (var item in userInfoUI.Values)
 		{
-			// item.Visible = false;
+			item.Visible = false;
 		}
 		UIEvent.ChangeAvatarEvent += OnChangeAvatarEvent;
 		UIEvent.ChangeNameEvent += OnChangeNameEvent;
