@@ -21,11 +21,18 @@ public class GameCore
 
     public void StartGame()
     {
+        InitBeforeNextTurn();
         deckManager.CreateDeck();
         deckManager.Shuffle();
         // deckManager.TestCreateDeck();
 
         gameData.CurrentPhase = GamePhase.DEALING;
+    }
+    private void InitBeforeNextTurn()
+    {
+        tableCards.Clear();
+        gameData.IdlePlayerScore = 0;
+        gameData.TrumpState = new TrumpState();
     }
     #region 出牌相关
     public void RemoveCardFromPlayer(int playerIndex, List<CardData> cardDatas)
@@ -108,10 +115,7 @@ public class GameCore
         tableCards = deckManager.GetRestCard();
         return tableCards;
     }
-    public void ClearTableCard()
-    {
-        tableCards.Clear();
-    }
+
     public void DealerGetCard(int seat)
     {
         List<CardData> cardDatas = GetRestCard();
@@ -224,10 +228,6 @@ public class GameCore
     public void InscreaseIdlePlayerScore(int increase)
     {
         gameData.IdlePlayerScore += increase;
-    }
-    public void ReSetPlayerScore()
-    {
-        gameData.IdlePlayerScore = 0;
     }
 
     public int GetIdleScore() => gameData.IdlePlayerScore;

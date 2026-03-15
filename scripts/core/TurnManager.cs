@@ -121,6 +121,7 @@ public class TurnManager
         {
             CardData card = pointCards[i];
             turnRequest.MoveCardToScore(card);
+            // TODO:这里可能太快了
             await WaitAsync(GameSettings.DEAL_DURATION_TIME);
             int increase = card.rank == Rank.FIVE ? 5 : 10;
             gameCore.InscreaseIdlePlayerScore(increase);
@@ -143,6 +144,7 @@ public class TurnManager
                 CardData card = tableCards[i];
                 if (!card.IsPoint()) continue;
                 turnRequest.MoveCardToScore(card);
+                // TODO:这里可能太快了
                 await WaitAsync(GameSettings.DEAL_DURATION_TIME * 0.75f);
                 int increase = card.rank == Rank.FIVE ? 5 : 10;
                 gameCore.InscreaseIdlePlayerScore(increase * times);
@@ -153,17 +155,7 @@ public class TurnManager
         List<CardData> winnerCards = playedCards[lastWinner];
         int score = gameCore.GetIdleScore();
         ScoreResult scoreResult = GameCore.GetScoreResult(score);
-        string info = scoreResult switch
-        {
-            ScoreResult.DealerUp3 => $"闲家分数{score}升3级",
-            ScoreResult.DealerUp2 => $"闲分数{score}升2级",
-            ScoreResult.DealerUp1 => $"闲分数{score}升1级",
-            ScoreResult.DealerStrong => $"闲分数{score}抢庄局",
-            ScoreResult.DealerDown => $"闲分数{score}闲家上台",
-            ScoreResult.IdleUp2 => $"闲分数{score}闲家升1级",
-            ScoreResult.IdleUp3 => $"闲分数{score}闲家升2级",
-            _ => throw new NotImplementedException(),
-        };
+        string info = $"闲家分数{score}";
         gameCore.WinRound(lastWinner, scoreResult, winnerCards);
         List<Rank> ranks = gameCore.GetCurrentRank();
         for (int i = 0; i < ranks.Count; i++)

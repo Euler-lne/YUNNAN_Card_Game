@@ -46,8 +46,6 @@ public partial class GameManager : Node
     {
         if (!Multiplayer.IsServer())
             return;
-        gameCore.ClearTableCard();
-        gameCore.ReSetPlayerScore();
         gameCore.StartGame();
         // 开始发牌
         dealManager.StartDeal();

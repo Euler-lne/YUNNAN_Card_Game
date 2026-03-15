@@ -183,7 +183,7 @@ public partial class DealManager : Node
         dealRequest.NotifyChooseModeResult(isBig);
 
         await DelayHalf(GameSettings.INFO_EXIST_TIME);
-        GD.Print("显示结束再继续向下走");
+        // GD.Print("显示结束再继续向下走");
 
         // 开始从上到下依次展示牌，直到遇到主，没有主那么采用大/小
         List<Rank> ranks = [];
@@ -214,6 +214,7 @@ public partial class DealManager : Node
             // TODO:当前只有卡牌移动，还没有执行卡牌的翻面
             dealRequest.GenerateHoleCard(posList[index],
                     cardDatas[index], index == cardDatas.Count - 1);
+            // TODO:这里可能太快了
             await DelayHalf(GameSettings.DEAL_DURATION_TIME);
 
             // 判断当前的是否应该结束
