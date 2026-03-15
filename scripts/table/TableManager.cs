@@ -32,6 +32,7 @@ public partial class TableManager : Node2D
 		TurnEvent.MoveCardToScoreEvent += OnMoveCardToScoreEvent;
 		TurnEvent.ExpandTableCardEvent += OnExpandTableCardEvent;
 		TurnEvent.CancelThrowCardEvent += OnCancelThrowCardEvent;
+		TurnEvent.ClearPointCardsEvent += OnClearPointCardsEvent;
 	}
 	public override void _EnterTree()
 	{
@@ -40,6 +41,16 @@ public partial class TableManager : Node2D
 		TurnEvent.MoveCardToScoreEvent -= OnMoveCardToScoreEvent;
 		TurnEvent.ExpandTableCardEvent -= OnExpandTableCardEvent;
 		TurnEvent.CancelThrowCardEvent -= OnCancelThrowCardEvent;
+		TurnEvent.ClearPointCardsEvent -= OnClearPointCardsEvent;
+	}
+
+	private void OnClearPointCardsEvent()
+	{
+		foreach (var card in pointCards)
+		{
+			card.QueueFree();
+		}
+		pointCards.Clear();
 	}
 
 	private void OnCancelThrowCardEvent()

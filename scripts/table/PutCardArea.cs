@@ -152,7 +152,7 @@ public partial class PutCardArea : Node2D
 		List<Card> cards = [];
 		foreach (int cardId in cardIds)
 		{
-			Card card = GenerateCard(true, parent, CardData.Deserialize(cardId));
+			Card card = GenerateCard(false, parent, CardData.Deserialize(cardId));
 			cards.Add(card);
 		}
 		return cards;

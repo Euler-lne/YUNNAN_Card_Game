@@ -32,9 +32,9 @@ namespace Euler.Global
     {
         public const int PLAYER_COUNT = 4;
         public const int CARD_PRE_PLAYER = 25;
-        public const float DEAL_DURATION_TIME = 0.2f;
-        public const float EXPAND_DURATION_TIME = 1f;
-        public const float MOVE_DURATION_TIME = 1f;
+        public const float DEAL_DURATION_TIME = 0.15f;
+        public const float EXPAND_DURATION_TIME = 0.75f;
+        public const float MOVE_DURATION_TIME = 0.75f;
 
         public const float DEAL_END_TIME = 1f;
         public const float INFO_EXIST_TIME = 1f;

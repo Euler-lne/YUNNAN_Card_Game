@@ -101,7 +101,8 @@ public partial class TurnRequest : Node2D
     {
         Rpc(nameof(RpcExpandTableCard), CardData.Serialize(tableCards));
     }
-    public void RpcExpandTableCard(int[] ids)
+    [Rpc(MultiplayerApi.RpcMode.Authority, CallLocal = true)]
+    private void RpcExpandTableCard(int[] ids)
     {
         TurnEvent.OnExpandTableCardEvent(ids);
     }

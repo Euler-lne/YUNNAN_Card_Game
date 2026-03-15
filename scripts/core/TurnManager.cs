@@ -90,7 +90,7 @@ public class TurnManager
         await IncreaseCurrentSeat();
     }
 
-    private void TurnEnd()
+    private async void TurnEnd()
     {
         GD.Print($"回合结束 当前seat={currentSeat}");
 
@@ -99,6 +99,7 @@ public class TurnManager
         dealer = winner;
 
         // 清空牌
+        await WaitAsync(GameSettings.INFO_EXIST_TIME * 0.75f); // 稍微等一下
         turnRequest.NewTurn(gameCore.IsDealer(dealer), dealer);
         if (!gameCore.IsDealer(dealer))
             AddPointCard();
@@ -118,6 +119,7 @@ public class TurnManager
                                                           // 将卡牌闲家赢得的牌展开
         turnRequest.ExpandScoreCard(pointCards.Count);
         await WaitAsync(GameSettings.EXPAND_DURATION_TIME);
+        await WaitAsync(10);
         for (int i = pointCards.Count - 1; i >= 0; i--)
         {
             CardData card = pointCards[i];
@@ -130,7 +132,6 @@ public class TurnManager
         if (!isDealerWin)
         {
             // 翻出底牌，用双牌赢的话就*2，用单牌赢的话就不翻倍
-            GD.Print("闲家获胜准备翻地");
             List<CardData> cardDatas = playedCards[lastWinner];
             SelectedHandComposition winnerCmp = new([.. CardData.Serialize(cardDatas)]);
             int times = 1;
@@ -139,8 +140,10 @@ public class TurnManager
                 times = 2;
             else if (playType == PlayType.EVEN_CORRECT)
                 times = winnerCmp.GetEvenCorrectLen();
+            GD.Print($"闲家获胜准备翻倍数量{times}");
             List<CardData> tableCards = gameCore.GetRestCard();
             turnRequest.ExpandTableCard(tableCards);
+            gameCore.InscreaseIdlePlayerScore(90);
             await WaitAsync(GameSettings.EXPAND_DURATION_TIME);
             for (int i = tableCards.Count - 1; i >= 0; i--)
             {
@@ -391,7 +394,7 @@ public class TurnManager
                 if (suits[i] == Suit.NONE)
                     killIndex.Add(index[i]);
             }
-            if (killIndex.Count == 0 || suits[dealer] == Suit.NONE) return dealer;
+            if (killIndex.Count == 0 || suits[dealerIndex] == Suit.NONE) return dealer;
             // 有人杀牌
             bool dealerHasTractor = dealerCmp.Tractors.Count > 0;
             bool dealerHasDouble = dealerCmp.Doubles.Count > 0;
