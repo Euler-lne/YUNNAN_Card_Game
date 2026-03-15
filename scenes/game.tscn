@@ -97,6 +97,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+mouse_filter = 2
 theme = ExtResource("5_kvpfn")
 script = ExtResource("4_iywne")
 
@@ -113,6 +114,7 @@ offset_right = 20.0
 offset_bottom = 20.0
 grow_horizontal = 2
 grow_vertical = 2
+mouse_filter = 2
 script = ExtResource("7_dinhu")
 
 [node name="HBoxContainer" type="HBoxContainer" parent="CanvasLayer/UIManager/HoleUI"]
@@ -129,6 +131,7 @@ offset_right = 44.0
 offset_bottom = 31.5
 grow_horizontal = 2
 grow_vertical = 2
+mouse_filter = 2
 
 [node name="BigButton" type="Button" parent="CanvasLayer/UIManager/HoleUI/HBoxContainer"]
 layout_mode = 2
@@ -155,6 +158,7 @@ offset_right = 80.0
 offset_bottom = 55.0
 grow_horizontal = 1
 grow_vertical = 1
+mouse_filter = 2
 
 [node name="VBoxContainer" type="VBoxContainer" parent="CanvasLayer/UIManager"]
 layout_mode = 1
@@ -169,6 +173,7 @@ offset_right = 44.0
 offset_bottom = 46.0
 grow_horizontal = 2
 grow_vertical = 2
+mouse_filter = 2
 
 [node name="CurrentPlayerNumber" type="Label" parent="CanvasLayer/UIManager/VBoxContainer"]
 layout_mode = 2
@@ -198,6 +203,7 @@ offset_right = 44.0
 offset_bottom = 46.0
 grow_horizontal = 2
 grow_vertical = 2
+mouse_filter = 2
 
 [node name="Info" type="Label" parent="CanvasLayer/UIManager/DealerGetCardUI"]
 layout_mode = 2
@@ -227,6 +233,7 @@ offset_right = 44.0
 offset_bottom = 153.0
 grow_horizontal = 2
 grow_vertical = 2
+mouse_filter = 2
 script = ExtResource("5_u5sy4")
 
 [node name="DeclareButton" type="Button" parent="CanvasLayer/UIManager/DeclareContainer"]
@@ -258,6 +265,7 @@ offset_right = 44.0
 offset_bottom = 153.0
 grow_horizontal = 2
 grow_vertical = 2
+mouse_filter = 2
 
 [node name="DarkDeclareButton" type="Button" parent="CanvasLayer/UIManager/DarkDeclareContainer"]
 layout_mode = 2
@@ -331,6 +339,7 @@ offset_left = 2.0
 offset_top = 2.0
 offset_right = 82.0
 offset_bottom = 82.0
+mouse_filter = 2
 texture = SubResource("AtlasTexture_1kice")
 expand_mode = 1
 
@@ -338,6 +347,7 @@ expand_mode = 1
 layout_mode = 1
 offset_right = 86.0
 offset_bottom = 86.0
+mouse_filter = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_trtic")
 
 [node name="Label" type="Label" parent="CanvasLayer/UIManager/UserInfos/UserInfoTop"]
@@ -357,6 +367,7 @@ offset_left = -31.0
 offset_top = 20.0
 offset_right = -1.0
 offset_bottom = 50.0
+mouse_filter = 2
 texture = ExtResource("13_1kice")
 expand_mode = 1
 
@@ -385,6 +396,7 @@ offset_left = 2.0
 offset_top = -114.0
 offset_right = 82.0
 offset_bottom = -34.0
+mouse_filter = 2
 texture = SubResource("AtlasTexture_5newe")
 expand_mode = 1
 
@@ -393,6 +405,7 @@ layout_mode = 1
 offset_top = -116.0
 offset_right = 86.0
 offset_bottom = -30.0
+mouse_filter = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_trtic")
 
 [node name="Label" type="Label" parent="CanvasLayer/UIManager/UserInfos/UserInfoDown"]
@@ -411,6 +424,7 @@ offset_left = 88.0
 offset_top = -92.0
 offset_right = 118.0
 offset_bottom = -62.0
+mouse_filter = 2
 texture = ExtResource("13_1kice")
 expand_mode = 1
 
@@ -441,6 +455,7 @@ offset_left = 2.0
 offset_top = 2.0
 offset_right = 82.0
 offset_bottom = 82.0
+mouse_filter = 2
 texture = SubResource("AtlasTexture_37s47")
 expand_mode = 1
 
@@ -448,6 +463,7 @@ expand_mode = 1
 layout_mode = 0
 offset_right = 86.0
 offset_bottom = 86.0
+mouse_filter = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_trtic")
 
 [node name="Label" type="Label" parent="CanvasLayer/UIManager/UserInfos/UserInfoLeft"]
@@ -466,6 +482,7 @@ offset_left = 88.0
 offset_top = 20.0
 offset_right = 118.0
 offset_bottom = 50.0
+mouse_filter = 2
 texture = ExtResource("13_1kice")
 expand_mode = 1
 
@@ -499,6 +516,7 @@ offset_left = -82.0
 offset_top = 2.0
 offset_right = -2.0
 offset_bottom = 82.0
+mouse_filter = 2
 texture = SubResource("AtlasTexture_bt5mj")
 expand_mode = 1
 
@@ -506,6 +524,7 @@ expand_mode = 1
 layout_mode = 0
 offset_left = -86.0
 offset_bottom = 86.0
+mouse_filter = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_trtic")
 
 [node name="Label" type="Label" parent="CanvasLayer/UIManager/UserInfos/UserInfoRight"]
@@ -535,6 +554,7 @@ offset_left = -117.0
 offset_top = 22.0
 offset_right = -87.0
 offset_bottom = 52.0
+mouse_filter = 2
 texture = ExtResource("13_1kice")
 expand_mode = 1
 
@@ -552,6 +572,7 @@ offset_right = 200.0
 offset_bottom = 27.5
 grow_horizontal = 2
 grow_vertical = 2
+mouse_filter = 2
 script = ExtResource("17_bt5mj")
 
 [node name="ThrowCardInfo" type="Label" parent="CanvasLayer/UIManager/ThrowCardUI"]
