@@ -99,7 +99,7 @@ public class TurnManager
         dealer = winner;
 
         // 清空牌
-        await WaitAsync(GameSettings.INFO_EXIST_TIME * 0.75f); // 稍微等一下
+        await WaitAsync(GameSettings.INFO_EXIST_TIME * 2); // 稍微等一下
         turnRequest.NewTurn(gameCore.IsDealer(dealer), dealer);
         if (!gameCore.IsDealer(dealer))
             AddPointCard();
@@ -119,7 +119,6 @@ public class TurnManager
                                                           // 将卡牌闲家赢得的牌展开
         turnRequest.ExpandScoreCard(pointCards.Count);
         await WaitAsync(GameSettings.EXPAND_DURATION_TIME);
-        await WaitAsync(10);
         for (int i = pointCards.Count - 1; i >= 0; i--)
         {
             CardData card = pointCards[i];
