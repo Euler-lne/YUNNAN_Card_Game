@@ -21,11 +21,11 @@ public class DeckManager
         // 两副牌
         for (int i = 0; i < 2; i++)
         {
-            foreach (Suit suit in Enum.GetValues(typeof(Suit)))
+            foreach (Suit suit in Enum.GetValues<Suit>())
             {
                 if (suit == Suit.NONE)
                     continue;
-                foreach (Rank rank in Enum.GetValues(typeof(Rank)))
+                foreach (Rank rank in Enum.GetValues<Rank>())
                 {
                     if (rank == Rank.SMALL_JOKER || rank == Rank.BIG_JOKER)
                         continue;
@@ -48,12 +48,12 @@ public class DeckManager
         deck.Add(new CardData(Suit.NONE, Rank.BIG_JOKER));
         for (int j = 0; j < 2; j++)
         {
-            Rank[] ranks = (Rank[])Enum.GetValues(typeof(Rank));
+            Rank[] ranks = Enum.GetValues<Rank>();
             for (int i = ranks.Length - 1; i >= 0; i--)
             {
                 Rank rank = ranks[i];
                 if (rank == Rank.SMALL_JOKER || rank == Rank.BIG_JOKER) continue;
-                foreach (Suit suit in (Suit[])Enum.GetValues(typeof(Suit)))
+                foreach (Suit suit in Enum.GetValues<Suit>())
                 {
                     if (suit == Suit.NONE) continue;
                     deck.Add(new CardData(suit, rank));
